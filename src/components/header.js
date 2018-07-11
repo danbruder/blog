@@ -2,30 +2,21 @@ import React from 'react'
 import { Link } from 'gatsby'
 
 const Header = ({ siteTitle }) => (
-  <div
-    style={{
-      background: 'rebeccapurple',
-      marginBottom: '1.45rem',
-    }}
-  >
-    <div
-      style={{
-        margin: '0 auto',
-        maxWidth: 960,
-        padding: '1.45rem 1.0875rem',
-      }}
-    >
-      <h1 style={{ margin: 0 }}>
-        <Link
-          to="/"
-          style={{
-            color: 'white',
-            textDecoration: 'none',
-          }}
-        >
+  <div className="w-100 pa3 ph5-ns bg-white">
+    <div className="db dt-ns mw9 center w-100">
+      <div className="db dtc-ns v-mid tl w-50">
+        <Link to="/" className="dib f5 f4-ns fw6 mt0 mb1 link black-70">
           {siteTitle}
         </Link>
-      </h1>
+      </div>
+      <div className="db dtc-ns v-mid w-100 tl tr-ns mt2 mt0-ns">
+        <Link
+          to="/specialties"
+          className="f6 fw6 hover-blue link black-70 mr2 mr3-m mr4-l dib"
+        >
+          Specialties
+        </Link>
+      </div>
     </div>
   </div>
 )
