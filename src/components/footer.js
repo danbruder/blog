@@ -3,7 +3,7 @@ import { Link } from 'gatsby'
 
 const Footer = () => (
   <div className=" mw9 center">
-    <div className="f6 justify-start items-start flex bg--black-10 w-100 pa5 ">
+    <div className="f6 justify-start items-start flex flex-wrap bg--black-10 w-100 pa5 ">
       <div className="pa3 mw5">
         <h3>Like what you see?</h3>
         <div className="pt2">
