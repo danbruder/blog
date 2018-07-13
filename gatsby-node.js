@@ -1,45 +1,79 @@
-//// Implement the Gatsby API “createPages”. This is called once the
-//// data layer is bootstrapped to let plugins create pages from data.
-//exports.createPages = ({ graphql, actions }) => {
-//const { createPage } = actions
+// Implement the Gatsby API “createPages”. This is called once the
+// data layer is bootstrapped to let plugins create pages from data.
 
-//return new Promise((resolve, reject) => {
-//const blogPostTemplate = path.resolve(`src/templates/blog-post.js`)
-//// Query for markdown nodes to use in creating pages.
-//resolve(
-//graphql(
-//`
-//{
-//allMarkdownRemark(limit: 1000) {
-//edges {
-//node {
-//frontmatter {
-//path
-//}
-//}
-//}
-//}
-//}
-//`
-//).then(result => {
-//if (result.errors) {
-//reject(result.errors)
-//}
+var path = require('path')
+exports.createPages = ({ graphql, actions }) => {
+  const { createPage } = actions
+  const projectTemplate = path.resolve(`src/templates/project.js`)
+  const serviceTemplate = path.resolve(`src/templates/service.js`)
+  const blogTemplate = path.resolve(`src/templates/blog.js`)
 
-//// Create pages for each markdown file.
-//result.data.allMarkdownRemark.edges.forEach(({ node }) => {
-//const path = node.frontmatter.path
-//createPage({
-//path,
-//component: blogPostTemplate,
-//// In your blog post template's graphql query, you can use path
-//// as a GraphQL variable to query for data from the markdown file.
-//context: {
-//path,
-//},
-//})
-//})
-//})
-//)
-//})
-//}
+  return new Promise((resolve, reject) => {
+    // Query for markdown nodes to use in creating pages.
+    resolve(
+      graphql(
+        `
+          query {
+            allContentfulOurWork(limit: 1000) {
+              edges {
+                node {
+                  slug
+                }
+              }
+            }
+            allContentfulPost(limit: 1000) {
+              edges {
+                node {
+                  slug
+                }
+              }
+            }
+            allContentfulSpecialty(limit: 1000) {
+              edges {
+                node {
+                  slug
+                }
+              }
+            }
+          }
+        `
+      ).then(result => {
+        console.log(result)
+        if (result.errors) {
+          reject(result.errors)
+        }
+
+        // Create pages for each markdown file.
+        result.data.allContentfulOurWork.edges.forEach(({ node }) => {
+          createPage({
+            path: `work/${node.slug}`,
+            component: projectTemplate,
+            context: {
+              slug: node.slug,
+            },
+          })
+        })
+
+        result.data.allContentfulPost.edges.forEach(({ node }) => {
+          createPage({
+            path: `blog/${node.slug}`,
+            component: blogTemplate,
+            context: {
+              slug: node.slug,
+            },
+          })
+        })
+
+        result.data.allContentfulSpecialty.edges.forEach(({ node }) => {
+          createPage({
+            path: `services/${node.slug}`,
+            component: serviceTemplate,
+            context: {
+              slug: node.slug,
+            },
+          })
+        })
+      })
+    )
+  })
+}
