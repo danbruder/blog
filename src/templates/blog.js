@@ -26,8 +26,8 @@ const BlogPage = ({ data }) => (
             }}
           />
         </div>
-        <div className="fn fl-ns w-100 w-30-ns pr4-ns mt4">
-          <div className=" pa2 pa4-ns  ">
+        <div className="fn fl-ns w-100 w-30-ns w-100-m pr4-ns mt4">
+          <div className="pa2 pa4-ns bg-white br3 ml5-l mt3 shadow-4">
             <div className="tl">
               <Img
                 className="br-100 h3 w3 dib"
@@ -38,7 +38,16 @@ const BlogPage = ({ data }) => (
               </h1>
               <hr className=" bb bw1 b--black-10" />
             </div>
-            <p className="lh-copy measure center f6 black-70" />
+            <p
+              className="lh-copy measure center f6 black-70"
+              dangerouslySetInnerHTML={{
+                __html: get(
+                  data,
+                  'blog.author.bio.childMarkdownRemark.html',
+                  ''
+                ),
+              }}
+            />
           </div>
         </div>
       </div>
@@ -58,6 +67,11 @@ export const pageQuery = graphql`
       createdAt(formatString: "M/D/YY")
       author {
         name
+        bio {
+          childMarkdownRemark {
+            html
+          }
+        }
         avatar {
           sizes(maxWidth: 200) {
             ...GatsbyContentfulSizes_tracedSVG

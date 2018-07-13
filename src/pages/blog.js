@@ -12,6 +12,16 @@ const BlogTeaser = ({ data }) => (
       <div className="pa3">
         <label className="tracked ttu gray fw2">Post</label>
         <h2 className="f4 ma0 tracked">{get(data, 'node.title', '')}</h2>
+        <div className="flex items-center pt3">
+          <Img
+            className="br-100 h2 w2 dib ba b--black-05 "
+            sizes={get(data, 'node.author.avatar.sizes', {})}
+          />
+          <label className="i  ml2 ">
+            {get(data, 'node.createdAt', '')} by{' '}
+            {get(data, 'node.author.name', '')}
+          </label>
+        </div>
         <p>{get(data, 'node.summary', '')}</p>
       </div>
     </Link>
