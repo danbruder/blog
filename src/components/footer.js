@@ -7,7 +7,9 @@ const Footer = () => (
       <div className="pa3 mw5">
         <h3>Like what you see?</h3>
         <div className="pt2">
-          <a className="link ba bw1 pa2 ph3">Say hi</a>
+          <Link to="/contact" className="link ba bw1 pa2 ph3">
+            Say hi
+          </Link>
         </div>
       </div>
 
@@ -60,12 +62,6 @@ const Footer = () => (
           process. Our team is smart, reliable, and deeply knowlegeable about
           the intricicies of circuit design, PCB layout, and EMC.
         </p>
-        <label className="i lh-copy">
-          What's it like working with us?{' '}
-          <a className="link primary" href="/">
-            Read our playbook.
-          </a>
-        </label>
       </div>
     </div>
     <div className="mw9 center w-100 pa5 ">
@@ -77,3 +73,9 @@ const Footer = () => (
 )
 
 export default Footer
+//<label className="i lh-copy">
+//What's it like working with us?{' '}
+//<a className="link primary" href="/">
+//Read our playbook.
+//</a>
+//</label>

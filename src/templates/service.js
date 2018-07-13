@@ -12,7 +12,7 @@ const ServicePage = ({ data }) => (
     <div className="mw9 center w-100  bg-light-gray">
       <article className="cf ph3 ph5-ns pv5">
         <header className="fn fl-ns w-40-ns pr4-ns">
-          <time className="f6 ttu tracked gray">Work</time>
+          <time className="f6 ttu tracked gray">Service</time>
           <h1 className="mb3 mt0 lh-title">{get(data, 'service.title', '')}</h1>
           <h2 className="f4 fw3 lh-copy">{get(data, 'service.summary', '')}</h2>
         </header>

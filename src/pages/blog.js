@@ -7,7 +7,7 @@ import { Link } from 'gatsby'
 import Layout from '../components/layout'
 
 const BlogTeaser = ({ data }) => (
-  <div className="br3 grow shadow-hover ma3 bg-white w-100 mw5-ns">
+  <div className=" bw2 br3 grow shadow-hover ma3 bg-white w-100 mw5-ns">
     <Link className="link black" to={`/blog/${data.node.slug}`}>
       <div className="pa3">
         <label className="tracked ttu gray fw2">Post</label>

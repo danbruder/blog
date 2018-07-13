@@ -3,7 +3,6 @@ import { graphql } from 'gatsby'
 import Img from 'gatsby-image'
 import { get } from 'lodash'
 import { Link } from 'gatsby'
-
 import Layout from '../components/layout'
 
 const ProjectTeaser = ({ data }) => (
@@ -26,6 +25,9 @@ const ProjectPage = ({ data }) => (
   <Layout>
     <div className="mw9 center w-100 pa5 bg-light-gray">
       <h1 className="f1 lh-title tc">Recent Projects</h1>
+      <h2 className="f3 fw3 tc pb5">
+        A collection of recent projects and practice areas
+      </h2>
       <div className="flex flex-wrap">
         {get(data, 'projects.edges', []).map((edge, key) => (
           <ProjectTeaser key={key} data={edge} />

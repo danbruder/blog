@@ -8,7 +8,12 @@ html {
 /* Secondary Green: #049371 */
 
 .primary,
+.hover-green:hover,
 .green {
+  color: #01a982;
+}
+
+a {
   color: #01a982;
 }
 

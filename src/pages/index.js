@@ -2,6 +2,10 @@ import React from 'react'
 import { graphql, Link } from 'gatsby'
 import Img from 'gatsby-image'
 import { get } from 'lodash'
+import hm from './img/hm.jpg'
+import cas from './img/cas.jpg'
+import car from './img/car.jpg'
+import kes from './img/kes.jpg'
 
 import Layout from '../components/layout'
 
@@ -48,9 +52,9 @@ const BlogTeaser = ({ data, className }) => (
           className="br-100 h2 w2 dib ba b--black-05 "
           sizes={get(data, 'node.author.avatar.sizes', {})}
         />
-        <label className="i tracked ml2 ">
-          By {get(data, 'node.author.name', '')} on{' '}
-          {get(data, 'node.createdAt', '')}
+        <label className="i  ml2 ">
+          {get(data, 'node.createdAt', '')} by{' '}
+          {get(data, 'node.author.name', '')}
         </label>
       </div>
       <p className="lh-copy">{get(data, 'node.summary', '')}</p>
@@ -62,7 +66,7 @@ const IndexPage = ({ data }) => (
   <Layout>
     <div className="bg-light-gray ">
       <div className="mw9 center w-100 pa3 pa5-ns bg-light-gray flex-ns items-center ">
-        <div className="w-50-ns w-100">
+        <div className="w-50-ns pr3 w-100">
           <h1 className="mt0 f2 f1-ns lh-title">
             Custom Electronics Design and Development
           </h1>
@@ -75,11 +79,13 @@ const IndexPage = ({ data }) => (
             <i>Seriously.</i>
           </p>
           <div className="pt4">
-            <a className="link ba bw1 pa3 ph4">Learn More</a>
+            <Link to="/services/" className="primary link ba bw1 pa3 ph4">
+              See our Services
+            </Link>
           </div>
         </div>
 
-        <div className="w-50-ns w-100 mt5 center bg-white br3 grow shadow-hover ">
+        <div className="w-50-ns w-100 ma5 db center bg-white br3 grow shadow-hover ">
           <Link
             className="link black"
             to={`/work/${get(data, 'featuredWork.edges[0].node.slug', '')}`}
@@ -121,7 +127,7 @@ const IndexPage = ({ data }) => (
       <div className="tc mw9 center w-100 pa3 pa5-ns bg-light-gray">
         <h1>Recent Projects</h1>
 
-        <div className="flex flex-wrap justify-center">
+        <div className="tl flex flex-wrap justify-center">
           {get(data, 'projects.edges', []).map((edge, key) => (
             <ProjectTeaser key={key} data={edge} />
           ))}
@@ -134,16 +140,16 @@ const IndexPage = ({ data }) => (
         <i className="f4 tc">- We have partnered with great people -</i>
         <div className="flex flex-wrap items-center justify-center pv5">
           <div className="mw5 ma3 pa2 grow">
-            <img src="https://fiu-assets-2-syitaetz61hl2sa.stackpathdns.com/static/use-media-items/14/13518/full-1400x513/56702756/Herman_Miller-logo.png?resolution=0" />
+            <img src={hm} />
           </div>
           <div className="mw5 ma3 pa2 grow">
-            <img src="http://cascoauto.com/wp-content/uploads/2017/02/CASCO-logo-430.png" />
+            <img src={cas} />
           </div>
           <div className="mw5 ma3 pa2 grow">
-            <img src="http://s19528.pcdn.co/wp-content/uploads/2015/07/carter-fuel-systems-logo.png" />
+            <img src={car} />
           </div>
           <div className="mw5 ma3 pa2 grow">
-            <img src="https://www.buyslider.com/img/tmp/manufacturer_1.jpg" />
+            <img src={kes} />
           </div>
         </div>
       </div>
@@ -218,6 +224,12 @@ const IndexPage = ({ data }) => (
         </div>
       </div>
     </div>
+    <script
+      type="text/javascript"
+      dangerouslySetInnerHTML={{
+        __html: `window.$crisp=[];window.CRISP_WEBSITE_ID="fc600f50-ee58-407f-903b-8184c5952765";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();`,
+      }}
+    />
   </Layout>
 )
 
