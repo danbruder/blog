@@ -27,7 +27,7 @@ const BlogPage = ({ data }) => (
           />
         </div>
         <div className="fn fl-ns w-100 w-30-ns w-100-m pr4-ns mt4">
-          <div className="pa2 pa4-ns bg-white br3 ml5-l mt3 shadow-4">
+          <div className="pa2 pa3-ns ml5-l mt0 pt0">
             <div className="tl">
               <Img
                 className="br-100 h3 w3 dib"

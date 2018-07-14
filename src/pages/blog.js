@@ -7,12 +7,12 @@ import { Link } from 'gatsby'
 import Layout from '../components/layout'
 
 const BlogTeaser = ({ data }) => (
-  <div className=" bw2 br3 grow shadow-hover ma3 bg-white w-100 mw5-ns">
-    <Link className="link black" to={`/blog/${data.node.slug}`}>
-      <div className="pa3">
-        <label className="tracked ttu gray fw2">Post</label>
-        <h2 className="f4 ma0 tracked">{get(data, 'node.title', '')}</h2>
-        <div className="flex items-center pt3">
+  <div className="bt cf b--black-90 w-100 ">
+    <Link className=" db w-50 fr link black " to={`/blog/${data.node.slug}`}>
+      <div className="pv4 measure fl">
+        <h2 className="f3 ma0 ">{get(data, 'node.title', '')}</h2>
+        <p className="mt1 lh-copy">{get(data, 'node.summary', '')}</p>
+        <div className="flex items-center pt0">
           <Img
             className="br-100 h2 w2 dib ba b--black-05 "
             sizes={get(data, 'node.author.avatar.sizes', {})}
@@ -22,7 +22,6 @@ const BlogTeaser = ({ data }) => (
             {get(data, 'node.author.name', '')}
           </label>
         </div>
-        <p>{get(data, 'node.summary', '')}</p>
       </div>
     </Link>
   </div>
@@ -31,11 +30,11 @@ const BlogTeaser = ({ data }) => (
 const BlogPage = ({ data }) => (
   <Layout>
     <div className="mw9 center w-100 pa3 pa5-ns bg-light-gray">
-      <h1 className="f1 lh-title tc">Blog</h1>
-      <h2 className="f3 fw3 tc">
+      <h1 className="f2 lh-title ">Blog</h1>
+      <h2 className="f4 i  fw3 ">
         We write here as we encounter and solve technical challenges.
       </h2>
-      <div className="mt5-ns justify-center flex flex-wrap">
+      <div className="">
         {get(data, 'blogs.edges', []).map((edge, key) => (
           <BlogTeaser key={key} data={edge} />
         ))}

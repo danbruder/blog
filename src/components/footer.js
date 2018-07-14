@@ -44,12 +44,22 @@ const Footer = () => (
       <div className="pa3 mw5">
         <h2 className="f5">Connect</h2>
         <div className="pt2">
-          <a href="/" className="link">
+          <a href="https://www.twitter.com/debassociates/" className="link">
+            Twitter
+          </a>
+        </div>
+        <div className="pt2">
+          <a href="https://www.linkedin.com/company/16260983/" className="link">
+            Linkdin
+          </a>
+        </div>
+        <div className="pt2">
+          <a href="https://www.facebook.com/debassociates/" className="link">
             Facebook
           </a>
         </div>
         <div className="pt2">
-          <a href="/" className="link">
+          <a href="https://www.instagram.com/debassociates/" className="link">
             Instagram
           </a>
         </div>
