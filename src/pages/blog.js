@@ -7,8 +7,8 @@ import { Link } from 'gatsby'
 import Layout from '../components/layout'
 
 const BlogTeaser = ({ data }) => (
-  <div className="bt cf b--black-90 w-100 ">
-    <Link className=" db w-50 fr link black " to={`/blog/${data.node.slug}`}>
+  <div className="bt w-50-l cf b--black-90 w-100 ">
+    <Link className=" db  w-100 fr link black " to={`/blog/${data.node.slug}`}>
       <div className="pv4 measure fl">
         <h2 className="f3 ma0 ">{get(data, 'node.title', '')}</h2>
         <p className="mt1 lh-copy">{get(data, 'node.summary', '')}</p>
@@ -29,15 +29,17 @@ const BlogTeaser = ({ data }) => (
 
 const BlogPage = ({ data }) => (
   <Layout>
-    <div className="mw9 center w-100 pa3 pa5-ns bg-light-gray">
-      <h1 className="f2 lh-title ">Blog</h1>
-      <h2 className="f4 i  fw3 ">
-        We write here as we encounter and solve technical challenges.
-      </h2>
-      <div className="">
-        {get(data, 'blogs.edges', []).map((edge, key) => (
-          <BlogTeaser key={key} data={edge} />
-        ))}
+    <div className="bg-light-gray">
+      <div className="mw9 center w-100 pa3 pa5-ns bg-light-gray">
+        <h1 className="f2 lh-title ">Blog</h1>
+        <h2 className="f4 i  fw3 ">
+          We write here as we encounter and solve technical challenges.
+        </h2>
+        <div className="">
+          {get(data, 'blogs.edges', []).map((edge, key) => (
+            <BlogTeaser key={key} data={edge} />
+          ))}
+        </div>
       </div>
     </div>
   </Layout>

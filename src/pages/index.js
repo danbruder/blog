@@ -9,6 +9,28 @@ import kes from './img/kes.jpg'
 
 import Layout from '../components/layout'
 
+const BioTeaser = ({ data }) => (
+  <article className="w-33-ns center bg-white  pa3 pa4-ns ma3 ba b--black-10">
+    <div className="tc">
+      <Img
+        className="br-100 h4 w4 dib ba b--black-05 pa2"
+        sizes={get(data, 'avatar.sizes', {})}
+      />
+      <h1 className="f3 mb2">{get(data, 'name', '')}</h1>
+      <h2 className="f5 fw4 gray mt0">
+        {get(data, 'name', '') == 'Dave' ? 'Principal' : 'Engineer'}
+      </h2>
+      <hr className="mw3 bb bw1 b--black-10" />
+    </div>
+    <p
+      className="lh-copy measure center f6 black-70"
+      dangerouslySetInnerHTML={{
+        __html: get(data, 'bio.childMarkdownRemark.html', ''),
+      }}
+    />
+  </article>
+)
+
 const ServiceTeaser = ({ data, index }) => (
   <div className="cf bt b--black-90 pv3">
     <Link
@@ -27,10 +49,10 @@ const ServiceTeaser = ({ data, index }) => (
 )
 
 const ProjectTeaser = ({ data }) => (
-  <div className="ma3 br3 grow shadow-hover bg-white w-100 mw5-ns">
+  <div className="ma3  grow shadow-hover bg-white w-100 mw5-ns">
     <Link className="link black db" to={`/work/${get(data, 'node.slug', '')}`}>
       <Img
-        className="br3 br--top pa3 dn db-ns"
+        className=" br--top pa3 dn db-ns"
         sizes={get(data, 'node.image.sizes', {})}
       />
       <div className="pa3">
@@ -43,7 +65,7 @@ const ProjectTeaser = ({ data }) => (
 )
 
 const BlogTeaser = ({ data, className }) => (
-  <div className={`br3 grow shadow-hover bg-white black pa3 ${className}`}>
+  <div className={` grow shadow-hover bg-white black pa3 ${className}`}>
     <Link className="link black" to={`/blog/${get(data, 'node.slug', '')}`}>
       <label className="tracked ttu">Post</label>
       <h2 className="f4 ma0 tracked">{get(data, 'node.title', '')}</h2>
@@ -85,14 +107,14 @@ const IndexPage = ({ data }) => (
           </div>
         </div>
 
-        <div className="w-50-ns w-100 ma5 db center bg-white br3 grow shadow-hover ">
+        <div className="w-50-ns w-100 ma5 db center bg-white  grow shadow-hover ">
           <Link
             className="link black"
             to={`/work/${get(data, 'featuredWork.edges[0].node.slug', '')}`}
           >
             <div className=" ">
               <Img
-                className="br3 br--top"
+                className=" br--top"
                 sizes={get(
                   data,
                   'featuredWork.edges[0].node.image.sizes',
@@ -160,54 +182,9 @@ const IndexPage = ({ data }) => (
         <h1>The Team</h1>
 
         <div className="mw9 flex-ns justify-around items-center">
-          <article className="w-33-ns center bg-white br3 pa3 pa4-ns ma3 ba b--black-10">
-            <div className="tc">
-              <img
-                src="https://media.licdn.com/dms/image/C4D03AQFDDSvESyTsuQ/profile-displayphoto-shrink_800_800/0?e=1536796800&v=beta&t=Iv0_KdSkyFLXEgMueLxxUigocrfo9sXkFGzUAdA_Vrw"
-                className="br-100 h4 w4 dib ba b--black-05 pa2"
-                title="Photo of a kitty staring at you"
-              />
-              <h1 className="f3 mb2">Alina Barnett</h1>
-              <h2 className="f5 fw4 gray mt0">Engineer</h2>
-              <hr className="mw3 bb bw1 b--black-10" />
-            </div>
-            <p className="lh-copy measure center f6 black-70">
-              Alina is a software engineer
-            </p>
-          </article>
-
-          <article className="w-33-ns  center bg-white br3 pa3 pa4-ns ma3 ba zoom b--black-10">
-            <div className="tc">
-              <img
-                src="https://media.licdn.com/dms/image/C4D03AQG_key8Uv4aUw/profile-displayphoto-shrink_800_800/0?e=1536796800&v=beta&t=DkYw7QmIQy6OUQK8zkQKz-RP2l3xeNste_bBewTME9I"
-                className="br-100 h4 w4 dib ba b--black-05 pa2"
-                title="Photo of a kitty staring at you"
-              />
-              <h1 className="f3 mb2">Dave Bruder</h1>
-              <h2 className="f5 fw4 gray mt0">Principle</h2>
-              <hr className="mw3 bb bw1 b--black-10" />
-            </div>
-            <p className="lh-copy measure center f6 black-70">
-              Dave has been designing electronics as a consultatnt for the last
-              decade.
-            </p>
-          </article>
-
-          <article className="w-33-ns center bg-white br3 pa3 pa4-ns ma3 ba b--black-10">
-            <div className="tc">
-              <img
-                src="https://s.gravatar.com/avatar/f3ecddbb2495c2bd92ca710df5f47c50?s=80&r=g"
-                className="br-100 h4 w4 dib ba b--black-05 pa2"
-                title="Photo of a kitty staring at you"
-              />
-              <h1 className="f3 mb2">Dan Bruder</h1>
-              <h2 className="f5 fw4 gray mt0">Engineer</h2>
-              <hr className="mw3 bb bw1 b--black-10" />
-            </div>
-            <p className="lh-copy measure center f6 black-70">
-              Dan is a software engineer with a background in web development.
-            </p>
-          </article>
+          <BioTeaser className="w-100" data={get(data, 'alina', {})} />
+          <BioTeaser className="w-100" data={get(data, 'dave', {})} />
+          <BioTeaser className="w-100" data={get(data, 'dan', {})} />
         </div>
       </div>
     </div>
@@ -236,6 +213,21 @@ const IndexPage = ({ data }) => (
 export default IndexPage
 
 export const pageQuery = graphql`
+  fragment AuthorFragment on ContentfulAuthor {
+    name
+    bio {
+      childMarkdownRemark {
+        html
+      }
+    }
+    twitter
+    avatar {
+      sizes {
+        src
+      }
+    }
+  }
+
   query IndexQuery {
     featuredWork: allContentfulOurWork(
       limit: 1
@@ -301,6 +293,16 @@ export const pageQuery = graphql`
           }
         }
       }
+    }
+
+    dan: contentfulAuthor(name: { eq: "Dan" }) {
+      ...AuthorFragment
+    }
+    dave: contentfulAuthor(name: { eq: "Dave" }) {
+      ...AuthorFragment
+    }
+    alina: contentfulAuthor(name: { eq: "Alina" }) {
+      ...AuthorFragment
     }
   }
 `

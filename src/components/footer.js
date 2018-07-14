@@ -3,7 +3,7 @@ import { Link } from 'gatsby'
 
 const Footer = () => (
   <div className=" mw9 center">
-    <div className="f6 justify-start items-start flex flex-wrap bg--black-10 w-100 pa5 ">
+    <div className="f6 justify-start items-start flex flex-wrap bg--black-10 w-100 pa3 pa5-ns ">
       <div className="pa3 mw5">
         <h3>Like what you see?</h3>
         <div className="pt2">
@@ -62,6 +62,30 @@ const Footer = () => (
           <a href="https://www.instagram.com/debassociates/" className="link">
             Instagram
           </a>
+        </div>
+      </div>
+
+      <div className="pa3 mw5">
+        <h2 className="f5">Links</h2>
+        <div className="pt2">
+          <Link to="/services" className="link">
+            Services
+          </Link>
+        </div>
+        <div className="pt2">
+          <Link to="/projects" className="link">
+            Projects
+          </Link>
+        </div>
+        <div className="pt2">
+          <Link to="/blog" className="link">
+            Blog
+          </Link>
+        </div>
+        <div className="pt2">
+          <Link to="/contact" className="link">
+            Contact
+          </Link>
         </div>
       </div>
 

@@ -23,7 +23,7 @@ const Header = ({ siteTitle }) => (
             Services
           </Link>
           <Link
-            to="/work"
+            to="/projects"
             className="f6 fw6 hover-green link black-70 mr2 mr3-m mr4-l dib"
           >
             Projects

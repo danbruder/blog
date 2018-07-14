@@ -25,12 +25,14 @@ const ServiceTeaser = ({ data, index }) => (
 
 const ServicePage = ({ data }) => (
   <Layout>
-    <div className="mw9 center w-100 pa3 cf pa5-ns bg-light-gray">
-      <h1>Services</h1>
-      <div>
-        {get(data, 'services.edges', []).map((edge, key) => (
-          <ServiceTeaser index={key} key={key} data={edge} />
-        ))}
+    <div className="bg-light-gray">
+      <div className="mw9 center w-100 pa3 cf pa5-ns bg-light-gray">
+        <h1>Services</h1>
+        <div>
+          {get(data, 'services.edges', []).map((edge, key) => (
+            <ServiceTeaser index={key} key={key} data={edge} />
+          ))}
+        </div>
       </div>
     </div>
   </Layout>

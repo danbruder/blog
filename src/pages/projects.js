@@ -6,12 +6,9 @@ import { Link } from 'gatsby'
 import Layout from '../components/layout'
 
 const ProjectTeaser = ({ data }) => (
-  <div className="br3 grow shadow-hover ma3 bg-white mw5">
+  <div className=" grow shadow-hover ma3 bg-white mw5">
     <Link className="link black" to={`/work/${data.node.slug}`}>
-      <Img
-        className="br3 br--top pa3"
-        sizes={get(data, 'node.image.sizes', {})}
-      />
+      <Img className=" br--top pa3" sizes={get(data, 'node.image.sizes', {})} />
       <div className="pa3">
         <label className="tracked ttu gray fw2">Work</label>
         <h2 className="f4 ma0 tracked">{get(data, 'node.title', '')}</h2>
@@ -23,15 +20,17 @@ const ProjectTeaser = ({ data }) => (
 
 const ProjectPage = ({ data }) => (
   <Layout>
-    <div className="mw9 center w-100 pa5 bg-light-gray">
-      <h1 className="f1 lh-title tc">Recent Projects</h1>
-      <h2 className="f3 fw3 tc pb5">
-        A collection of recent projects and practice areas
-      </h2>
-      <div className="flex flex-wrap">
-        {get(data, 'projects.edges', []).map((edge, key) => (
-          <ProjectTeaser key={key} data={edge} />
-        ))}
+    <div className="bg-light-gray">
+      <div className="mw9 center w-100 pa5 bg-light-gray">
+        <h1 className="f1 lh-title tc">Recent Projects</h1>
+        <h2 className="f3 fw3 tc pb5">
+          A collection of recent projects and practice areas
+        </h2>
+        <div className="flex flex-wrap justify-center">
+          {get(data, 'projects.edges', []).map((edge, key) => (
+            <ProjectTeaser key={key} data={edge} />
+          ))}
+        </div>
       </div>
     </div>
   </Layout>

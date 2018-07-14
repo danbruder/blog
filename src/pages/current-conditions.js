@@ -14,9 +14,9 @@ class CurrentConditionsPage extends React.Component {
     return (
       <Layout>
         <div className="bg-light-gray ">
-          <div className="mw9 tc center w-100 pa3 pa5-ns bg-light-gray">
+          <div className="mw9 tc-ns center w-100 pa3 pa5-ns bg-light-gray">
             <h1>Current Office Conditions</h1>
-            <p className="measure lh-copy center">
+            <p className="measure lh-copy center-ns">
               We have an environmental sensor set up in the office to track our
               working conditions. Data is updated every 10 minutes. We wrote
               about it {link}.

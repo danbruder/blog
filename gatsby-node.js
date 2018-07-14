@@ -38,7 +38,6 @@ exports.createPages = ({ graphql, actions }) => {
           }
         `
       ).then(result => {
-        console.log(result)
         if (result.errors) {
           reject(result.errors)
         }
@@ -46,7 +45,7 @@ exports.createPages = ({ graphql, actions }) => {
         // Create pages for each markdown file.
         result.data.allContentfulOurWork.edges.forEach(({ node }) => {
           createPage({
-            path: `work/${node.slug}`,
+            path: `projects/${node.slug}`,
             component: projectTemplate,
             context: {
               slug: node.slug,
