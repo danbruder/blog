@@ -13,9 +13,7 @@ const BioTeaser = ({ data }) => (
         sizes={get(data, 'avatar.sizes', {})}
       />
       <h1 className="f3 mb2">{get(data, 'name', '')}</h1>
-      <h2 className="f5 fw4 gray mt0">
-        {get(data, 'name', '') == 'Dave' ? 'Principal' : 'Engineer'}
-      </h2>
+      <h2 className="f5 fw4 gray mt0">{get(data, 'position', '')}</h2>
       <hr className="mw3 bb bw1 b--black-10" />
     </div>
     <p
@@ -24,6 +22,11 @@ const BioTeaser = ({ data }) => (
         __html: get(data, 'bio.childMarkdownRemark.html', ''),
       }}
     />
+    {get(data, 'name') == 'Dan' ? (
+      <div className=" lh-copy measure center f6 black-70 flex items-center">
+        <a href="https://twitter.com/danbruder">@danbruder</a>
+      </div>
+    ) : null}
   </article>
 )
 
@@ -207,6 +210,7 @@ export default IndexPage
 export const pageQuery = graphql`
   fragment AuthorFragment on ContentfulAuthor {
     name
+    position
     bio {
       childMarkdownRemark {
         html
