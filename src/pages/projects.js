@@ -7,10 +7,10 @@ import Layout from '../components/layout'
 
 const ProjectTeaser = ({ data }) => (
   <div className=" grow shadow-hover ma3 bg-white mw5">
-    <Link className="link black" to={`/work/${data.node.slug}`}>
+    <Link className="link black" to={`/projects/${data.node.slug}`}>
       <Img className=" br--top pa3" sizes={get(data, 'node.image.sizes', {})} />
       <div className="pa3">
-        <label className="tracked ttu gray fw2">Work</label>
+        <label className="tracked ttu gray fw2">Project</label>
         <h2 className="f4 ma0 tracked">{get(data, 'node.title', '')}</h2>
         <p>{get(data, 'node.teaser', '')}</p>
       </div>
