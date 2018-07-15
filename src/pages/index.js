@@ -16,12 +16,9 @@ const BioTeaser = ({ data }) => (
       <h2 className="f5 fw4 gray mt0">{get(data, 'position', '')}</h2>
       <hr className="mw3 bb bw1 b--black-10" />
     </div>
-    <p
-      className="lh-copy measure center f6 black-70"
-      dangerouslySetInnerHTML={{
-        __html: get(data, 'bio.childMarkdownRemark.html', ''),
-      }}
-    />
+    <p className="lh-copy measure center f6 black-70">
+      {get(data, 'bio.bio', '')}
+    </p>
     {get(data, 'name') == 'Dan' ? (
       <div className=" lh-copy measure center f6 black-70 flex items-center">
         <a href="https://twitter.com/danbruder">@danbruder</a>
@@ -212,6 +209,7 @@ export const pageQuery = graphql`
     name
     position
     bio {
+      bio
       childMarkdownRemark {
         html
       }
