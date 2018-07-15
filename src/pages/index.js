@@ -2,10 +2,6 @@ import React from 'react'
 import { graphql, Link } from 'gatsby'
 import Img from 'gatsby-image'
 import { get } from 'lodash'
-import hm from './img/hm.jpg'
-import cas from './img/cas.jpg'
-import car from './img/car.jpg'
-import kes from './img/kes.jpg'
 
 import Layout from '../components/layout'
 
@@ -164,18 +160,11 @@ const IndexPage = ({ data }) => (
       <div className="tc mw9 center w-100 pa5 ">
         <i className="f4 tc">- We have partnered with great people -</i>
         <div className="flex flex-wrap items-center justify-center pv5">
-          <div className="mw5 ma3 pa2 grow">
-            <img src={hm} />
-          </div>
-          <div className="mw5 ma3 pa2 grow">
-            <img src={cas} />
-          </div>
-          <div className="mw5 ma3 pa2 grow">
-            <img src={car} />
-          </div>
-          <div className="mw5 ma3 pa2 grow">
-            <img src={kes} />
-          </div>
+          {get(data, 'clients.edges', []).map((edge, key) => (
+            <div className="w5 h-auto mw5 ma3 pa2 grow">
+              <Img className="" sizes={get(edge, 'node.logo.sizes', {})} />
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -306,6 +295,18 @@ export const pageQuery = graphql`
     }
     alina: contentfulAuthor(name: { eq: "Alina" }) {
       ...AuthorFragment
+    }
+    clients: allContentfulClient(sort: { order: ASC, fields: [createdAt] }) {
+      edges {
+        node {
+          name
+          logo {
+            sizes(maxWidth: 200) {
+              ...GatsbyContentfulSizes_tracedSVG
+            }
+          }
+        }
+      }
     }
   }
 `
