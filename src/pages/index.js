@@ -50,13 +50,16 @@ const ServiceTeaser = ({ data, index }) => (
 
 const ProjectTeaser = ({ data }) => (
   <div className="ma3  grow shadow-hover bg-white w-100 mw5-ns">
-    <Link className="link black db" to={`/work/${get(data, 'node.slug', '')}`}>
+    <Link
+      className="link black db"
+      to={`/projects/${get(data, 'node.slug', '')}`}
+    >
       <Img
         className=" br--top pa3 dn db-ns"
         sizes={get(data, 'node.image.sizes', {})}
       />
       <div className="pa3">
-        <label className="tracked ttu gray fw2">Work</label>
+        <label className="tracked ttu gray fw2">Project</label>
         <h2 className="f4 ma0 tracked">{get(data, 'node.title', '')}</h2>
         <p>{get(data, 'node.teaser', '')}</p>
       </div>
@@ -110,7 +113,7 @@ const IndexPage = ({ data }) => (
         <div className="w-50-ns w-100 ma5 db center bg-white  grow shadow-hover ">
           <Link
             className="link black"
-            to={`/work/${get(data, 'featuredWork.edges[0].node.slug', '')}`}
+            to={`/projects/${get(data, 'featuredWork.edges[0].node.slug', '')}`}
           >
             <div className=" ">
               <Img
