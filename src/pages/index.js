@@ -117,16 +117,28 @@ const IndexPage = ({ data }) => (
       <div className="mw9 center w-100 pa3 pa5-ns bg-light-gray flex-ns items-center ">
         <div className="w-100 w-50-l pr3 w-100">
           <h1 className="mt0 f3 f1-l lh-title">
-            Custom Electronics Design and Development
+            {get(data, 'headline.headline', '')}
           </h1>
-          <h3 className="f5 f3-l fw2 ">
-            Reducing costs and expediting development. We empower companies with
-            custom electronics solutions.
-          </h3>
-          <p className=" ">
-            We offer no-risk engagements. We deliver or you don't pay.{' '}
-            <i>Seriously.</i>
-          </p>
+          <h3
+            className="f5 f3-l fw2 "
+            dangerouslySetInnerHTML={{
+              __html: get(
+                data,
+                'headline.subTitle.childMarkdownRemark.html',
+                ''
+              ),
+            }}
+          />
+          <p
+            className=" "
+            dangerouslySetInnerHTML={{
+              __html: get(
+                data,
+                'headline.subSubTitle.childMarkdownRemark.html',
+                ''
+              ),
+            }}
+          />
           <div className="pt4">
             <Link
               to="/services/"
@@ -371,6 +383,19 @@ export const pageQuery = graphql`
     }
     electron: contentfulAsset(title: { regex: "/client-electron/" }) {
       ...ClientFragment
+    }
+    headline: contentfulFrontPage {
+      headline
+      subTitle {
+        childMarkdownRemark {
+          html
+        }
+      }
+      subSubTitle {
+        childMarkdownRemark {
+          html
+        }
+      }
     }
   }
 `
