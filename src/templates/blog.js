@@ -14,7 +14,7 @@ const BlogPage = ({ data }) => (
     <div className="bg-light-gray">
       <div className="mw9 center w-100 pa5-ns ">
         <div className="cf pa3 pa0-ns">
-          <div className="fn fl-ns w-70-ns">
+          <div className="fn fl-l w-70-l">
             <i className="db mv3 gray">
               {get(data, 'blog.createdAt', '')} by{' '}
               {get(data, 'blog.author.name', '')}
@@ -26,15 +26,15 @@ const BlogPage = ({ data }) => (
               {get(data, 'blog.summary', '')}
             </h2>
             <div
-              className="blog-body f5 lh-copy  mt0-ns"
+              className="blog-body f5 lh-copy  mt0-l"
               dangerouslySetInnerHTML={{
                 __html: get(data, 'blog.body.childMarkdownRemark.html', ''),
               }}
             />
           </div>
-          <div className="fn fl-ns w-100 w-30-ns w-100-m pr4-ns mt4">
-            <div className="pa2 pa3-ns ml5-l mt0 pt0">
-              <div className="tl">
+          <div className="pa2 pa3-l measure  fn fl-l w-100 w-100 w-30-l w-100-m pr4-l mt4">
+            <div className=" ml5-l mt0 pt0">
+              <div className=" tl">
                 <Img
                   className="br-100 h3 w3 dib"
                   sizes={get(data, 'blog.author.avatar.sizes', {})}
@@ -45,7 +45,7 @@ const BlogPage = ({ data }) => (
                 <hr className=" bb bw1 b--black-10" />
               </div>
               <p
-                className="lh-copy measure center f6 black-70"
+                className="lh-copy  center f6 black-70"
                 dangerouslySetInnerHTML={{
                   __html: get(
                     data,
