@@ -226,13 +226,18 @@ const IndexPage = ({ data }) => (
     </div>
 
     <div className="bg-black-90 ">
-      <div className="mw9 center  white w-100 pa5 ">
+      <div className="mw9 center white w-100 pa5 ">
         <i className="f4 tracked ttu">Latest Blog Posts</i>
-        <div className="flex flex-wrap">
+        <div className="flex flex-column flex-row-l justify-center mt4">
           {get(data, 'blogs.edges', []).map((edge, key) => (
-            <div key={key} className="w-33-ns w-100 pa3">
-              <BlogTeaser className="w-100" data={edge} />
-            </div>
+            <BlogTeaser
+              key={key}
+              className={`w-100 mw6 ba b--white pa4  
+              ${key % 1 == 0 ? 'mr2-l mt2' : ''}
+              ${key % 2 == 0 ? 'mt2' : ''}
+              ${key % 3 == 0 ? 'ml2-l mt2' : ''} `}
+              data={edge}
+            />
           ))}
         </div>
       </div>

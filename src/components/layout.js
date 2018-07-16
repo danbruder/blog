@@ -1,6 +1,8 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { StaticQuery, graphql } from 'gatsby'
+import Helmet from 'react-helmet'
+import favicon from './favicon.ico'
 
 import Header from './header'
 import Footer from './footer'
@@ -21,6 +23,7 @@ const Layout = ({ children, data }) => (
     `}
     render={data => (
       <>
+        <Helmet link={[{ rel: 'shortcut icon', href: `${favicon}` }]} />
         <Header siteTitle={data.site.siteMetadata.title} />
         <div className="">{children}</div>
         <Footer />
