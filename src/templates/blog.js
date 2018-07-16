@@ -11,48 +11,50 @@ const BlogPage = ({ data }) => (
       title={get(data, 'blog.title', null)}
       url={`/blog/${get(data, 'blog.slug', '')}`}
     />
-    <div className="mw9 center w-100 pa5-ns bg-light-gray">
-      <div className="cf pa3 pa0-ns">
-        <div className="fn fl-ns w-70-ns">
-          <i className="db mv3 gray">
-            {get(data, 'blog.createdAt', '')} by{' '}
-            {get(data, 'blog.author.name', '')}
-          </i>
-          <h1 className="f2 lh-title fw9 mb3 mt0 pt3 bt bw1">
-            {get(data, 'blog.title', '')}
-          </h1>
-          <h2 className="f3 mid-gray lh-title">
-            {get(data, 'blog.summary', '')}
-          </h2>
-          <div
-            className="blog-body f5 lh-copy  mt0-ns"
-            dangerouslySetInnerHTML={{
-              __html: get(data, 'blog.body.childMarkdownRemark.html', ''),
-            }}
-          />
-        </div>
-        <div className="fn fl-ns w-100 w-30-ns w-100-m pr4-ns mt4">
-          <div className="pa2 pa3-ns ml5-l mt0 pt0">
-            <div className="tl">
-              <Img
-                className="br-100 h3 w3 dib"
-                sizes={get(data, 'blog.author.avatar.sizes', {})}
-              />
-              <h1 className="f5 gray i fw3">
-                By: {get(data, 'blog.author.name', '')}
-              </h1>
-              <hr className=" bb bw1 b--black-10" />
-            </div>
-            <p
-              className="lh-copy measure center f6 black-70"
+    <div className="bg-light-gray">
+      <div className="mw9 center w-100 pa5-ns ">
+        <div className="cf pa3 pa0-ns">
+          <div className="fn fl-ns w-70-ns">
+            <i className="db mv3 gray">
+              {get(data, 'blog.createdAt', '')} by{' '}
+              {get(data, 'blog.author.name', '')}
+            </i>
+            <h1 className="f2 lh-title fw9 mb3 mt0 pt3 bt bw1">
+              {get(data, 'blog.title', '')}
+            </h1>
+            <h2 className="f3 mid-gray lh-title">
+              {get(data, 'blog.summary', '')}
+            </h2>
+            <div
+              className="blog-body f5 lh-copy  mt0-ns"
               dangerouslySetInnerHTML={{
-                __html: get(
-                  data,
-                  'blog.author.bio.childMarkdownRemark.html',
-                  ''
-                ),
+                __html: get(data, 'blog.body.childMarkdownRemark.html', ''),
               }}
             />
+          </div>
+          <div className="fn fl-ns w-100 w-30-ns w-100-m pr4-ns mt4">
+            <div className="pa2 pa3-ns ml5-l mt0 pt0">
+              <div className="tl">
+                <Img
+                  className="br-100 h3 w3 dib"
+                  sizes={get(data, 'blog.author.avatar.sizes', {})}
+                />
+                <h1 className="f5 gray i fw3">
+                  By: {get(data, 'blog.author.name', '')}
+                </h1>
+                <hr className=" bb bw1 b--black-10" />
+              </div>
+              <p
+                className="lh-copy measure center f6 black-70"
+                dangerouslySetInnerHTML={{
+                  __html: get(
+                    data,
+                    'blog.author.bio.childMarkdownRemark.html',
+                    ''
+                  ),
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>

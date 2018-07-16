@@ -8,9 +8,9 @@ import Meta from '../components/meta'
 import Layout from '../components/layout'
 
 const BlogTeaser = ({ data }) => (
-  <div className="bt w-100 cf b--black-90 w-100 ">
-    <Link className=" db  w-100 fr link black " to={`/blog/${data.node.slug}`}>
-      <div className="pv4 measure fl">
+  <div className=" w-33-l     ">
+    <Link className="black link pr3 db" to={`/blog/${data.node.slug}`}>
+      <div className="pv4 measure bt b--black-90  ">
         <h2 className="f3 ma0 ">{get(data, 'node.title', '')}</h2>
         <p className="mt1 lh-copy">{get(data, 'node.summary', '')}</p>
         <div className="flex items-center pt0">
@@ -41,7 +41,7 @@ const BlogPage = ({ data }) => (
         <h2 className="f4 i  fw3 ">
           We write here as we encounter and solve technical challenges.
         </h2>
-        <div className="">
+        <div className="flex flex-wrap">
           {get(data, 'blogs.edges', []).map((edge, key) => (
             <BlogTeaser key={key} data={edge} />
           ))}

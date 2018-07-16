@@ -5,8 +5,8 @@ import Headroom from 'react-headroom'
 
 const Header = ({ siteTitle }) => (
   <Headroom>
-    <div className="w-100 pa3 ph5-ns bg-white">
-      <div className="db dt-ns mw9 center w-100">
+    <div className="w-100 pa3 mw9 ph5 center bg-white">
+      <div className="db dt-ns   w-100">
         <div className="db dtc-ns v-mid tl w-50">
           <div className="flex items-center">
             <img className="h2 w2" src={logo} />

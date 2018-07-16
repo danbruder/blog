@@ -33,7 +33,7 @@ const BioSocialLinks = ({ data }) => {
 }
 
 const BioTeaser = ({ data, className }) => (
-  <article className={`w-100 mw6 bg-white pa4 ba b--black-10 ${className}`}>
+  <article className={` w-100 mw6 bg-white pa4 ba b--black-10 ${className}`}>
     <div className="tc">
       <Img
         className="br-100 h4 w4 dib ba b--black-05 pa2"
@@ -41,12 +41,14 @@ const BioTeaser = ({ data, className }) => (
       />
       <h1 className="f3 mb2">{get(data, 'name', '')}</h1>
       <h2 className="f5 fw4 gray mt0">{get(data, 'position', '')}</h2>
-      <hr className="mw3 bb bw1 b--black-10" />
+      <hr className=" bb bw1 b--black-10" />
     </div>
     <p className="lh-copy measure center pb0 mb0 f6 black-70">
       {get(data, 'bio.bio', '')}
     </p>
-    <BioSocialLinks data={data} />
+    <div className="">
+      <BioSocialLinks data={data} />
+    </div>
   </article>
 )
 
@@ -111,11 +113,11 @@ const IndexPage = ({ data }) => (
     <Meta description="Custom Electronics Design and Development" />
     <div className="bg-light-gray ">
       <div className="mw9 center w-100 pa3 pa5-ns bg-light-gray flex-ns items-center ">
-        <div className="w-50-ns pr3 w-100">
-          <h1 className="mt0 f2 f1-ns lh-title">
+        <div className="w-100 w-50-l pr3 w-100">
+          <h1 className="mt0 f3 f1-l lh-title">
             Custom Electronics Design and Development
           </h1>
-          <h3 className="f3 fw2 ">
+          <h3 className="f5 f3-l fw2 ">
             Reducing costs and expediting development. We empower companies with
             custom electronics solutions.
           </h3>
@@ -124,13 +126,16 @@ const IndexPage = ({ data }) => (
             <i>Seriously.</i>
           </p>
           <div className="pt4">
-            <Link to="/services/" className="primary link ba bw1 pa3 ph4">
+            <Link
+              to="/services/"
+              className="primary link ba bw1 pa2 pa3-l ph3 ph4-l"
+            >
               See our Services
             </Link>
           </div>
         </div>
 
-        <div className="w-50-ns w-100 ma5 db center bg-white  grow shadow-hover ">
+        <div className=" w-100 w-50-l ma5 db center bg-white  grow shadow-hover ">
           <Link
             className="link black"
             to={`/projects/${get(data, 'featuredWork.edges[0].node.slug', '')}`}
@@ -184,11 +189,24 @@ const IndexPage = ({ data }) => (
       <div className="tc mw9 center w-100 pa5 ">
         <i className="f4 tc">- We have partnered with great people -</i>
         <div className="flex flex-wrap items-center justify-center pv5">
-          {get(data, 'clients.edges', []).map((edge, key) => (
-            <div key={key} className="w5 h-auto mw5 ma3 pa2 grow">
-              <Img className="" sizes={get(edge, 'node.logo.sizes', {})} />
-            </div>
-          ))}
+          <div className="w5 h-auto mw5 ma4 pa2 grow">
+            <Img className="" sizes={get(data, 'hm.sizes', {})} />
+          </div>
+          <div className="w5 h-auto mw5 ma4 pa2 grow">
+            <Img className="" sizes={get(data, 'casco.sizes', {})} />
+          </div>
+          <div className="w5 h-auto mw5 ma4 pa2 grow">
+            <Img className="" sizes={get(data, 'kessler.sizes', {})} />
+          </div>
+          <div className="w4 h-auto mw5 ma4 pa2 grow">
+            <Img className="" sizes={get(data, 'electron.sizes', {})} />
+          </div>
+          <div className="mw6 w-100 h-auto mw5 ma4 pa2 grow">
+            <Img className="" sizes={get(data, 'carter.sizes', {})} />
+          </div>
+          <div className="w5 h-auto mw4 ma4 pa2 grow">
+            <Img className="" sizes={get(data, 'soundoff.sizes', {})} />
+          </div>
         </div>
       </div>
     </div>
@@ -206,7 +224,7 @@ const IndexPage = ({ data }) => (
     </div>
 
     <div className="bg-black-90 ">
-      <div className="mw9 center bg-black-90 white w-100 pa5 ">
+      <div className="mw9 center  white w-100 pa5 ">
         <i className="f4 tracked ttu">Latest Blog Posts</i>
         <div className="flex flex-wrap">
           {get(data, 'blogs.edges', []).map((edge, key) => (
@@ -244,6 +262,12 @@ export const pageQuery = graphql`
       sizes {
         src
       }
+    }
+  }
+
+  fragment ClientFragment on ContentfulAsset {
+    sizes(maxWidth: 1200) {
+      ...GatsbyContentfulSizes_tracedSVG
     }
   }
 
@@ -323,17 +347,23 @@ export const pageQuery = graphql`
     alina: contentfulAuthor(name: { eq: "Alina" }) {
       ...AuthorFragment
     }
-    clients: allContentfulClient(sort: { order: ASC, fields: [createdAt] }) {
-      edges {
-        node {
-          name
-          logo {
-            sizes(maxWidth: 200) {
-              ...GatsbyContentfulSizes_tracedSVG
-            }
-          }
-        }
-      }
+    hm: contentfulAsset(title: { regex: "/client-herman-miller/" }) {
+      ...ClientFragment
+    }
+    carter: contentfulAsset(title: { regex: "/client-carter/" }) {
+      ...ClientFragment
+    }
+    casco: contentfulAsset(title: { regex: "/client-casco/" }) {
+      ...ClientFragment
+    }
+    kessler: contentfulAsset(title: { regex: "/client-kessler/" }) {
+      ...ClientFragment
+    }
+    soundoff: contentfulAsset(title: { regex: "/client-soundoff-signal/" }) {
+      ...ClientFragment
+    }
+    electron: contentfulAsset(title: { regex: "/client-electron/" }) {
+      ...ClientFragment
     }
   }
 `
