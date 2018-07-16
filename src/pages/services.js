@@ -1,6 +1,5 @@
 import React from 'react'
 import { graphql } from 'gatsby'
-import Img from 'gatsby-image'
 import { get } from 'lodash'
 import { Link } from 'gatsby'
 import Meta from '../components/meta'

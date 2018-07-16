@@ -13,6 +13,15 @@ html {
   color: #01a982;
 }
 
+.hover-green {
+  transition: color 0.2s ease-in-out;
+}
+
+.icon-wrap {
+  width: 24px;
+  height: 24px;
+}
+
 a {
   color: #01a982;
 }

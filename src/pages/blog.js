@@ -4,7 +4,6 @@ import Img from 'gatsby-image'
 import { get } from 'lodash'
 import { Link } from 'gatsby'
 import Meta from '../components/meta'
-import Helmet from 'react-helmet'
 
 import Layout from '../components/layout'
 

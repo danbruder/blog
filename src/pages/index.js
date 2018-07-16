@@ -2,12 +2,38 @@ import React from 'react'
 import { graphql, Link } from 'gatsby'
 import Img from 'gatsby-image'
 import { get } from 'lodash'
+import { Twitter, Linkedin } from 'react-feather'
 
 import Layout from '../components/layout'
 import Meta from '../components/meta'
 
-const BioTeaser = ({ data }) => (
-  <article className="w-33-ns center bg-white  pa3 pa4-ns ma3 ba b--black-10">
+const BioSocialLinks = ({ data }) => {
+  const items = [
+    {
+      url: `https://twitter.com/${get(data, 'twitter', '')}`,
+      hasVal: get(data, 'twitter', false),
+      component: <Twitter />,
+    },
+    {
+      url: `https://linkedin.com/in/${get(data, 'linkedin', '')}`,
+      hasVal: get(data, 'linkedin', false),
+      component: <Linkedin />,
+    },
+  ]
+  const getItems = () =>
+    items.filter(i => i.hasVal).map((i, key) => (
+      <div key={key} className="">
+        <a className="icon-wrap pr3 pt3 black hover-green" href={i.url}>
+          {i.component}
+        </a>
+      </div>
+    ))
+
+  return <div className="pt3 justify-start flex">{getItems()}</div>
+}
+
+const BioTeaser = ({ data, className }) => (
+  <article className={`w-100 mw6 bg-white pa4 ba b--black-10 ${className}`}>
     <div className="tc">
       <Img
         className="br-100 h4 w4 dib ba b--black-05 pa2"
@@ -17,14 +43,10 @@ const BioTeaser = ({ data }) => (
       <h2 className="f5 fw4 gray mt0">{get(data, 'position', '')}</h2>
       <hr className="mw3 bb bw1 b--black-10" />
     </div>
-    <p className="lh-copy measure center f6 black-70">
+    <p className="lh-copy measure center pb0 mb0 f6 black-70">
       {get(data, 'bio.bio', '')}
+      <BioSocialLinks data={data} />
     </p>
-    {get(data, 'name') == 'Dan' ? (
-      <div className=" lh-copy measure center f6 black-70 flex items-center">
-        <a href="https://twitter.com/danbruder">@danbruder</a>
-      </div>
-    ) : null}
   </article>
 )
 
@@ -163,7 +185,7 @@ const IndexPage = ({ data }) => (
         <i className="f4 tc">- We have partnered with great people -</i>
         <div className="flex flex-wrap items-center justify-center pv5">
           {get(data, 'clients.edges', []).map((edge, key) => (
-            <div className="w5 h-auto mw5 ma3 pa2 grow">
+            <div key={key} className="w5 h-auto mw5 ma3 pa2 grow">
               <Img className="" sizes={get(edge, 'node.logo.sizes', {})} />
             </div>
           ))}
@@ -172,13 +194,13 @@ const IndexPage = ({ data }) => (
     </div>
 
     <div className="bg-light-gray">
-      <div className="mw9 center w-100 pa5 bg-light-gray">
+      <div className="mw9 center w-100 pa3 pa5-ns bg-light-gray">
         <h1>The Team</h1>
 
-        <div className="mw9 flex-ns justify-around items-center">
-          <BioTeaser className="w-100" data={get(data, 'alina', {})} />
-          <BioTeaser className="w-100" data={get(data, 'dave', {})} />
-          <BioTeaser className="w-100" data={get(data, 'dan', {})} />
+        <div className="mw9 flex flex-column flex-row-l justify-center">
+          <BioTeaser className="mr2-l mt2" data={get(data, 'alina', {})} />
+          <BioTeaser className="mt2" data={get(data, 'dave', {})} />
+          <BioTeaser className="ml2-l mt2" data={get(data, 'dan', {})} />
         </div>
       </div>
     </div>
@@ -217,6 +239,7 @@ export const pageQuery = graphql`
       }
     }
     twitter
+    linkedin
     avatar {
       sizes {
         src

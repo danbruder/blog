@@ -1,6 +1,5 @@
 import React from 'react'
 import MetaTags from 'react-meta-tags'
-import moment from 'moment'
 
 export default props => {
   const defaultTitle = `DEB Associates`

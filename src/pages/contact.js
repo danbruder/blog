@@ -1,5 +1,4 @@
 import React from 'react'
-import { Link } from 'gatsby'
 import Layout from '../components/layout'
 import Meta from '../components/meta'
 
@@ -46,7 +45,10 @@ class Contact extends React.Component {
                 <p className="lh-copy mt0 measure">
                   Send us an email at info@debassociates.com We're nice people.
                   We care about what we do and about our clients' success. If
-                  nothing else, just leave us a wave. 👋
+                  nothing else, just leave us a wave.{' '}
+                  <span role="img" aria-label="Wave">
+                    👋
+                  </span>
                 </p>
               </div>
             </div>
