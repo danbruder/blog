@@ -45,8 +45,8 @@ const BioTeaser = ({ data, className }) => (
     </div>
     <p className="lh-copy measure center pb0 mb0 f6 black-70">
       {get(data, 'bio.bio', '')}
-      <BioSocialLinks data={data} />
     </p>
+    <BioSocialLinks data={data} />
   </article>
 )
 
