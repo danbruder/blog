@@ -70,21 +70,23 @@ const ServiceTeaser = ({ data, index }) => (
 )
 
 const ProjectTeaser = ({ data }) => (
-  <div className="ma3  grow shadow-hover bg-white w-100 mw5-ns">
-    <Link
-      className="link black db"
-      to={`/projects/${get(data, 'node.slug', '')}`}
-    >
-      <Img
-        className=" br--top pa3 dn db-ns"
-        sizes={get(data, 'node.image.sizes', {})}
-      />
-      <div className="pa3">
-        <label className="tracked ttu gray fw2">Project</label>
-        <h2 className="f4 ma0 tracked">{get(data, 'node.title', '')}</h2>
-        <p>{get(data, 'node.teaser', '')}</p>
-      </div>
-    </Link>
+  <div className="pa3 w-100 w-50-ns w-33-l">
+    <div className="grow shadow-hover bg-white ">
+      <Link
+        className="link black db"
+        to={`/projects/${get(data, 'node.slug', '')}`}
+      >
+        <Img
+          className=" br--top pa3 w-100 h4"
+          sizes={get(data, 'node.image.sizes', {})}
+        />
+        <div className="pa3">
+          <label className="tracked ttu gray fw2">Project</label>
+          <h2 className="f4 ma0 tracked">{get(data, 'node.title', '')}</h2>
+          <p>{get(data, 'node.teaser', '')}</p>
+        </div>
+      </Link>
+    </div>
   </div>
 )
 
@@ -290,7 +292,7 @@ export const pageQuery = graphql`
       }
     }
     projects: allContentfulOurWork(
-      limit: 4
+      limit: 3
       sort: { order: ASC, fields: [weight] }
     ) {
       edges {
@@ -317,7 +319,7 @@ export const pageQuery = graphql`
       }
     }
     blogs: allContentfulPost(
-      limit: 6
+      limit: 3
       sort: { order: DESC, fields: [createdAt] }
     ) {
       edges {
