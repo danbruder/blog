@@ -3,11 +3,13 @@ import { graphql } from 'gatsby'
 import Img from 'gatsby-image'
 import { get } from 'lodash'
 import { Link } from 'gatsby'
+import Meta from '../components/meta'
+import Helmet from 'react-helmet'
 
 import Layout from '../components/layout'
 
 const BlogTeaser = ({ data }) => (
-  <div className="bt w-50-l cf b--black-90 w-100 ">
+  <div className="bt w-100 cf b--black-90 w-100 ">
     <Link className=" db  w-100 fr link black " to={`/blog/${data.node.slug}`}>
       <div className="pv4 measure fl">
         <h2 className="f3 ma0 ">{get(data, 'node.title', '')}</h2>
@@ -29,6 +31,11 @@ const BlogTeaser = ({ data }) => (
 
 const BlogPage = ({ data }) => (
   <Layout>
+    <Meta
+      title="Blog"
+      description="We write here as we encounter and solve technical challenges."
+      url="blog"
+    />
     <div className="bg-light-gray">
       <div className="mw9 center w-100 pa3 pa5-ns bg-light-gray">
         <h1 className="f2 lh-title ">Blog</h1>

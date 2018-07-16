@@ -4,6 +4,7 @@ import Img from 'gatsby-image'
 import { get } from 'lodash'
 
 import Layout from '../components/layout'
+import Meta from '../components/meta'
 
 const BioTeaser = ({ data }) => (
   <article className="w-33-ns center bg-white  pa3 pa4-ns ma3 ba b--black-10">
@@ -85,6 +86,7 @@ const BlogTeaser = ({ data, className }) => (
 
 const IndexPage = ({ data }) => (
   <Layout>
+    <Meta description="Custom Electronics Design and Development" />
     <div className="bg-light-gray ">
       <div className="mw9 center w-100 pa3 pa5-ns bg-light-gray flex-ns items-center ">
         <div className="w-50-ns pr3 w-100">
@@ -92,7 +94,7 @@ const IndexPage = ({ data }) => (
             Custom Electronics Design and Development
           </h1>
           <h3 className="f3 fw2 ">
-            Reducing costs and expiditing development. We empower companies with
+            Reducing costs and expediting development. We empower companies with
             custom electronics solutions.
           </h3>
           <p className=" ">

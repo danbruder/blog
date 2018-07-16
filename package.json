@@ -6,6 +6,7 @@
   "dependencies": {
     "gatsby": "next",
     "gatsby-image": "^1.0.54",
+    "gatsby-plugin-favicon": "^2.1.1",
     "gatsby-plugin-google-analytics": "^1.0.31",
     "gatsby-plugin-google-fonts": "^0.0.4",
     "gatsby-plugin-react-helmet": "next",
@@ -24,6 +25,7 @@
     "react-feather": "^1.1.1",
     "react-headroom": "^2.2.2",
     "react-helmet": "^5.2.0",
+    "react-meta-tags": "^0.4.1",
     "recharts": "^1.0.1",
     "tachyons": "4.10.0"
   },

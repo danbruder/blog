@@ -4,6 +4,7 @@ import Img from 'gatsby-image'
 import { get } from 'lodash'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
+import Meta from '../components/meta'
 
 const ProjectTeaser = ({ data }) => (
   <div className=" grow shadow-hover ma3 bg-white mw5">
@@ -20,6 +21,7 @@ const ProjectTeaser = ({ data }) => (
 
 const ProjectPage = ({ data }) => (
   <Layout>
+    <Meta title="Projects" url="projects" />
     <div className="bg-light-gray">
       <div className="mw9 center w-100 pa5 bg-light-gray">
         <h1 className="f1 lh-title tc">Recent Projects</h1>

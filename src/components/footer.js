@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'gatsby'
+import moment from 'moment'
 
 const Footer = () => (
   <div className=" mw9 center">
@@ -94,14 +95,14 @@ const Footer = () => (
         <p className="lh-copy">
           DEB Associates helps companies through the entire electronics design
           process. Our team is smart, reliable, and deeply knowlegeable about
-          the intricicies of circuit design, PCB layout, and EMC.
+          the intricacies of circuit design, PCB layout, and EMC.
         </p>
       </div>
     </div>
     <div className="mw9 center w-100 pa5 ">
       <hr />
       <small>DEB Associates</small>
-      <small> 2018</small>
+      <small>{moment().format('YYYY')}</small>
     </div>
   </div>
 )

@@ -3,9 +3,14 @@ import Img from 'gatsby-image'
 import { get } from 'lodash'
 
 import Layout from '../components/layout'
+import Meta from '../components/meta'
 
 const ServicePage = ({ data }) => (
   <Layout>
+    <Meta
+      title={get(data, 'service.title', null)}
+      url={`/services/${get(data, 'service.slug', '')}`}
+    />
     <div className="w-100 h5">
       <Img className="w-100 h5" sizes={get(data, 'service.image.sizes', {})} />
     </div>

@@ -3,9 +3,15 @@ import Img from 'gatsby-image'
 import { get } from 'lodash'
 
 import Layout from '../components/layout'
+import Meta from '../components/meta'
 
 const ProjectPage = ({ data }) => (
   <Layout>
+    <Meta
+      title={get(data, 'project.title', null)}
+      url={`/projects/${get(data, 'project.slug', '')}`}
+      description={get(data, 'project.summary', '')}
+    />
     <div className="w-100 h5">
       <Img className="w-100 h5" sizes={get(data, 'project.image.sizes', {})} />
     </div>

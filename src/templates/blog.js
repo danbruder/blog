@@ -4,8 +4,13 @@ import { get } from 'lodash'
 
 import Layout from '../components/layout'
 
+import Meta from '../components/meta'
 const BlogPage = ({ data }) => (
   <Layout>
+    <Meta
+      title={get(data, 'blog.title', null)}
+      url={`/blog/${get(data, 'blog.slug', '')}`}
+    />
     <div className="mw9 center w-100 pa5-ns bg-light-gray">
       <div className="cf pa3 pa0-ns">
         <div className="fn fl-ns w-70-ns">

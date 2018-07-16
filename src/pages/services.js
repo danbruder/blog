@@ -3,6 +3,7 @@ import { graphql } from 'gatsby'
 import Img from 'gatsby-image'
 import { get } from 'lodash'
 import { Link } from 'gatsby'
+import Meta from '../components/meta'
 
 import Layout from '../components/layout'
 
@@ -25,6 +26,7 @@ const ServiceTeaser = ({ data, index }) => (
 
 const ServicePage = ({ data }) => (
   <Layout>
+    <Meta title="Services" url="services" />
     <div className="bg-light-gray">
       <div className="mw9 center w-100 pa3 cf pa5-ns bg-light-gray">
         <h1>Services</h1>
