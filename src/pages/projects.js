@@ -24,8 +24,8 @@ const ProjectPage = ({ data }) => (
     <Meta title="Projects" url="projects" />
     <div className="bg-light-gray">
       <div className="mw9 center w-100 pa3 pa5-ns bg-light-gray">
-        <h1 className="f1 lh-title tc">Recent Projects</h1>
-        <h2 className="f3 fw3 tc pb5">
+        <h1 className="f2 f1-ns lh-title tc">Recent Projects</h1>
+        <h2 className="f4 f3-ns fw3 tc pb5-ns">
           A collection of recent projects and practice areas
         </h2>
         <div className="flex flex-wrap justify-center">
