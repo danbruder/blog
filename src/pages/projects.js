@@ -7,7 +7,7 @@ import Layout from '../components/layout'
 import Meta from '../components/meta'
 
 const ProjectTeaser = ({ data }) => (
-  <div className=" grow shadow-hover ma3 bg-white mw5">
+  <div className=" grow shadow-hover ma3 bg-white mw5-ns">
     <Link className="link black" to={`/projects/${data.node.slug}`}>
       <Img className=" br--top pa3" sizes={get(data, 'node.image.sizes', {})} />
       <div className="pa3">
@@ -23,7 +23,7 @@ const ProjectPage = ({ data }) => (
   <Layout>
     <Meta title="Projects" url="projects" />
     <div className="bg-light-gray">
-      <div className="mw9 center w-100 pa5 bg-light-gray">
+      <div className="mw9 center w-100 pa3 pa5-ns bg-light-gray">
         <h1 className="f1 lh-title tc">Recent Projects</h1>
         <h2 className="f3 fw3 tc pb5">
           A collection of recent projects and practice areas
