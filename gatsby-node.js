@@ -1,61 +1,65 @@
-// Implement the Gatsby API “createPages”. This is called once the
-// data layer is bootstrapped to let plugins create pages from data.
+var config = require('./src/config')
+var _ = require('lodash')
 
 var path = require('path')
+const PAGE_LIMIT = 10
+
 exports.createPages = ({ graphql, actions }) => {
   const { createPage } = actions
-  const projectTemplate = path.resolve(`src/templates/project.js`)
-  const serviceTemplate = path.resolve(`src/templates/service.js`)
+  //const projectTemplate = path.resolve(`src/templates/project.js`)
+  //const serviceTemplate = path.resolve(`src/templates/service.js`)
   const blogTemplate = path.resolve(`src/templates/blog.js`)
+  const blogListTemplate = path.resolve(`src/templates/blogList.js`)
 
   return new Promise((resolve, reject) => {
     // Query for markdown nodes to use in creating pages.
     resolve(
       graphql(
         `
-          query {
-            allContentfulOurWork(limit: 1000) {
-              edges {
-                node {
-                  slug
-                }
-              }
-            }
-            allContentfulPost(limit: 1000) {
-              edges {
-                node {
-                  slug
-                }
-              }
-            }
-            allContentfulSpecialty(limit: 1000) {
-              edges {
-                node {
-                  slug
-                }
+        query { 
+          categories: allContentfulCategory{
+            edges{
+              node{
+                title
               }
             }
           }
+          posts: allContentfulPost(sort: {order: DESC, fields: [date]}){
+            edges{
+              node{
+                slug
+              }
+            }
+          }
+        }
         `
       ).then(result => {
         if (result.errors) {
           reject(result.errors)
         }
 
-        // Create pages for each markdown file.
-        result.data.allContentfulOurWork.edges.forEach(({ node }) => {
+        let chunks = _.chunk(result.data.posts.edges, PAGE_LIMIT)
+
+        chunks.forEach((chunk, index) => {
+          if (index == 0) return;
+
           createPage({
-            path: `projects/${node.slug}`,
-            component: projectTemplate,
+            path: `blog/page/${index}`,
+            component: blogListTemplate,
             context: {
-              slug: node.slug,
+              skip: PAGE_LIMIT * index, 
+              limit: PAGE_LIMIT,
+              hasNextPage: index != chunks.length - 1,
+                nextPageLink: `/blog/page/${index + 1}`
             },
           })
         })
 
-        result.data.allContentfulPost.edges.forEach(({ node }) => {
+        // Create a blog page
+        result.data.posts.edges.forEach(({ node }) => {
+          // loop over split pages
           createPage({
-            path: `blog/${node.slug}`,
+            path: `${config.blogRootPath}/${node.slug}`,
             component: blogTemplate,
             context: {
               slug: node.slug,
@@ -63,15 +67,17 @@ exports.createPages = ({ graphql, actions }) => {
           })
         })
 
-        result.data.allContentfulSpecialty.edges.forEach(({ node }) => {
-          createPage({
-            path: `services/${node.slug}`,
-            component: serviceTemplate,
-            context: {
-              slug: node.slug,
-            },
-          })
-        })
+        // Categories
+        //result.data.categories.edges.forEach(({ node }) => {
+          //// loop over split pages
+          //createPage({
+            //path: `${config.categoryRootPath}/${node.slug}`,
+            //component: blogTemplate,
+            //context: {
+              //slug: node.slug,
+            //},
+          //})
+        //})
       })
     )
   })

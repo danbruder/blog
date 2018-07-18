@@ -1,0 +1,3 @@
+module.exports = {
+  blogRootPath: `/blog`
+}

@@ -1,14 +1,14 @@
 module.exports = {
   siteMetadata: {
-    title: 'DEB Associates',
-    siteUrl: `https://debassociates.com`,
+    title: 'Simple',
+    siteUrl: `https://danbruder.com`,
   },
   plugins: [
     {
       resolve: `gatsby-source-contentful`,
       options: {
-        spaceId: `6d2kjfv47hcs`,
-        accessToken: `dd274fe947669d0fb05fa8038b81b1c2db70930a6896cb7d9553d0f1eefb91f3`,
+        spaceId: `mkfpbp2zqk3q`,
+        accessToken: `df085b3e2af8879d4f0bf71afa89fb090fbc1620389f2d612a8d98b635cdd34d`,
       },
     },
     {
@@ -31,7 +31,7 @@ module.exports = {
     {
       resolve: `gatsby-plugin-google-analytics`,
       options: {
-        trackingId: 'UA-68629017-1',
+        trackingId: '',
         anonymize: false,
       },
     },
