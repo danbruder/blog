@@ -52,8 +52,10 @@ a {
   background-color: white;
   border: 1px solid #eee;
   margin: 0.5em 0;
+  border-radius: 0.3em;
   padding: 1em;
   overflow: auto;
+  box-shadow: 0 2px 4px 0 rgba(14, 30, 37, 0.12);
 }
 .gatsby-highlight pre[class*='language-'] {
   background-color: transparent;
