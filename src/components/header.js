@@ -14,12 +14,12 @@ const Header = ({ siteTitle }) => (
           </div>
         </div>
         <div className="db dtc-ns v-mid w-100 tl tr-ns mt2 mt0-ns">
-          <Link
+          { false && <Link
             to="/blog"
             className="f6 fw6 hover-green link black-70 mr2 mr3-m mr4-l dib"
           >
             Blog
-          </Link>
+          </Link>}
         </div>
       </div>
     </div>
