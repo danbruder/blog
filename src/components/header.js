@@ -6,7 +6,7 @@ import myface from './myface.jpeg'
 const Header = ({ siteTitle }) => (
   <Headroom>
     <div className="w-100 bg-white">
-      <div className="pa3 mw7 ph5-ns center ">
+      <div className="pa3 mw7 ph5-l center ">
         <div className="db dt-l   w-100">
           <div className="db dtc-l v-mid tl w-50">
             <div className="flex items-center">
