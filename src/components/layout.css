@@ -70,3 +70,7 @@ pre[class*='language-'],
   font-family: 'IBM Plex Mono', monospace !important;
   font-size: 14px;
 }
+:not(pre) > code[class*='language-'],
+pre[class*='language-'] {
+  background: none;
+}
