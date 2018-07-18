@@ -8,18 +8,19 @@ import Layout from '../components/layout'
 import BlogTeaser from '../components/BlogTeaser'
 import AuthorTeaser from '../components/AuthorTeaser'
 
-const BlogListPage = ({ data, pageContext: { hasNextPage, nextPageLink } }) => (
+const BlogListPage = ({ data, pageContext }) => (
   <Layout>
     <div className="bg-gray-light ">
       <div className="mw7 center w-100 pa3 pv4-ns pa5-l ">
         {get(data, 'posts.edges', []).map((edge, key) => (
           <BlogTeaser data={edge} key={key} />
         ))}
-        {hasNextPage && (
-          <Link class="flex items-center" to={nextPageLink}>
-            <small>Next page</small>
-          </Link>
-        )}
+        {pageContext &&
+          pageContext.hasNextPage && (
+            <Link class="flex items-center" to={pageContext.nextPageLink}>
+              <small>Next page</small>
+            </Link>
+          )}
       </div>
     </div>
   </Layout>
