@@ -10,7 +10,7 @@ import { Calendar, Clock } from 'react-feather'
 const BlogPage = ({ data }) => (
   <Layout>
     <div className="bg-light-gray">
-      <div className="mw7 center w-100 pa3 pa5-ns ">
+      <div className="mw7 center w-100 pa3 pv4-ns ph5-ns ">
         <span className="fw5 ttu primary pr2">
           {get(data, 'blog.category.title', '')}
         </span>
