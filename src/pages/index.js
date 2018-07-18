@@ -2,21 +2,36 @@ import React from 'react'
 import { graphql, Link } from 'gatsby'
 import Img from 'gatsby-image'
 import { get } from 'lodash'
-import {blogRootPath} from '../config'
+import { blogRootPath } from '../config'
 
 import Layout from '../components/layout'
 import BlogTeaser from '../components/BlogTeaser'
-import AuthorTeaser from '../components/AuthorTeaser'
 
 const IndexPage = ({ data }) => (
   <Layout>
-    <div className="bg-light-gray ">
-      <div className="mw9 center w-100 pa3 pa5-ns bg-light-gray flex">
-        <div className="w-30">
-          <AuthorTeaser data={get(data, 'author', {})}/>
+    <div className="bg-light-gray  ">
+      <div className="mw7 pa3 pa5-l center pv3 pv4-l bg-light-gray ">
+        <div className="mb5">
+          <h1>Hi, I'm Dan</h1>
+          <h2 className=" fw3 lh-copy">
+            I’m a software developer that builds web applications that are easy
+            to use, robust, and secure.
+          </h2>
+          <p className="f5 pb3">
+            My primary tools are Elixir/Phoenix and ReactJS.
+          </p>
+          <a
+            className="dib link bg-green white ph4 b  fw4 pv2"
+            href="mailto:hello@danbruder.com"
+          >
+            Contact me
+          </a>
         </div>
-        <div className="bl b--black-10 w-70">
-          {get(data, 'posts.edges', []).map((edge, key) => <BlogTeaser data={edge} key={key}/>)}
+        <div className="">
+          <h3 className="bb b--black-10 pb1">Blog</h3>
+          {get(data, 'posts.edges', []).map((edge, key) => (
+            <BlogTeaser data={edge} key={key} />
+          ))}
         </div>
       </div>
     </div>
@@ -26,44 +41,27 @@ const IndexPage = ({ data }) => (
 export default IndexPage
 
 export const pageQuery = graphql`
-fragment PostTeaserFragment on ContentfulPost {
-  title
-  date(formatString: "MMMM D, YYYY")
-  slug
-  category {
+  fragment PostTeaserFragment on ContentfulPost {
     title
-  }
-  summary {
-    childMarkdownRemark {
-      html
+    date(formatString: "MMMM D, YYYY")
+    slug
+    category {
+      title
     }
-  }
-}
-
-fragment AuthorTeaserFragment on ContentfulAuthor {
-    name
-    biography{
-      childMarkdownRemark{
+    summary {
+      childMarkdownRemark {
         html
       }
     }
-    profilePhoto{
-      sizes(maxWidth:500){
-        ...GatsbyContentfulSizes_tracedSVG
-      }
-    }
-}
+  }
 
-query IndexQuery {
-  posts: allContentfulPost(sort: {order: DESC, fields: [date]}){
-    edges{
-      node{
-        ...PostTeaserFragment
+  query IndexQuery {
+    posts: allContentfulPost(sort: { order: DESC, fields: [date] }) {
+      edges {
+        node {
+          ...PostTeaserFragment
+        }
       }
     }
   }
-  author: contentfulAuthor{
-    ...AuthorTeaserFragment
-  }
-}
 `

@@ -4,6 +4,14 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+pre {
+  overflow: scroll;
+}
+pre,
+.mono {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
 /* Green: #01a982 */
 /* Secondary Green: #049371 */
 

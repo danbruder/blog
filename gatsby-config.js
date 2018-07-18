@@ -43,10 +43,11 @@ module.exports = {
       options: {
         fonts: [
           `IBM Plex Sans\:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i`,
+          `IBM Plex Mono\:300,300i,400,400i,500,500i,700,700i`,
         ],
       },
     },
     `gatsby-plugin-react-helmet`,
-    `gatsby-plugin-offline`
+    `gatsby-plugin-offline`,
   ],
 }

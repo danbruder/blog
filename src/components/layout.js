@@ -23,16 +23,14 @@ const Layout = ({ children, data }) => (
     `}
     render={data => (
       <>
-      <Helmet
-        title="Dan Bruder | Elixir Developer"
-        link={[
-          { rel: 'shortcut icon', href: `${favicon}` }
-        ]}
-      />
-      <Header siteTitle={data.site.siteMetadata.title} />
-      <div className="">{children}</div>
-      <Footer />
-    </>
+        <Helmet
+          title="Dan Bruder | Elixir Developer"
+          link={[{ rel: 'shortcut icon', href: `${favicon}` }]}
+        />
+        <Header siteTitle={data.site.siteMetadata.title} />
+        <div className="">{children}</div>
+        <Footer />
+      </>
     )}
   />
 )
