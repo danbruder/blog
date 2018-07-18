@@ -33,7 +33,7 @@ const IndexPage = ({ data }) => (
           {get(data, 'posts.edges', []).map((edge, key) => (
             <BlogTeaser data={edge} key={key} />
           ))}
-          <Link class="flex items-center" to="/blog/page/1">
+          <Link className="flex items-center" to="/blog/page/1">
             <small>Next page</small>
           </Link>
         </div>
