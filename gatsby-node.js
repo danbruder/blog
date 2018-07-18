@@ -2,7 +2,7 @@ var config = require('./src/config')
 var _ = require('lodash')
 
 var path = require('path')
-const PAGE_LIMIT = 10
+const PAGE_LIMIT = 5
 
 exports.createPages = ({ graphql, actions }) => {
   const { createPage } = actions
@@ -16,22 +16,22 @@ exports.createPages = ({ graphql, actions }) => {
     resolve(
       graphql(
         `
-        query { 
-          categories: allContentfulCategory{
-            edges{
-              node{
-                title
+          query {
+            categories: allContentfulCategory {
+              edges {
+                node {
+                  title
+                }
+              }
+            }
+            posts: allContentfulPost(sort: { order: DESC, fields: [date] }) {
+              edges {
+                node {
+                  slug
+                }
               }
             }
           }
-          posts: allContentfulPost(sort: {order: DESC, fields: [date]}){
-            edges{
-              node{
-                slug
-              }
-            }
-          }
-        }
         `
       ).then(result => {
         if (result.errors) {
@@ -41,16 +41,14 @@ exports.createPages = ({ graphql, actions }) => {
         let chunks = _.chunk(result.data.posts.edges, PAGE_LIMIT)
 
         chunks.forEach((chunk, index) => {
-          if (index == 0) return;
-
           createPage({
-            path: `blog/page/${index}`,
+            path: `blog/page/${index + 1}`,
             component: blogListTemplate,
             context: {
-              skip: PAGE_LIMIT * index, 
+              skip: PAGE_LIMIT * index,
               limit: PAGE_LIMIT,
               hasNextPage: index != chunks.length - 1,
-                nextPageLink: `/blog/page/${index + 1}`
+              nextPageLink: `/blog/page/${index + 2}`,
             },
           })
         })
@@ -69,14 +67,14 @@ exports.createPages = ({ graphql, actions }) => {
 
         // Categories
         //result.data.categories.edges.forEach(({ node }) => {
-          //// loop over split pages
-          //createPage({
-            //path: `${config.categoryRootPath}/${node.slug}`,
-            //component: blogTemplate,
-            //context: {
-              //slug: node.slug,
-            //},
-          //})
+        //// loop over split pages
+        //createPage({
+        //path: `${config.categoryRootPath}/${node.slug}`,
+        //component: blogTemplate,
+        //context: {
+        //slug: node.slug,
+        //},
+        //})
         //})
       })
     )

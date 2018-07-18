@@ -3,6 +3,7 @@ import { graphql, Link } from 'gatsby'
 import Img from 'gatsby-image'
 import { get } from 'lodash'
 import { blogRootPath } from '../config'
+import { BookOpen } from 'react-feather'
 
 import Layout from '../components/layout'
 import BlogTeaser from '../components/BlogTeaser'
@@ -28,10 +29,13 @@ const IndexPage = ({ data }) => (
           </a>
         </div>
         <div className="">
-          <h3 className="bb b--black-10 pb1">Blog</h3>
+          <h3 className="bb b--black-10 pb1">Recent Posts</h3>
           {get(data, 'posts.edges', []).map((edge, key) => (
             <BlogTeaser data={edge} key={key} />
           ))}
+          <Link class="flex items-center" to="/blog/page/1">
+            <small>Next page</small>
+          </Link>
         </div>
       </div>
     </div>
@@ -56,7 +60,7 @@ export const pageQuery = graphql`
   }
 
   query IndexQuery {
-    posts: allContentfulPost(sort: { order: DESC, fields: [date] }) {
+    posts: allContentfulPost(limit: 3, sort: { order: DESC, fields: [date] }) {
       edges {
         node {
           ...PostTeaserFragment
