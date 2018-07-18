@@ -28,7 +28,7 @@ const IndexPage = ({ data }) => (
             Contact me
           </Link>
         </div>
-        <div className="">
+        <div className="pb5">
           <h3 className="bb b--black-10 pb1">Recent Posts</h3>
           {get(data, 'posts.edges', []).map((edge, key) => (
             <BlogTeaser data={edge} key={key} />
