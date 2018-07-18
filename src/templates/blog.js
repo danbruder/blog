@@ -15,12 +15,12 @@ const BlogPage = ({ data }) => (
           {get(data, 'blog.category.title', '')}
         </span>
         <h1 className="bb b--black-10 mv1 pb2 lh-title">{data.blog.title}</h1>
-        <div className="pv2 ma0 gray flex items-center">
-          <Calendar />
-          <span className="fw3  mono ml2 mr4 ">
+        <div className="f7 pv2 ma0 gray flex items-center">
+          <Calendar className="h1 w1" />
+          <span className="fw3  mono ml2 mr3 ">
             {get(data, 'blog.date', '')}
           </span>
-          <Clock />
+          <Clock className="h1 w1" />
           <span className="fw3 mono ml2 ">
             {get(data, 'blog.body.childMarkdownRemark.timeToRead', '')} minute
           </span>

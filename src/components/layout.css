@@ -7,11 +7,6 @@ html {
 pre {
   overflow: scroll;
 }
-pre,
-.mono {
-  font-family: 'IBM Plex Mono', monospace;
-}
-
 /* Green: #01a982 */
 /* Secondary Green: #049371 */
 
@@ -52,4 +47,26 @@ a {
   margin-bottom: 5px;
   border-radius: 5px;
   box-shadow: 0 0 16px 2px rgba(0, 0, 0, 0.3);
+}
+.gatsby-highlight {
+  background-color: white;
+  border: 1px solid #eee;
+  margin: 0.5em 0;
+  padding: 1em;
+  overflow: auto;
+}
+.gatsby-highlight pre[class*='language-'] {
+  background-color: transparent;
+  margin: 0;
+  padding: 0;
+  overflow: initial;
+  float: left; /* 1 */
+  min-width: 100%; /* 2 */
+}
+
+code[class*='language-'],
+pre[class*='language-'],
+.mono {
+  font-family: 'IBM Plex Mono', monospace !important;
+  font-size: 14px;
 }

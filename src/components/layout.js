@@ -8,6 +8,8 @@ import Footer from './footer'
 import favicon from './favicon.ico'
 import 'normalize.css/normalize.css'
 import 'tachyons/css/tachyons.css'
+// layouts/index.js
+import 'prismjs/themes/prism.css'
 import './layout.css'
 
 const Layout = ({ children, data }) => (

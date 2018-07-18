@@ -48,9 +48,9 @@ export const pageQuery = graphql`
     category {
       title
     }
-    summary {
+    body {
       childMarkdownRemark {
-        html
+        timeToRead
       }
     }
   }
