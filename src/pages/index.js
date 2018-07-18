@@ -9,8 +9,8 @@ import BlogTeaser from '../components/BlogTeaser'
 
 const IndexPage = ({ data }) => (
   <Layout>
-    <div className="bg-light-gray  ">
-      <div className="mw7 pa3 pa5-l center pv3 pv4-l bg-light-gray ">
+    <div className="bg-gray-light  ">
+      <div className="mw7 pa3 pa5-l center pv3 pv4-l ">
         <div className="mb5">
           <h1>Hi, I'm Dan</h1>
           <h2 className=" fw3 lh-copy">

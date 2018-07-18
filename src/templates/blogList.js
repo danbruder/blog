@@ -10,8 +10,8 @@ import AuthorTeaser from '../components/AuthorTeaser'
 
 const BlogListPage = ({ data, pageContext: { hasNextPage, nextPageLink } }) => (
   <Layout>
-    <div className="bg-light-gray ">
-      <div className="mw9 center w-100 pa3 pa5-ns bg-light-gray flex">
+    <div className="bg-gray-light ">
+      <div className="mw9 center w-100 pa3 pa5-ns flex">
         <div className="w-30">
           <AuthorTeaser />
         </div>
