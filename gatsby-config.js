@@ -1,6 +1,6 @@
 module.exports = {
   siteMetadata: {
-    title: 'Tell the machines what to do',
+    title: 'Dan Bruder',
     siteUrl: `https://danbruder.com`,
   },
   plugins: [
