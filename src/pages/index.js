@@ -15,7 +15,7 @@ const IndexPage = ({ data }) => (
         <div className="mb5">
           <h1>Hi, I'm Dan</h1>
           <h2 className=" fw3 lh-copy">
-            I’m a software developer that builds web applications that are easy
+            I'm a software developer that builds web applications that are easy
             to use, robust, and secure.
           </h2>
           <p className="f5 pb3">
