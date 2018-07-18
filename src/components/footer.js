@@ -5,9 +5,8 @@ import moment from 'moment'
 
 const Footer = () => (
   <div className=" bg--black-10 ">
-    <div className="mw7 center f6 w-100 pa3 ph5-l flex justify-between items-center">
-      <small>© {moment().format('YYYY')} Dan Bruder</small>
-      <div className="flex items-center">
+    <div className="mw7 center tc f6 w-100 pv4 pa3 ph5-l ">
+      <div className=" pb1 flex justify-center items-center">
         <a
           className="hover-green pr3 link gray"
           href="https://github.com/danbruder"
@@ -27,6 +26,7 @@ const Footer = () => (
           <Linkedin className="h1 w1" />
         </a>
       </div>
+      <small className="gray">© {moment().format('YYYY')} Dan Bruder</small>
     </div>
   </div>
 )
