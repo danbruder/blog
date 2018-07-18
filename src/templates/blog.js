@@ -42,7 +42,7 @@ export const pageQuery = graphql`
   query BlogQuery($slug: String) {
     blog: contentfulPost(slug: { eq: $slug }) {
       title
-      date(formatString: "MMMM, D YYYY")
+      date(formatString: "MMMM D, YYYY")
       category {
         title
       }
