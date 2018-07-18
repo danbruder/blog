@@ -11,18 +11,15 @@ import AuthorTeaser from '../components/AuthorTeaser'
 const BlogListPage = ({ data, pageContext: { hasNextPage, nextPageLink } }) => (
   <Layout>
     <div className="bg-gray-light ">
-      <div className="mw9 center w-100 pa3 pa5-ns flex">
-        <div className="w-30">
-          <AuthorTeaser />
-        </div>
-        <div className="bl b--black-10 w-70">
-          {get(data, 'posts.edges', []).map((edge, key) => (
-            <BlogTeaser data={edge} key={key} />
-          ))}
-          <div className="pa3 ph5-l">
-            {hasNextPage && <Link to={nextPageLink}>Next page</Link>}
-          </div>
-        </div>
+      <div className="mw7 center w-100 pa3 pv4-ns pa5-l ">
+        {get(data, 'posts.edges', []).map((edge, key) => (
+          <BlogTeaser data={edge} key={key} />
+        ))}
+        {hasNextPage && (
+          <Link class="flex items-center" to={nextPageLink}>
+            <small>Next page</small>
+          </Link>
+        )}
       </div>
     </div>
   </Layout>

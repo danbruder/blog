@@ -47,6 +47,7 @@ exports.createPages = ({ graphql, actions }) => {
             context: {
               skip: PAGE_LIMIT * index,
               limit: PAGE_LIMIT,
+              pageNumber: index + 1,
               hasNextPage: index != chunks.length - 1,
               nextPageLink: `/blog/page/${index + 2}`,
             },
