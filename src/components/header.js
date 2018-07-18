@@ -26,6 +26,12 @@ const Header = ({ siteTitle }) => (
             >
               About Me
             </Link>
+            <Link
+              to="/contact"
+              className="f6 fw6 hover-green link black-70 mr2 mr3-m mr4-l dib"
+            >
+              Contact
+            </Link>
           </div>
         </div>
       </div>

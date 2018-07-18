@@ -21,12 +21,12 @@ const IndexPage = ({ data }) => (
           <p className="f5 pb3">
             My primary tools are Elixir/Phoenix and ReactJS.
           </p>
-          <a
-            className="dib link bg-green white ph4 b  fw4 pv2"
-            href="mailto:hello@danbruder.com"
+          <Link
+            className="dib link ba b--green green white ph4 b fw4 pv2"
+            to="/contact"
           >
             Contact me
-          </a>
+          </Link>
         </div>
         <div className="">
           <h3 className="bb b--black-10 pb1">Recent Posts</h3>
