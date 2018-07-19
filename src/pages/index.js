@@ -21,12 +21,6 @@ const IndexPage = ({ data }) => (
           <p className="f5 pb3">
             My primary tools are Elixir/Phoenix and ReactJS.
           </p>
-          <Link
-            className="dib link ba b--green green white ph4 b fw4 pv2"
-            to="/contact"
-          >
-            Contact me
-          </Link>
         </div>
         <div className="pb5">
           <h3 className="bb b--black-10 pb1">Recent Posts</h3>

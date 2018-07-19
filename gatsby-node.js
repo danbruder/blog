@@ -2,7 +2,7 @@ var config = require('./src/config')
 var _ = require('lodash')
 
 var path = require('path')
-const PAGE_LIMIT = 5
+const PAGE_LIMIT = 10
 
 exports.createPages = ({ graphql, actions }) => {
   const { createPage } = actions
