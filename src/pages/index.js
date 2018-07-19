@@ -34,7 +34,7 @@ const IndexPage = ({ data }) => (
             <BlogTeaser data={edge} key={key} />
           ))}
           <Link className="flex items-center" to="/blog/page/1">
-            <small>Next page</small>
+            <small>All posts</small>
           </Link>
         </div>
       </div>
@@ -60,7 +60,7 @@ export const pageQuery = graphql`
   }
 
   query IndexQuery {
-    posts: allContentfulPost(limit: 3, sort: { order: DESC, fields: [date] }) {
+    posts: allContentfulPost(limit: 5, sort: { order: DESC, fields: [date] }) {
       edges {
         node {
           ...PostTeaserFragment
