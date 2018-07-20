@@ -28,16 +28,15 @@ const Layout = ({ children, data }) => (
         <Helmet
           title="Dan Bruder | Elixir Developer"
           link={[{ rel: 'shortcut icon', href: `${favicon}` }]}
-        />
+        >
+          <meta
+            name="google-site-verification"
+            content="Mf0hCpk6x3lpvPrl2qBdhVROvsZBRn2JTiciS2v-OJg"
+          />
+        </Helmet>
         <Header siteTitle={data.site.siteMetadata.title} />
         <div className="">{children}</div>
         <Footer />
-        <script
-          type="text/javascript"
-          dangerouslySetInnerHTML={{
-            __html: `window.$crisp=[];window.CRISP_WEBSITE_ID="35215621-0493-4b5e-8e57-f06798774837";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();`,
-          }}
-        />
       </>
     )}
   />
