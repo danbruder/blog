@@ -26,9 +26,13 @@ const Layout = ({ children, data }) => (
     render={data => (
       <>
         <Helmet
-          title="Dan Bruder | Elixir Developer"
+          title="Dan Bruder | Software Developer"
           link={[{ rel: 'shortcut icon', href: `${favicon}` }]}
         >
+          <meta
+            name="google-site-verification"
+            content="Mf0hCpk6x3lpvPrl2qBdhVROvsZBRn2JTiciS2v-OJg"
+          />
           <meta
             name="google-site-verification"
             content="Mf0hCpk6x3lpvPrl2qBdhVROvsZBRn2JTiciS2v-OJg"
