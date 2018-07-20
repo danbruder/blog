@@ -1,12 +1,9 @@
 import React from 'react'
 import { graphql, Link } from 'gatsby'
-import Img from 'gatsby-image'
 import { get } from 'lodash'
-import { blogRootPath } from '../config'
 
 import Layout from '../components/layout'
 import BlogTeaser from '../components/BlogTeaser'
-import AuthorTeaser from '../components/AuthorTeaser'
 
 const BlogListPage = ({ data, pageContext }) => (
   <Layout>
