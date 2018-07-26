@@ -32,6 +32,19 @@ exports.createPages = ({ graphql, actions }) => {
         let chunks = _.chunk(result.data.posts.edges, PAGE_SIZE)
 
         chunks.forEach((chunk, index) => {
+          if (index == 0) {
+            createPage({
+              path: `blog`,
+              component: blogListTemplate,
+              context: {
+                skip: PAGE_SIZE * index,
+                limit: PAGE_SIZE,
+                pageNumber: index + 1,
+                hasNextPage: index != chunks.length - 1,
+                nextPageLink: `/blog/page/${index + 2}`,
+              },
+            })
+          }
           createPage({
             path: `blog/page/${index + 1}`,
             component: blogListTemplate,

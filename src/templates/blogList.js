@@ -14,7 +14,7 @@ const BlogListPage = ({ data, pageContext }) => (
         ))}
         {pageContext &&
           pageContext.hasNextPage && (
-            <Link class="flex items-center" to={pageContext.nextPageLink}>
+            <Link className="flex items-center" to={pageContext.nextPageLink}>
               <small>Next page</small>
             </Link>
           )}

@@ -1,0 +1,17 @@
+comments:
+  allowedFields: ["name", "email", "url", "message"]
+  branch: "master"
+  commitMessage: "New comment"
+  filename: "entry{@timestamp}"
+  format: "frontmatter"
+  generatedFields:
+    date:
+      type: date
+      options:
+        format: "timestamp-seconds"
+  moderation: true
+  name: "danbruder.com"
+  path: "_data/comments/{options.slug}"
+  requiredFields: ["name", "email", "message"]
+  transforms:
+    email: md5

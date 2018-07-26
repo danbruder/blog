@@ -84,5 +84,9 @@ pre[class*='language-'] {
   margin-left: -1.2em;
   padding-right: 1em;
   padding-left: 0.75em;
-  border-left: 0.25em solid #F4D03F;
+  border-left: 0.25em solid #f4d03f;
+}
+
+.shadow-fancy {
+  box-shadow: 0 2px 4px 0 rgba(14, 30, 37, 0.12);
 }
