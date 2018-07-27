@@ -26,7 +26,7 @@ const BlogPage = ({ data }) => (
           </span>
         </div>
         <div
-          className="lh-copy"
+          className="lh-copy body"
           dangerouslySetInnerHTML={{
             __html: get(data, 'blog.body.childMarkdownRemark.html', ''),
           }}
