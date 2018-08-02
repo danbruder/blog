@@ -63,7 +63,7 @@ const ResumePage = ({ data }) => (
             <ul className="list ml0 pl3 pt0 mt0">
               {[
                 'a fuel pump motor driver that cut production cost with higher efficiency',
-                'USB-C power delivery compliant charger for automotive and furnature industries',
+                'USB-C power delivery compliant charger for automotive and furniture industries',
                 'cloud enabled environmental sensor',
               ].map((i, k) => (
                 <li key={k} className="flex items-center pt2">
