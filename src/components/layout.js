@@ -12,7 +12,7 @@ import 'tachyons/css/tachyons.css'
 import 'prismjs/themes/prism.css'
 import './layout.css'
 
-const Layout = ({ children, data }) => (
+const Layout = props => (
   <StaticQuery
     query={graphql`
       query SiteTitleQuery {
@@ -38,9 +38,11 @@ const Layout = ({ children, data }) => (
             content="Mf0hCpk6x3lpvPrl2qBdhVROvsZBRn2JTiciS2v-OJg"
           />
         </Helmet>
-        <Header siteTitle={data.site.siteMetadata.title} />
-        <div className="">{children}</div>
-        <Footer />
+        {!props.hideHeader && (
+          <Header siteTitle={data.site.siteMetadata.title} />
+        )}
+        <div className="">{props.children}</div>
+        {!props.hideFooter && <Footer />}
       </>
     )}
   />
