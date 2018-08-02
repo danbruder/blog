@@ -423,10 +423,8 @@ const ResumePage = ({ data }) => (
             <p className="lh-copy">
               I live in Hudsonville, MI with my wife and three kids. I love
               reading, learning, and playing guitar. On the weekends there's a
-              good chance you'll see us at{' '}
-              <a href="http://downtownmarketgr.com/">
-                Grand Rapids' Downtown Market
-              </a>.
+              good chance you'll see us at the{' '}
+              <a href="http://downtownmarketgr.com/">Downtown Market</a>.
             </p>
             <div className="">
               <label className="i">
