@@ -1,3 +1,7 @@
+require('dotenv').config({
+  path: `.env`,
+})
+
 module.exports = {
   siteMetadata: {
     title: 'Dan Bruder',
@@ -7,8 +11,8 @@ module.exports = {
     {
       resolve: `gatsby-source-contentful`,
       options: {
-        spaceId: `mkfpbp2zqk3q`,
-        accessToken: `df085b3e2af8879d4f0bf71afa89fb090fbc1620389f2d612a8d98b635cdd34d`,
+        spaceId: process.env.CONTENTFUL_SPACE_ID,
+        accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
       },
     },
     {
