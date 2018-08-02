@@ -27,6 +27,12 @@ const Footer = () => (
         </a>
       </div>
       <small className="gray">© {moment().format('YYYY')} Dan Bruder</small>
+      <small className="gray"> - </small>
+      <small className="gray pt2">
+        <Link className="link" to="/resume">
+          Resume
+        </Link>
+      </small>
     </div>
   </div>
 )
