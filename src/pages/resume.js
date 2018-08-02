@@ -121,12 +121,6 @@ const books = [
     link: 'https://www.openmymind.net/2012/1/23/The-Little-Redis-Book/',
     done: true,
   },
-  {
-    title: 'The Positioning Manual for Technical Firms',
-    link:
-      'https://philipmorganconsulting.com/the-positioning-manual-for-technical-firms/',
-    done: true,
-  },
 ]
 
 const ResumePage = ({ data }) => (
