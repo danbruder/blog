@@ -12,6 +12,7 @@ import {
   BookOpen,
 } from 'react-feather'
 import _ from 'lodash'
+import './layout.css'
 
 const books = [
   {
