@@ -31,10 +31,29 @@ const BlogPage = ({ data }) => (
             __html: get(data, 'blog.body.childMarkdownRemark.html', ''),
           }}
         />
+        <small class=" w-100 db mt4">
+          <a href={formatShareLink(data)}>Tweet this post</a>
+        </small>
+        {false && (
+          <div className="mv4 pv3 bt b--black-10">
+            <small class=" w-100 db ">
+              Dan is a software developer that builds web applications that are
+              easy to use, robust, and secure.
+            </small>
+          </div>
+        )}
       </div>
     </div>
   </Layout>
 )
+
+const formatShareLink = data => {
+  let slug = get(data, 'blog.slug')
+  let url = `https://danbruder.com/blog/${slug}`
+  let text = get(data, 'blog.title')
+  let via = `danbruder`
+  return `https://twitter.com/intent/tweet?url=${url}&text=${text}&via=${via}`
+}
 
 export default BlogPage
 
@@ -42,6 +61,7 @@ export const pageQuery = graphql`
   query BlogQuery($slug: String) {
     blog: contentfulPost(slug: { eq: $slug }) {
       title
+      slug
       date(formatString: "MMMM D, YYYY")
       category {
         title
