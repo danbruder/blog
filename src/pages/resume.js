@@ -438,31 +438,33 @@ const ResumePage = ({ data }) => (
                 good chance you'll see us at the{' '}
                 <a href="http://downtownmarketgr.com/">Downtown Market</a>.
               </p>
-              <div className="">
-                <label className="i">
-                  Books I've enjoyed (or in process of enjoying)
-                </label>
-                <ul className="list ml0 pl0 pt0 mt0 pr4">
-                  {books.map((i, k) => (
-                    <li key={k} className="flex items-center pt2">
-                      {i.done ? (
-                        <CheckCircle
-                          id={k}
-                          style={{ marginRight: 8, width: 16, height: 16 }}
-                        />
-                      ) : (
-                        <Circle
-                          id={k}
-                          style={{ marginRight: 8, width: 16, height: 16 }}
-                        />
-                      )}
-                      <span>
-                        <a href={i.link}>{i.title}</a>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {false && (
+                <div className="">
+                  <label className="i">
+                    Books I've enjoyed (or in process of enjoying)
+                  </label>
+                  <ul className="list ml0 pl0 pt0 mt0 pr4">
+                    {books.map((i, k) => (
+                      <li key={k} className="flex items-center pt2">
+                        {i.done ? (
+                          <CheckCircle
+                            id={k}
+                            style={{ marginRight: 8, width: 16, height: 16 }}
+                          />
+                        ) : (
+                          <Circle
+                            id={k}
+                            style={{ marginRight: 8, width: 16, height: 16 }}
+                          />
+                        )}
+                        <span>
+                          <a href={i.link}>{i.title}</a>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex-ns bt bw1 pv1 mt1 b--black">
