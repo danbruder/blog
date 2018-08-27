@@ -15,11 +15,12 @@ const IndexPage = ({ data }) => (
         <div className="mb5">
           <h1>Hi, I'm Dan</h1>
           <h2 className=" fw3 lh-copy">
-            I'm a software developer that builds web applications that are easy
-            to use, robust, and secure.
+            I'm a software developer. I build applications for the web and
+            embedded systems.
           </h2>
           <p className="f5 pb3">
-            My primary tools are Elixir/Phoenix and ReactJS.
+            I love to learn and build. This is a place for me to share what I am
+            learning.
           </p>
         </div>
         <div className="pb5">
