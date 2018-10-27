@@ -14,7 +14,7 @@ const ProjectPage = ({ data }) => (
     <div className="bg-gray-light">
       <div className="mw9 pa3 pa5-l center pv3 pv4-l ">
         <div className="bb b--black-10">
-          <h2>Featured Projects</h2>
+          <h2>Recent Projects</h2>
         </div>
         <div className="pv3 pv5-ns">{renderFeaturedProjectTeasers(data)}</div>
         <div className="bb b--black-10">
