@@ -21,6 +21,12 @@ const Header = ({ siteTitle }) => (
           </div>
           <div className="db dtc-l v-mid w-100 tl tr-l mt2 mt0-l">
             <Link
+              to="/projects"
+              className="f6 fw6 hover-green link black-70 dib mr2"
+            >
+              Projects
+            </Link>
+            <Link
               to="/blog/about"
               className="f6 fw6 hover-green link black-70 dib"
             >
