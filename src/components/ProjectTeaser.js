@@ -7,7 +7,7 @@ export default ({ data }) => {
   return (
     <div className="">
       <section className="center">
-        <article className="mb5 b--black-10">
+        <article className="mb3 b--black-10">
           <div className="flex flex-column flex-row-ns">
             <div className="pr3-ns mb0 mb0-ns w-100 w-40-ns" />
             <div className="w-100 w-60-ns pl3-ns">

@@ -59,7 +59,7 @@ export const pageQuery = graphql`
   }
 
   query ProjectQuery {
-    projects: allContentfulProject(limit: 5) {
+    projects: allContentfulProject(sort: { fields: [weight], order: ASC }) {
       edges {
         node {
           ...ProjectTeaserFragment
