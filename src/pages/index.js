@@ -22,6 +22,12 @@ const IndexPage = ({ data }) => (
             I love to learn and build. This is a place for me to share what I am
             learning.
           </p>
+          <p>
+            You can find{' '}
+            <Link to="/projects" className="f5 pb3">
+              my projects here
+            </Link>.
+          </p>
         </div>
         <div className="pb5">
           <h3 className="bb b--black-10 pb1">Recent Posts</h3>
