@@ -11,11 +11,11 @@ import Layout from '../components/layout'
 const ProjectPage = ({ data }) => (
   <Layout>
     <div className="bg-gray-light  ">
-      <div className="mw7 pa3 pa5-l center pv3 pv4-l ">
-        <div className="">
+      <div className="mw9 pa3 pa5-l center pv3 pv4-l ">
+        <div className="bb b--black-10">
           <h1>Projects</h1>
         </div>
-        <div className="pb5">
+        <div className="pv5">
           {get(data, 'projects.edges', []).map((edge, key) => (
             <ProjectTeaser data={edge} key={key} />
           ))}
@@ -32,6 +32,12 @@ export const pageQuery = graphql`
     title
     slug
     weight
+    featured
+    image {
+      sizes(maxWidth: 1000) {
+        ...GatsbyContentfulSizes_tracedSVG
+      }
+    }
     body {
       childMarkdownRemark {
         html
