@@ -49,6 +49,10 @@ a {
   box-shadow: 0 2px 4px 0 rgba(14, 30, 37, 0.12);
 }
 
+.elev1 {
+  box-shadow: 0 4px 6px 0 rgba(14, 30, 37, 0.12);
+}
+
 .gatsby-highlight {
   background-color: white;
   border: 1px solid #eee;
