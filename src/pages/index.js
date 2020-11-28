@@ -21,21 +21,12 @@ const IndexPage = ({ data }) => (
             I love to learn and build. This is a place for me to share what I am
             learning.
           </p>
-          <p>
-            You can find{' '}
-            <Link to="/projects" className="f5 pb3">
-              my projects here
-            </Link>.
-          </p>
         </div>
         <div className="pb5">
-          <h3 className="bb b--black-10 pb1">Recent Posts</h3>
+          <h3 className="bb b--black-10 pb1">Posts</h3>
           {get(data, 'posts.edges', []).map((edge, key) => (
             <BlogTeaser data={edge} key={key} />
           ))}
-          <Link className="flex items-center" to="/blog/page/1">
-            <small>All posts</small>
-          </Link>
         </div>
       </div>
     </div>
@@ -60,7 +51,7 @@ export const pageQuery = graphql`
   }
 
   query IndexQuery {
-    posts: allContentfulPost(limit: 5, sort: { order: DESC, fields: [date] }) {
+    posts: allContentfulPost(limit: 1000, sort: { order: DESC, fields: [date] }) {
       edges {
         node {
           ...PostTeaserFragment
