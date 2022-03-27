@@ -15,7 +15,7 @@ const IndexPage = ({ data }) => (
         <div className="mb5">
           <h1>Hi, I'm Dan</h1>
           <h2 className=" fw3 lh-copy">
-              I'm an engineering leader that loves to learn and build 
+              Here are some posts:
           </h2>
         </div>
         <div className="pb5">
