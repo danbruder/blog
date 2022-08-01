@@ -31,20 +31,32 @@ const BlogPage = ({ data }) => (
             __html: get(data, 'blog.body.childMarkdownRemark.html', ''),
           }}
         />
-        <small class=" w-100 db mt4">
-          <a href={formatShareLink(data)}>Tweet this post</a>
-        </small>
-        {false && (
-          <div className="mv4 pv3 bt b--black-10">
-            <small class=" w-100 db ">
-              Dan is a software developer that builds web applications that are
-              easy to use, robust, and secure.
-            </small>
-          </div>
-        )}
+
+        <SubscribeForm/>
       </div>
     </div>
   </Layout>
+)
+
+const SubscribeForm = () => (
+    <form
+    action="https://buttondown.email/api/emails/embed-subscribe/danbruder"
+    method="post"
+    target="popupwindow"
+    onsubmit="window.open('https://buttondown.email/danbruder', 'popupwindow')"
+    class="pa3 bg-white mv3 card"
+>
+        <div class="pa0">
+            <p class="pa0 ma0">Subscribe</p>
+        </div>
+        <div class="f6 gray">
+            <label for="bd-email block f5 light-gray">No spam, just software engineering tips</label>
+        </div>
+        <div class="mt2">
+            <input class="o--gray" type="email" name="email" id="bd-email" />
+            <input type="submit" value="Subscribe" />
+        </div>
+    </form>
 )
 
 const formatShareLink = data => {
