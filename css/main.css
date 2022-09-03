@@ -73,6 +73,9 @@ body {
     @apply text-xl mb-4;
 }
 
+.link { 
+    @apply underline text-orange-200;
+}
 .markdown-content a { 
     @apply underline text-orange-200;
 }
