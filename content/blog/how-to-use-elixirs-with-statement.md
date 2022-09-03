@@ -2,9 +2,10 @@
 date: 2018-07-25
 title: "How to use Elixir's \"with\" statement"
 slug: how-to-use-elixirs-with-statement
-category: Backend
-tags:
-  - elixir
+taxonomies: 
+    category: [Backend]
+    tags:
+      - elixir
 ---
 
 One of my favorite language constructs of elixir is the pipe operator (|>). It makes really readable code: 

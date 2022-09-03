@@ -2,9 +2,10 @@
 date: 2019-02-17
 title: Store JSON blob in Postgres with Diesel
 slug: store-json-blob-in-postgres-with-diesel
-category: Backend
-tags:
-  - rust
+taxonomies:
+    category: [Backend]
+    tags:
+      - rust
 ---
 
 Use the `jsonb` type in your migration:  

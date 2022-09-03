@@ -2,11 +2,12 @@
 date: 2017-06-29
 title: "TypeError: require is not a function (webpack + faunadb)"
 slug: typeerror-require-is-not-a-function-webpack-faunadb
-category: Serverless
-tags:
-  - faunadb
-  - nosql
-  - nodejs
+taxonomies: 
+    category: [ Serverless ]
+    tags:
+      - faunadb
+      - nosql
+      - nodejs
 ---
 
 This error comes up when using faunadb’s driver for nodejs with webpack.

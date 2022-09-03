@@ -2,10 +2,11 @@
 date: 2018-07-21
 title: "[SOLVED]: ERROR 22001 (string_data_right_truncation): value too long for type character varying(255)"
 slug: error-22001-string_data_right_truncation-value-too-long-for-type-character
-category: Backend
-tags:
-  - elixir
-  - ecto
+taxonomies: 
+    category: [ Backend ]
+    tags:
+      - elixir
+      - ecto
 ---
 
 ```elixir

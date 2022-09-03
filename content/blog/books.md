@@ -1,9 +1,10 @@
 ---
 date: 2017-05-10
 title: Books
-slug: books
-category: General
-tags: []
+slug: book
+taxonomies: 
+    category: []
+    tags: []
 ---
 
 _Updated 6-19-2021_ 

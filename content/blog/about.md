@@ -2,8 +2,9 @@
 date: 2017-05-09
 title: "Hi, I'm Dan"
 slug: about
-category: General
-tags: []
+taxonomies: 
+    category: []
+    tags: []
 ---
 
 ## I'm an Software Engineer focused on building.

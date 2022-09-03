@@ -2,10 +2,12 @@
 date: 2018-06-30
 title: AWS AppSync First Impressions
 slug: aws-appsync-first-impressions
-category: Serverless
-tags:
-  - aws
-  - graphql
+taxonomies: 
+    category: 
+      - Serverless
+    tags:
+      - aws
+      - graphql
 ---
 
 AppSync is a service from AWS that lets you configure a GraphQL API over your AWS data sources including DynamoDB, Lambda, and Elasticsearch. It seems to be aimed at getting a backend up and running quickly and with minimal fuss.

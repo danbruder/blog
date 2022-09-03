@@ -2,11 +2,12 @@
 date: 2018-07-23
 title: "Reflections on the book Functional Web Development with Elixir, OTP, and Phoenix"
 slug: reflections-on-the-book-functional-web-development-with-elixir-otp-and-phoenix
-category: Books
-tags:
-  - elixir
-  - functional
-  - architecture
+taxonomies: 
+    category: [Books]
+    tags:
+      - elixir
+      - functional
+      - architecture
 ---
 
 > _TLDR: Its a great book and you should buy it. **Seriously**. Stop reading this and go [buy it right now](https://pragprog.com/book/lhelph/functional-web-development-with-elixir-otp-and-phoenix)._

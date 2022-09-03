@@ -2,8 +2,9 @@
 date: 2018-07-19
 title: "What I've learned from Sashko Stubailo (Apollo/Meteor)"
 slug: what-ive-learned-from-sashko-stubailo-apollo-meteor
-category: Thoughts
-tags: []
+taxonomies: 
+    category: [Thoughts]
+    tags: []
 ---
 
 I have been following Meteor for a while. I remember when Sashko Stubailo started working on Apollo because:

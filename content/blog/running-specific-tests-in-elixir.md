@@ -2,11 +2,12 @@
 date: 2018-07-27
 title: Running specific tests in Elixir
 slug: running-specific-tests-in-elixir
-category: Development
-tags:
-  - elixir
-  - tdd
-  - testing
+taxonomies:
+    category: [Development]
+    tags:
+      - elixir
+      - tdd
+      - testing
 ---
 
 To run the whole test suite, you can stick to 
