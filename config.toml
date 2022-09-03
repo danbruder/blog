@@ -1,0 +1,20 @@
+title = "Dan Bruder | Software Developer"
+base_url = "https://danbruder-blog-22.netlify.app/"
+compile_sass = false
+build_search_index = false
+
+taxonomies = [
+    {name = "tags"}, 
+    {name = "category"}, 
+]
+
+[markdown]
+highlight_code = true
+#highlight_theme = "1337"
+#highlight_theme = "charcoal"
+#highlight_theme = "subway-moscow"
+#highlight_theme = "zenburn"
+highlight_theme = "OneHalfDark"
+
+[extra]
+favicon = "static/pixels.jpeg"

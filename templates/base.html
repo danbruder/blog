@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {% set favicon = resize_image(path=config.extra.favicon, format="png", width=32, height=32) %}
+        {% set logo = resize_image(path=config.extra.favicon, format="png", width=128, height=128) %}
+        <link rel="shortcut icon" href="{{ favicon.url | safe }}" type="image/png">
+        <link rel="icon" href="{{ favicon.url | safe }}" type="image/png">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <meta charset="utf-8">
+
+        <title>{{ config.title }}</title>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,700;1,400;1,700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Work+Sans:wght@700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="{{ get_url(path="output.css") | safe }}" />
+        <!-- Panelbear -->
+        <script async src="https://cdn.panelbear.com/analytics.js?site=EHBCNAWZUJp"></script>
+        <script>
+window.panelbear = window.panelbear || function() { (window.panelbear.q = window.panelbear.q || []).push(arguments); };
+panelbear('config', { site: 'EHBCNAWZUJp' });
+        </script>
+
+
+        {% block title -%}
+            {% set section =  load_data(path=current_path ~ "_index.md", metadata_only=true, required = false)  -%}
+        {% endblock title -%}
+    </head>
+
+    <body class="bg-zinc-900 text-white flex flex-col min-h-screen">
+        <header class="py-4 bg-zinc-800">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="mx-auto max-w-3xl ">
+                    <div>
+                        <a href="/" class="flex items-center space-x-3 ">
+                            <img class="w-6 block" src="{{ logo.url }} "/>
+                            <span class="font-fancy text-sm lowercase text-orange-100">danbruder</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <div class="flex-grow">
+            {% block content -%}
+            {% endblock content -%}
+        </div>
+
+        <footer class="bg-black mt-24">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="mx-auto max-w-3xl ">
+                    <div class="flex justify-between items-center text-sm py-6">
+                        <div class="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+    </body>
+</html>

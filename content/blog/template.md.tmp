@@ -1,0 +1,31 @@
+---
+title: Some title
+date: 2020-01-01
+draft: false
+slug: some-title
+taxonomies: 
+    tags: [rust]
+    authors: [Dan Bruder]
+---
+
+Check out this code block:
+
+```rust
+struct Ionsite { 
+    get_it: bool
+}
+```
+
+You can do line numbers and highlights like this
+
+```rust,linenos,hl_lines=2-4 7
+impl Ionsite { 
+    fn blog() -> String { 
+        "hey".into()
+    }
+
+    fn code() -> String { 
+        "hey".into()
+    }
+}
+```
