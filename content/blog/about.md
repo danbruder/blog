@@ -14,4 +14,4 @@ I have 11 years of professional experience developing software. Most recently, I
 A bit more about me: 
 - I live with my wife and 3 kids in Grand Rapids, MI.
 - I graduated with a B.S. in Electrical Engineering from Grand Valley State University in 2011. 
-- Here are some [books I'm working on](/blog/books). 
+- Here are some [books I'm working on](/blog/book). 
