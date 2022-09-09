@@ -17,7 +17,7 @@ CREATE DATABASE "MyAwesomeDatabase";
 
 It looks like this in `psql` session:
 
-```psql,linenos,hl_lines=4 10
+```psql
 psql (14.5, server 12.9)
 Type "help" for help.
 
@@ -34,7 +34,7 @@ postgres=# \l
 
 If you don't include quotes, you'll create a database with all lowercase letters:
 
-```psql,linenos,hl_lines=4 10
+```psql
 psql (14.5, server 12.9)
 Type "help" for help.
 
