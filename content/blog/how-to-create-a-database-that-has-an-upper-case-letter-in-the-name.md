@@ -1,7 +1,9 @@
 ---
 date: 2022-09-09
-title: How to create a Database that has an upper-case letter in the name
-slug: how-to-create-a-database-that-has-an-upper-case-letter-in-the-name
+title: How to create a Postgres database that has an upper-case letter in the name
+slug: how-to-create-a-postgres-database-that-has-an-upper-case-letter-in-the-name
+aliases:
+  [/blog/how-to-create-a-database-that-has-an-upper-case-letter-in-the-name]
 taxonomies:
   category: []
   tags: []
