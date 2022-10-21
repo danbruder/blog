@@ -942,11 +942,6 @@ select {
   color: rgb(107 114 128 / var(--tw-text-opacity));
 }
 
-.text-sky-300 {
-  --tw-text-opacity: 1;
-  color: rgb(125 211 252 / var(--tw-text-opacity));
-}
-
 .text-zinc-100 {
   --tw-text-opacity: 1;
   color: rgb(244 244 245 / var(--tw-text-opacity));
@@ -1133,8 +1128,6 @@ body {
 }
 
 .markdown-content blockquote p {
-  font-size: 1rem;
-  line-height: 1.5rem;
   --tw-text-opacity: 1;
   color: rgb(254 215 170 / var(--tw-text-opacity));
 }

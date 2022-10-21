@@ -104,7 +104,7 @@ body {
 }
 
 .markdown-content blockquote p {
-  @apply text-base text-orange-200;
+  @apply text-orange-200;
 }
 
 .markdown-content blockquote p:last-child {
