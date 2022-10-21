@@ -96,7 +96,9 @@ Interesting discussion on incentives and unintended consequences. Relevant in li
 
 ### [Movies App](https://tastejs.com/movies/index.html)
 
-Spiritual successor to [TodoMVC](https://todomvc.com/), [HNPWA](https://hnpwa.com/), and a sibling to [Realworld](https://github.com/gothinkster/realworld) app. Uses [TMDB (The movie database)](https://www.themoviedb.org/) as an API. Somewhat related - [this](https://elm-hnpwa.firebaseapp.com/top?page=1) elm-based hacker news client is very slick. [Announcement here](https://twitter.com/addyosmani/status/1582798642015924224)
+Spiritual successor to [TodoMVC](https://todomvc.com/), [HNPWA](https://hnpwa.com/), and a sibling to [Realworld](https://github.com/gothinkster/realworld) app. Uses [TMDB (The movie database)](https://www.themoviedb.org/) as an API. [Announcement here](https://twitter.com/addyosmani/status/1582798642015924224).
+
+Somewhat related - [this](https://elm-hnpwa.firebaseapp.com/top?page=1) elm-based hacker news client is very slick.
 
 ### [The http crash course nobody asked for](https://fasterthanli.me/articles/the-http-crash-course-nobody-asked-for)
 
