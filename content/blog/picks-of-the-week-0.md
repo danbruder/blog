@@ -1,9 +1,10 @@
 ---
 date: 2022-10-21
-title: Picks of the week 1
-slug: picks-of-the-week-1
+title: Picks of the week 0
+slug: picks-of-the-week-0
+aliases: [/blog/picks-of-the-week-1]
 taxonomies:
-  category: []
+  category: [picks]
   tags: []
 ---
 
