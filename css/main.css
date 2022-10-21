@@ -86,10 +86,10 @@ body {
   @apply list-decimal;
 }
 .markdown-content li {
-  @apply text-xl;
+  @apply text-lg;
 }
 .markdown-content p {
-  @apply text-xl mb-4;
+  @apply text-lg mb-4;
 }
 
 .link {
