@@ -720,6 +720,22 @@ select {
   --tw-backdrop-sepia:  ;
 }
 
+.static {
+  position: static;
+}
+
+.fixed {
+  position: fixed;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.relative {
+  position: relative;
+}
+
 .mx-auto {
   margin-left: auto;
   margin-right: auto;
@@ -734,12 +750,32 @@ select {
   margin-top: 6rem;
 }
 
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mt-8 {
+  margin-top: 2rem;
+}
+
+.mb-12 {
+  margin-bottom: 3rem;
+}
+
 .block {
   display: block;
 }
 
 .flex {
   display: flex;
+}
+
+.table {
+  display: table;
+}
+
+.hidden {
+  display: none;
 }
 
 .min-h-screen {
@@ -926,6 +962,10 @@ select {
   color: rgb(231 229 228 / var(--tw-text-opacity));
 }
 
+.filter {
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+
 /* Syntax highlighting styles */
 
 pre {
@@ -999,16 +1039,21 @@ h5 {
   line-height: 1.75rem;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: "Work Sans", sans-serif
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Work Sans", sans-serif;
 }
 
 .font-fancy {
-  font-family: "Work Sans", sans-serif
+  font-family: "Work Sans", sans-serif;
 }
 
 body {
-  font-family: "Poppins", sans-serif
+  font-family: "Poppins", sans-serif;
 }
 
 /* inline code styles */
@@ -1075,6 +1120,29 @@ body {
           text-decoration-line: underline;
 }
 
+.markdown-content blockquote {
+  margin-bottom: 1rem;
+  display: inline-block;
+  border-radius: 0.25rem;
+  border-left-width: 4px;
+  --tw-border-opacity: 1;
+  border-color: rgb(254 215 170 / var(--tw-border-opacity));
+  --tw-bg-opacity: 1;
+  background-color: rgb(39 39 42 / var(--tw-bg-opacity));
+  padding: 1rem;
+}
+
+.markdown-content blockquote p {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  --tw-text-opacity: 1;
+  color: rgb(254 215 170 / var(--tw-text-opacity));
+}
+
+.markdown-content blockquote p:last-child {
+  margin-bottom: 0px;
+}
+
 @media (min-width: 640px) {
   .sm\:px-6 {
     padding-left: 1.5rem;
@@ -1115,4 +1183,3 @@ body {
     padding-right: 2rem;
   }
 }
-
