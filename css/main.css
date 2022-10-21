@@ -7,8 +7,8 @@ pre {
   padding: 1rem;
   overflow: auto;
   font-family: "Space Mono" monospace;
-  /*@apply text-sm -mx-16 my-8 ;*/
   @apply text-sm my-8;
+  /*@apply text-sm -mx-16 my-8 rounded;*/
 }
 pre[data-linenos] {
   padding: 1rem 0;
@@ -30,19 +30,19 @@ pre table {
 }
 
 h1 {
-  @apply text-4xl mt-8 mb-2;
+  @apply text-3xl mt-8 mb-2;
 }
 h2 {
-  @apply text-3xl mt-6 mb-2;
+  @apply text-2xl mt-6 mb-2;
 }
 h3 {
-  @apply text-2xl mt-5 mb-2;
+  @apply text-xl mt-5 mb-2;
 }
 h4 {
-  @apply text-xl mt-3 mb-2;
+  @apply text-base mt-3 mb-2;
 }
 h5 {
-  @apply text-lg my-2;
+  @apply my-2;
 }
 
 h1,
@@ -86,10 +86,10 @@ body {
   @apply list-decimal;
 }
 .markdown-content li {
-  @apply text-lg;
+  @apply text-base;
 }
 .markdown-content p {
-  @apply text-lg mb-4;
+  @apply text-base mb-4;
 }
 
 .link {

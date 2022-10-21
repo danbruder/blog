@@ -1,6 +1,6 @@
 ---
 date: 2022-10-21
-title: Picks of the week 0
+title: Picks of the week 0 - Seinfeld's writing process, The Founder Mindset
 slug: picks-of-the-week-0
 aliases: [/blog/picks-of-the-week-1]
 taxonomies:
