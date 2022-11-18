@@ -1,6 +1,6 @@
 ---
 date: 2022-11-18
-title: How I Run a Team of Remote Software Engineers (Part 1: Meetings)
+title: How I Run a Team of Remote Software Engineers (Part 1 - Meetings)
 slug: how-i-run-a-team-of-remote-software-engineers-part-1-meetings
 draft: false
 taxonomies:
