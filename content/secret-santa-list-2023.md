@@ -5,6 +5,7 @@ template: page.html
 
 # Hey there. Here's my list:
 
+- [This bag of whole bean coffee from Ceremony Roasters](https://shop.ceremonycoffee.com/products/kenya-kamwangi?ref=shown) -> $23.00 + shipping
 - [Giftcard to Wildroast](https://wildroastcoffeeco.com/store/giftcard) -> $5.00-??
 - [Kotlin In Action](https://www.thriftbooks.com/w/kotlin-in-action_svetlana-isakova_dmitry-jemero/11432899/?resultid=4a3432f4-5ec3-4a68-a891-d003af91eda5#edition=10953016&idiq=36049896) -> $24.49
 - [MongoDB Applied Design Patterns](https://www.thriftbooks.com/w/mongodb-applied-design-patterns_rick-copeland/1189236/?resultid=991b5438-8777-4ed3-b4a5-86e6d8eb5d63#edition=7488872&idiq=25904950) -> $7.29
