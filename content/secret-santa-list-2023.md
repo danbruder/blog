@@ -6,6 +6,7 @@ template: page.html
 # Hey there. Here's my list:
 
 - [Concurrent Data Processing in Elixir](https://pragprog.com/titles/sgdpelixir/concurrent-data-processing-in-elixir/) -> $26.95
+- [Distributed Services with Go](https://pragprog.com/titles/tjgo/distributed-services-with-go/) -> $27.95
 - [This bag of whole bean coffee from Ceremony Roasters](https://shop.ceremonycoffee.com/products/kenya-kamwangi?ref=shown) -> $23.00 + shipping
 - [Giftcard to Wildroast](https://wildroastcoffeeco.com/store/giftcard) -> $5.00-??
 - [Kotlin In Action](https://www.thriftbooks.com/w/kotlin-in-action_svetlana-isakova_dmitry-jemero/11432899/?resultid=4a3432f4-5ec3-4a68-a891-d003af91eda5#edition=10953016&idiq=36049896) -> $24.49
