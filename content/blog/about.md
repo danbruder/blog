@@ -11,7 +11,7 @@ taxonomies:
 
 I have 12 years of professional experience developing software. Most recently, I've been building a suite of web-based tools that enable efficient progress tracking for the construction industry called [SmartTrack](https://structionsite.com/products/smarttrack/).
 
-I recently appeared on [Software Unscripted](https://open.spotify.com/episode/6cnAHvdCXedoHxG4w9pWOV) where [Richard](https://twitter.com/rtfeldman) and I talked about my experience using Elm + Rust at StructionSite.
+I recently appeared on [Software Unscripted](https://open.spotify.com/episode/6cnAHvdCXedoHxG4w9pWOV) talking about our experience using Elm + Rust at StructionSite.
 
 A bit more about me:
 
