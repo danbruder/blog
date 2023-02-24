@@ -2,16 +2,19 @@
 date: 2017-05-09
 title: "Hi, I'm Dan"
 slug: about
-taxonomies: 
-    category: []
-    tags: []
+taxonomies:
+  category: []
+  tags: []
 ---
 
 ### I'm an engineering leader [helping builders do their best work](https://structionsite.com/)
 
-I have 11 years of professional experience developing software. Most recently, I've been building a suite of web-based tools that enable efficient progress tracking for the construction industry called [SmartTrack](https://structionsite.com/products/smarttrack/). 
+I have 12 years of professional experience developing software. Most recently, I've been building a suite of web-based tools that enable efficient progress tracking for the construction industry called [SmartTrack](https://structionsite.com/products/smarttrack/).
 
-A bit more about me: 
+I recently appeared on [Software Unscripted](https://open.spotify.com/show/0cWHExP9zgcPaaSRScHVtO) talking about our experience using Elm + Rust at StructionSite.
+
+A bit more about me:
+
 - I live with my wife and 3 kids in Grand Rapids, MI.
-- I graduated with a B.S. in Electrical Engineering from Grand Valley State University in 2011. 
-- Here are some [books I'm working on](/blog/book). 
+- I graduated with a B.S. in Electrical Engineering from Grand Valley State University in 2011.
+- Here are some [books I'm working on](/blog/book).
