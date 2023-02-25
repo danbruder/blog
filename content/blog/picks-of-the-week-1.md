@@ -1,6 +1,6 @@
 ---
 date: 2023-02-25
-title: Picks of the week 1 - Scaling Insights & Rescue Missions
+title: Picks of the week 1 - Scaling Insights | Rescue Missions | Pattern for Growth
 slug: picks-of-the-week-1
 aliases: []
 taxonomies:
@@ -21,3 +21,7 @@ taxonomies:
 [Article link](https://www.maxcountryman.com/articles/let-it-fail)
 
 <hr class="mt-8 mb-12"/>
+
+# Pick #3: A Pattern for Growth 
+
+[Article link](https://www.wking.dev/library/a-pattern-for-growth)
