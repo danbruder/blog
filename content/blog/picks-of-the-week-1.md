@@ -19,3 +19,9 @@ taxonomies:
 # Pick #2: Let it fail
 
 [Article link](https://www.maxcountryman.com/articles/let-it-fail)
+
+<hr class="mt-8 mb-12"/>
+
+# Pick #3: Failure points from $5M to $100M
+
+[Article link](https://www.linkedin.com/pulse/failure-points-from-5m-100m-arr-tracy-young/)
