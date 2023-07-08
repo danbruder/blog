@@ -31,28 +31,28 @@ config :friends, Friends.Repo,
   ]
 ```
 
-## Solution
+# Solution
 
 `server_name_indication` is a char list, not a string! The single quotes are important! I had been passing in a string from an environment variable like this:
 
 ```elixir
-    config :danos, Danos.Repo,
-      ssl: true,
-      ssl_opts: [
-        server_name_indication: System.get_env("DATABASE_HOST"),
-        verify: :verify_none
-      ],
+config :danos, Danos.Repo,
+  ssl: true,
+  ssl_opts: [
+    server_name_indication: System.get_env("DATABASE_HOST"),
+    verify: :verify_none
+  ],
 ```
 
 To make it a char list:
 
 ```elixir
-    config :danos, Danos.Repo,
-      ssl: true,
-      ssl_opts: [
-        server_name_indication: to_char_list(System.get_env("DATABASE_HOST")),
-        verify: :verify_none
-      ],
+config :danos, Danos.Repo,
+  ssl: true,
+  ssl_opts: [
+    server_name_indication: to_char_list(System.get_env("DATABASE_HOST")),
+    verify: :verify_none
+  ],
 ```
 
 And voila, it works!
