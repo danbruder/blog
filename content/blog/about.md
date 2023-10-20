@@ -15,6 +15,6 @@ I recently appeared on [Software Unscripted](https://open.spotify.com/episode/6c
 
 A bit more about me:
 
-- I live with my wife and 3 kids in Grand Rapids, MI.
+- I live with my wife and 3 kids in Greenville, SC
 - I graduated with a B.S. in Electrical Engineering from Grand Valley State University in 2011.
 - Here are some [books I'm working on](/blog/book).
