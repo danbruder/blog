@@ -1,5 +1,5 @@
 ---
-date: 2024-03-17
+date: 2024-03-12
 title: Delete files older than 7 days with bash
 slug: delete-files-older-than-7-days-with-bash
 taxonomies: 
