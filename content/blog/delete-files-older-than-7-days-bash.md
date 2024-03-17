@@ -14,7 +14,9 @@ To delete files older than 7 days with bash, you can use the following command:
 find ! -ctime -7 -type f -delete
 ```
 
-Passing `!` to `find` will negate the condition, so it will find files that are not created in the last 7 days. The -type f flag will make sure that only files are deleted, and the -delete flag will delete the files found.
+Let's go through the command step by step:
 
-Replace 7 with the number of days you want to use as a threshold.
-
+- `find`: The `find` command is used to search for files in a directory hierarchy.
+- `! -ctime -7`: This is the condition to find files older than 7 days. The `!` is used to negate the condition, and `-ctime -7` is used to find files that were changed more than 7 days ago.
+- `-type f`: This is used to specify that we are looking for files, not directories.
+- `-delete`: This option is used to delete the files that match the conditions.
