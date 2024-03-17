@@ -9,13 +9,13 @@ taxonomies:
       - rxjs
 ---
 
-Debouncing and throttling are two different techniques to control the frequency of events. They are often used in user interface programming to limit the number of events that are processed.
+Debouncing and throttling are two different techniques to control the frequency of events. They are often used when building user interfaces to limit the number of events that are processed.
 
-Debouncing is a technique to delay the processing of an event until a certain amount of time has passed since the last event. This is useful when you want to wait for a user to stop typing before performing an action, such as searching for a term in a search box.
+**Debouncing** is a technique to delay the processing of an event until a certain amount of time has passed since the last event. This is useful when you want to wait for a user to stop typing before performing an action, such as searching for a term in a search box.
 
-Throttling, on the other hand, is a technique to ensure that events are not processed more frequently than a certain amount of time. This is useful when you want to limit the rate at which a user can perform an action, such as scrolling through a list of items.
+**Throttling**, on the other hand, is a technique to ensure that events are not processed more frequently than a certain amount of time. This is useful when you want to limit the rate at which a user can perform an action, such as scrolling through a list of items.
 
-## Examples
+# Examples
 
 Here's an example of debouncing in RxJS:
 
@@ -54,8 +54,7 @@ fromEvent(button, 'click')
 ```
 
 In this example, the `throttleTime` operator is used to ensure that the `click` event is not processed more frequently than once every 1000 milliseconds.
-```
 
-## Conclusion
+# Conclusion
 
 Debouncing and throttling are two different techniques to control the frequency of events. Debouncing is used to delay the processing of events until a certain amount of time has passed since the last event, while throttling is used to ensure that events are not processed more frequently than a certain amount of time.
