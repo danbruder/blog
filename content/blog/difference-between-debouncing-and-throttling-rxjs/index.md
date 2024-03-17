@@ -9,11 +9,11 @@ taxonomies:
       - rxjs
 ---
 
-`Debouncing` and `throttling` are two different techniques to control the frequency of events. They are often used when building UIs to limit the number of events that are processed.
+`Debouncing` and `Throttling` are two different techniques to control the frequency of events. They are often used when building UIs to limit the number of events that are processed.
 
-**Debouncing** is a technique to delay the processing of an event until a certain amount of time has passed since the last event. This is useful when you want to wait for a user to stop typing before performing an action, like searching for a term in a search box.
+**Debouncing** is a technique to delay the processing of an event until a some time has passed since the last event. This is useful when you want to wait for a user to stop typing before performing an action, for example, searching for a term in a search box.
 
-**Throttling**, on the other hand, is a technique to make sure that events are not processed more frequently than a certain amount of time. This is useful when you want to limit the rate at which a user can perform an action, like scrolling through a list of items.
+**Throttling**, on the other hand, is a technique to make sure that events are not processed more frequently than a certain amount of time. This is useful when you want to limit the rate at which a user can perform an action, for example, scrolling through a list of items.
 
 # Debouncing
 
@@ -60,6 +60,6 @@ fromEvent(button, 'click')
 
 In this example, the `throttleTime` operator is used to make sure that the `click` event is not processed more frequently than once every 1000 milliseconds.
 
-# Conclusion
+# Wrapping up
 
-Debouncing and throttling are two different techniques to control the frequency of events. Debouncing is used to delay the processing of events until a certain amount of time has passed since the last event, while throttling is used to make sure that events are not processed more frequently than a certain amount of time.
+Both debouncing and throttling are useful tools to stabilize inputs in your application. By understanding the differences between the two, you can choose the right one for what you're working on. 
