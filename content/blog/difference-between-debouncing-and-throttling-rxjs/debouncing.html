@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Debouncing</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/7.3.0/rxjs.umd.js"></script>
+  </head>
+  <body>
+    <h1>Debouncing</h1>
+    <p>Type something into this search box:</p>
+    <input id="search-box" type="text" placeholder="Search" />
+    <pre id="search-output"></pre>
+
+    <script>
+      // Debouncing
+      const input = document.getElementById("search-box");
+
+      rxjs.fromEvent(input, "input")
+        .pipe(rxjs.debounceTime(300))
+        .subscribe(() => {
+          const output = document.getElementById("search-output");
+          output.textContent = `Searching for: ${input.value}`;
+        });
+    </script>
+  </body>
+</html>

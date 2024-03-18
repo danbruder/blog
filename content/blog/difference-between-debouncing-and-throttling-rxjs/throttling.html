@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Throttling</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/7.3.0/rxjs.umd.js"></script>
+  </head>
+  <body>
+    <h1>Throttling</h1>
+    <button id="scroll-button">scroll to next page</button>
+    <pre id="click-output"></pre>
+    <pre id="scroll-output"></pre>
+
+    <script>
+      // Throttling
+      const button = document.getElementById("scroll-button");
+      let scrollCount = 0;
+      let clickCount = 0;
+
+      rxjs
+        .fromEvent(button, "click")
+        .pipe(
+          rxjs.tap(() => {
+            const output = document.getElementById("click-output");
+            clickCount += 1;
+            output.textContent = `Clicked: ${clickCount}`;
+          }),
+          rxjs.throttleTime(1000)
+        )
+        .subscribe(() => {
+          const output = document.getElementById("scroll-output");
+          scrollCount += 1;
+          output.textContent = `Scrolling to page: ${scrollCount}`;
+        });
+    </script>
+  </body>
+</html>

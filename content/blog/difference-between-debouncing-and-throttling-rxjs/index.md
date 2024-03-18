@@ -22,7 +22,7 @@ The term "debouncing" comes from the analogy of a mechanical switch. When a swit
 Here's an example of debouncing in RxJS:
 
 ```typescript
-import { fromEvent } from 'rxjs';
+import { fromEvent, debounceTime } from 'rxjs';
 
 const input = document.getElementById('search-box');
 
@@ -35,6 +35,10 @@ fromEvent(input, 'input')
   });
 ```
 
+And here it is in action: 
+
+<iframe src="debouncing.html" style="width:100%; height:200px; border:none; background: white; margin-bottom: 24px; border-radius: 2px "></iframe>
+
 In this example, the `debounceTime` operator is used to delay the processing of the `input` event until 300 milliseconds have passed since the last event.
 
 # Throttling
@@ -45,7 +49,7 @@ Here's an example of throttling in RxJS:
 
 ```typescript
 
-import { fromEvent } from 'rxjs';
+import { fromEvent, throttleTime } from 'rxjs';
 
 const button = document.getElementById('scroll-button');
 
@@ -56,7 +60,12 @@ fromEvent(button, 'click')
   .subscribe(() => {
     // Scroll to next page
   });
+  
 ```
+
+Here's an example of throttling in RxJS:
+
+<iframe src="throttling.html" style="width:100%; height:200px; border:none; background: white; margin-bottom: 24px; border-radius: 2px "></iframe>
 
 In this example, the `throttleTime` operator is used to make sure that the `click` event is not processed more frequently than once every 1000 milliseconds.
 
