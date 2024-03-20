@@ -61,6 +61,10 @@ body {
   font-family: "Poppins", sans-serif;
 }
 
+a { 
+  @apply text-blue-100 hover:text-blue-300 transition-colors ease-in-out duration-300;
+}
+
 /* inline code styles */
 .markdown-content p code {
   @apply text-sm px-1 py-px text-orange-200 bg-orange-500 bg-opacity-20;
@@ -94,9 +98,11 @@ body {
 
 .link {
   @apply underline text-orange-200;
+  @apply hover:text-orange-300 transition-colors ease-in-out duration-300;
 }
 .markdown-content a {
   @apply underline text-orange-200;
+  @apply hover:text-orange-300 transition-colors ease-in-out duration-300;
 }
 
 .markdown-content blockquote {

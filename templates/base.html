@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         {% set favicon = resize_image(path=config.extra.favicon, format="png", width=32, height=32) %}
-        {% set logo = resize_image(path=config.extra.favicon, format="png", width=128, height=128) %}
+        {% set logo = resize_image(path=config.extra.favicon, format="png", width=256, height=256) %}
         <link rel="shortcut icon" href="{{ favicon.url | safe }}" type="image/png">
         <link rel="icon" href="{{ favicon.url | safe }}" type="image/png">
 
@@ -30,18 +30,19 @@ cronitor('config', { clientKey: '90e41c2012125c46121a852d0e3af6e1' });
     </head>
 
     <body class="bg-zinc-900 text-zinc-50 flex flex-col min-h-screen">
-        <header class="py-4 bg-zinc-800">
+        <header class="py-4 bg-zinc-800 border-t-4 border-blue-500">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="mx-auto max-w-2xl flex justify-between">
                     <div>
                         <a href="/" class="flex items-center space-x-3 ">
-                            <img class="w-6 block" src="{{ logo.url }} "/>
-                            <span class="font-fancy text-sm lowercase text-orange-100">danbruder</span>
+                            <img class="w-6 block rounded-full" src="{{ logo.url }} "/>
+                            <span class="font-fancy ">danbruder</span>
                         </a>
                     </div>
                     <div>
-                        <a href="/blog/about" class="">
-                            <span class="font-fancy text-sm lowercase text-orange-100">about</span>
+                        <a href="/blog/about" class="group relative">
+                          <span class="inline-block delay-100 group-hover:animate-wave  ease-in-out ">👋🏻</span>
+                          <span class="font-fancy text-sm ">about me</span>
                         </a>
                     </div>
                 </div>

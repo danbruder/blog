@@ -7,6 +7,8 @@ taxonomies:
   tags: []
 ---
 
+![My face](/my-face-new.jpg)
+
 ### I'm an engineering leader [helping builders do their best work](https://structionsite.com/)
 
 I have 12 years of professional experience developing software. Most recently, I've been building a suite of web-based tools that enable efficient progress tracking for the construction industry called [SmartTrack](https://structionsite.com/products/smarttrack/).
