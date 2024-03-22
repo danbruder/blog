@@ -2,8 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+
 .painted { 
-    background-image: paint(my-custom-paint);
+    background-image: paint(circles);
+    /*@apply border-2 border-orange-200;*/
 }
 
 /* Syntax highlighting styles */

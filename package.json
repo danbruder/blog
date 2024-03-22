@@ -15,10 +15,10 @@
     "build:preview": "npm run build:css && npm run build:zola --base-url $DEPLOY_PRIME_URL",
     "dev:zola": "zola-bin serve --open",
     "dev:css": "tailwindcss -i ./css/main.css -o ./static/output.css --watch",
-    "dev:js": "rollup js/main.js --file ./static/output.js --format iife --watch",
+    "dev:js": "",
     "build:zola": "zola-bin build",
     "build:css": "tailwindcss -i ./css/main.css -o ./static/output.css --minify",
-    "build:js": "rollup js/main.js --file ./static/output.js --format iife"
+    "build:js": ""
   },
   "dependencies": {
     "concurrently": "^7.3.0",

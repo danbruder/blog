@@ -1,6 +1,4 @@
-(function () {
-	'use strict';
-
-	console.log('Hello World, this is dan');
-
-})();
+if ('paintWorklet' in CSS) {
+  console.log('Paint supported!')
+  CSS.paintWorklet.addModule('/paintWorklet.js');
+}
