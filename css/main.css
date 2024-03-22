@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+.painted { 
+    background-image: paint(my-custom-paint);
+}
+
 /* Syntax highlighting styles */
 pre {
   padding: 1rem;

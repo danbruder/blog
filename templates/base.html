@@ -19,8 +19,10 @@
 
         <script async src="https://rum.cronitor.io/script.js"></script>
         <script>
-window.cronitor = window.cronitor || function() { (window.cronitor.q = window.cronitor.q || []).push(arguments); };
-cronitor('config', { clientKey: '90e41c2012125c46121a852d0e3af6e1' });
+if(window.location.host == "danbruder.com") { 
+  window.cronitor = window.cronitor || function() { (window.cronitor.q = window.cronitor.q || []).push(arguments); };
+  cronitor('config', { clientKey: '90e41c2012125c46121a852d0e3af6e1' });
+}
         </script>
 
 
@@ -48,6 +50,7 @@ cronitor('config', { clientKey: '90e41c2012125c46121a852d0e3af6e1' });
                 </div>
             </div>
         </header>
+
         <div class="flex-grow">
             {% block content -%}
             {% endblock content -%}
@@ -64,5 +67,7 @@ cronitor('config', { clientKey: '90e41c2012125c46121a852d0e3af6e1' });
             </div>
         </footer>
 
+        <script async src=""></script>
+        <script async src="{{ get_url(path="output.js") | safe }}"></script>
     </body>
 </html>
