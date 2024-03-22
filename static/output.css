@@ -771,6 +771,10 @@ select {
   margin-bottom: 3rem;
 }
 
+.mt-12 {
+  margin-top: 3rem;
+}
+
 .block {
   display: block;
 }
@@ -1059,6 +1063,11 @@ select {
 .text-stone-200 {
   --tw-text-opacity: 1;
   color: rgb(231 229 228 / var(--tw-text-opacity));
+}
+
+.underline {
+  -webkit-text-decoration-line: underline;
+          text-decoration-line: underline;
 }
 
 .filter {
