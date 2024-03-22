@@ -1,8 +1,10 @@
 class CirclesPainter {
   paint(ctx, geom) {
+    
     const colors = ['#2e1065', '#022c22', '#1f2937', '#44403c']; // Subtle color palette
     const shapes = ['circle', 'rectangle', 'line'];
     const maxShapes = geom.height / 3;
+    console.log(geom)
 
     for (let i = 0; i < maxShapes; i++) {
       const color = colors[Math.floor(Math.random() * colors.length)];
@@ -33,4 +35,6 @@ class CirclesPainter {
   }
 }
 
-registerPaint('circles', CirclesPainter);
+if (typeof registerPaint === 'function') {
+  registerPaint('circles', CirclesPainter);
+}
