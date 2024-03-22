@@ -11,7 +11,7 @@ taxonomies:
 
 ### I'm an engineering manager working on making [reality capture](https://www.dronedeploy.com/) easy.
 
-I've been working in software for 13 years, the last 4 as a manager. Recently I've been working on a web-based platform for drone management and reality capture at [DroneDeploy](https://www.dronedeploy.com/).
+I've been working in software for 13 years, 4 of which I've been a manager. Recently I've been working on a web-based platform for drone management and reality capture at [DroneDeploy](https://www.dronedeploy.com/).
 
 Previously, I built a suite of web-based tools that enable efficient progress tracking for the construction industry called [SmartTrack](https://structionsite.com/products/smarttrack/).
 
