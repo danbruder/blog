@@ -19,10 +19,8 @@
 
         <script async src="https://rum.cronitor.io/script.js"></script>
         <script>
-if(window.location.host == "danbruder.com") { 
-  window.cronitor = window.cronitor || function() { (window.cronitor.q = window.cronitor.q || []).push(arguments); };
-  cronitor('config', { clientKey: '90e41c2012125c46121a852d0e3af6e1' });
-}
+window.cronitor = window.cronitor || function() { (window.cronitor.q = window.cronitor.q || []).push(arguments); };
+cronitor('config', { clientKey: '90e41c2012125c46121a852d0e3af6e1' });
         </script>
         <script src="{{ get_url(path="output.js") | safe }}"></script>
 
