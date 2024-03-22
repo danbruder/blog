@@ -24,7 +24,7 @@ if(window.location.host == "danbruder.com") {
   cronitor('config', { clientKey: '90e41c2012125c46121a852d0e3af6e1' });
 }
         </script>
-
+        <script src="{{ get_url(path="output.js") | safe }}"></script>
 
         {% block title -%}
             {% set section =  load_data(path=current_path ~ "_index.md", metadata_only=true, required = false)  -%}
@@ -67,7 +67,5 @@ if(window.location.host == "danbruder.com") {
             </div>
         </footer>
 
-        <script async src=""></script>
-        <script async src="{{ get_url(path="output.js") | safe }}"></script>
     </body>
 </html>
