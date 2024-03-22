@@ -3,6 +3,7 @@ document.addEventListener(
   function () {
     const { fromEvent, interval } = rxjs;
     const {
+      merge,
       map,
       filter,
       startWith,
@@ -11,6 +12,11 @@ document.addEventListener(
       share,
     } = rxjs;
     const canvas = document.getElementById('gameCanvas');
+    const left = document.getElementById('btn-left');
+    const right = document.getElementById('btn-right');
+    const up = document.getElementById('btn-up');
+    const down = document.getElementById('btn-down');
+
     const ctx = canvas.getContext('2d');
     const SCALE = 20; // Size of each square
     const WIDTH = canvas.width / SCALE;
@@ -44,8 +50,13 @@ document.addEventListener(
     const tick$ = interval(TICK_RATE);
     const keyDown$ = fromEvent(document, "keydown");
 
+    const left$ = fromEvent(left, 'click').pipe(map(() => DIRECTIONS.LEFT));
+    const right$ = fromEvent(right, 'click').pipe(map(() => DIRECTIONS.RIGHT));
+    const up$ = fromEvent(up, 'click').pipe(map(() => DIRECTIONS.UP));
+    const down$ = fromEvent(down, 'click').pipe(map(() => DIRECTIONS.DOWN));
+
     // Snake direction observable
-    const direction$ = keyDown$.pipe(
+    const direction$ = merge(keyDown$.pipe(
       map((event) => {
         switch (event.code) {
           case "ArrowUp":
@@ -63,7 +74,7 @@ document.addEventListener(
       filter((direction) => !!direction),
       distinctUntilChanged(),
       startWith(INITIAL_DIRECTION)
-    );
+    ), left$, right$, up$, down$);
 
     // Game state observable
     const gameState$ = tick$.pipe(

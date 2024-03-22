@@ -8,6 +8,7 @@
     /*@apply border-2 border-orange-200;*/
 }
 
+button,
 .snake,
 img { 
   @apply rounded-xl shadow-lg shadow-blue-100/25 border-2 border-blue-200;
