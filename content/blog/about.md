@@ -7,7 +7,7 @@ taxonomies:
   tags: []
 ---
 
-![My face](/my-face-new.jpg)
+<img class="portrait" src="/my-face-new.jpg"/>
 
 ### I'm an engineering manager working on making [reality capture](https://www.dronedeploy.com/) easy.
 

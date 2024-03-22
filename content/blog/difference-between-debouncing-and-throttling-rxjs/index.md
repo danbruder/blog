@@ -37,7 +37,14 @@ fromEvent(input, 'input')
 
 And here it is in action: 
 
-<iframe src="debouncing.html" style="width:100%; height:200px; border:none; background: white; margin-bottom: 24px; border-radius: 2px "></iframe>
+<div class="bg-white rounded-lg my-12 browser max-w-xl m-auto">
+    <div class="w-full bg-zinc-700 h-8 flex space-x-2 items-center justify-start pl-2 rounded-t-lg">
+        <div class="w-2 h-2 rounded-full bg-red-500"></div>
+        <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+        <div class="w-2 h-2 rounded-full bg-green-500"></div>
+    </div>
+    <iframe src="debouncing.html" style="width:100%; height:200px; " class="rounded-b-lg border-l border-r border-b border-zinc-400"></iframe>
+</div>
 
 In this example, the `debounceTime` operator is used to delay the processing of the `input` event until 300 milliseconds have passed since the last event.
 
@@ -65,7 +72,15 @@ fromEvent(button, 'click')
 
 Here's an example of throttling in RxJS:
 
-<iframe src="throttling.html" style="width:100%; height:200px; border:none; background: white; margin-bottom: 24px; border-radius: 2px "></iframe>
+<div class="bg-white rounded-lg my-12 browser max-w-xl m-auto">
+    <div class="w-full bg-zinc-700 h-8 flex space-x-2 items-center justify-start pl-2 rounded-t-lg">
+        <div class="w-2 h-2 rounded-full bg-red-500"></div>
+        <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+        <div class="w-2 h-2 rounded-full bg-green-500"></div>
+    </div>
+    <iframe src="throttling.html" style="width:100%; height:200px; " class="rounded-b-lg border-l border-r border-b border-zinc-400"></iframe>
+</div>
+
 
 In this example, the `throttleTime` operator is used to make sure that the `click` event is not processed more frequently than once every 1000 milliseconds.
 

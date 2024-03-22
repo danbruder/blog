@@ -1,4 +1,4 @@
-title = "Dan Bruder | Software Developer"
+title = "Dan Bruder | Software Engineering Manager"
 base_url = "https://danbruder.com/"
 compile_sass = false
 build_search_index = false
@@ -10,10 +10,6 @@ taxonomies = [
 
 [markdown]
 highlight_code = true
-#highlight_theme = "1337"
-#highlight_theme = "charcoal"
-#highlight_theme = "subway-moscow"
-#highlight_theme = "zenburn"
 highlight_theme = "OneHalfDark"
 
 [extra]
