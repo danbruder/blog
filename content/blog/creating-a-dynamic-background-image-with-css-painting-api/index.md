@@ -101,7 +101,7 @@ Except on safari.
 
 CSS Painting API is experimental and [_does not work_ in Safari](https://caniuse.com/css-paint-api). But I want mobile viewers to see this fancy background too!
 
-To get around this, I used the same CSS class to generate the pattern, pulled the image out using `toDataUrl`, then set that as the background: 
+To get around this, I used the same JS class to generate the pattern, pulled the image out using `toDataUrl`, then set that as the background: 
 
 ```js 
 if ("paintWorklet" in CSS) {
