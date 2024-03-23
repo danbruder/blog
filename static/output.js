@@ -7,8 +7,8 @@ document.addEventListener('DOMContentLoaded', function(){
     canvas.height = window.innerHeight;
 
     let ctx = canvas.getContext('2d');
-    let cp = new CirclesPainter;
-    cp.paint(ctx, {width: canvas.width, height: canvas.height});
+    let p = new MyPainter();
+    p.paint(ctx, {width: canvas.width, height: canvas.height});
     let url = canvas.toDataURL();
     let el = document.body;
     el.style.backgroundImage = `url(${url})`;
