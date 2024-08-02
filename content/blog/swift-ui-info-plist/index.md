@@ -15,7 +15,7 @@ Xcode says the problem is that I have not added `NSCameraUsageDescription` to `I
 
 However, I didn't have one - how do I add it? 
 
-I followed the instructions in [https://useyourloaf.com/blog/xcode-13-missing-info.plist/](this blog post).
+I followed the instructions in [this blog post](https://useyourloaf.com/blog/xcode-13-missing-info.plist/).
 
 ![Steps to add Info.plist](./screen-shot-1.png)
 
