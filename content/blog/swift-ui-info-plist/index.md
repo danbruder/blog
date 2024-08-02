@@ -17,6 +17,8 @@ However, I didn't have one - how do I add it?
 
 I followed the instructions in [https://useyourloaf.com/blog/xcode-13-missing-info.plist/](this blog post).
 
+![Steps to add Info.plist](./screen-shot-1.png)
+
 1. Click on the top level project
 2. Click on 'info'
 3. Edit a property in the configuration settings. I chose to remove then re-add `Scene Configuratoin` under `Application Scene Manifest`
