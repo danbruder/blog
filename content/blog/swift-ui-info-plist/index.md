@@ -20,7 +20,7 @@ I followed the instructions in [this blog post](https://useyourloaf.com/blog/xco
 ![Steps to add Info.plist](./screen-shot-1.png)
 
 1. Click on the top level project
-2. Click on 'info'
+2. Click on the 'Info' tab
 3. Edit a property in the configuration settings. I chose to remove then re-add `Scene Configuratoin` under `Application Scene Manifest`
 4. The `Info.plist` file appears! 
 
