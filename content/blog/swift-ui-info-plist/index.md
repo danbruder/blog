@@ -1,7 +1,9 @@
 ---
 date: 2024-08-02
-title: Missing Info.plist in SwiftUI project
-slug: missing-info-plist-in-swiftui-project
+title: Where is Info.plist in SwiftUI project?
+slug: where-is-info-plist-in-swiftui-project
+aliases:
+  [/blog/missing-info-plist-in-swiftui-project]
 taxonomies: 
     category: 
       - Mobile
