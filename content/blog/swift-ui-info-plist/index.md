@@ -42,3 +42,5 @@ With the empty `Info.plist` file open, I added the necessary privacy settings:
 ```
 
 Now I can take photos in my app!
+
+Seems like it should have been easier than this...
