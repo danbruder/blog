@@ -30,17 +30,15 @@ document.addEventListener(
       DOWN: { x: 0, y: 1 },
     };
 
-    const TICK_RATE = 150;
+    const TICK_RATE = 450;
     const INITIAL_DIRECTION = DIRECTIONS.RIGHT;
     const INITIAL_LENGTH = 5;
 
     // Utility functions
     const willEat = (head, food) => head.x === food.x && head.y === food.y;
-    const willCrash = (head, body) => {
-      const withSelf = body.some((segment) => segment.x === head.x && segment.y === head.y);
-      const withWall = head.x < 0 || head.x >= WIDTH || head.y < 0 || head.y >= HEIGHT;
-      return withSelf || withWall;
-    }
+    const willCrash = (head, body) =>
+  body.some((segment) => segment.x === head.x && segment.y === head.y);
+    
     const getRandomFoodPosition = () => ({
       x: Math.floor(Math.random() * 20),
       y: Math.floor(Math.random() * 20),
@@ -82,8 +80,8 @@ document.addEventListener(
       scan(
         ({ snake, food }, [_, direction]) => {
           let nextHead = {
-            x: snake[0].x + direction.x,
-            y: snake[0].y + direction.y,
+            x: (snake[0].x + direction.x + WIDTH) % WIDTH,
+            y: (snake[0].y + direction.y + HEIGHT) % HEIGHT,
           };
 
           if (willEat(nextHead, food)) {
