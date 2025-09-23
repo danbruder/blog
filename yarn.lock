@@ -40,6 +40,26 @@
     lodash.merge "^4.6.2"
     postcss-selector-parser "6.0.10"
 
+"@u-c-s/zola-darwin-arm64@0.19.2":
+  version "0.19.2"
+  resolved "https://registry.yarnpkg.com/@u-c-s/zola-darwin-arm64/-/zola-darwin-arm64-0.19.2.tgz#d0555f2647b5329a393118e7335490fa0e0c2d61"
+  integrity sha512-qFUbF2P+AKr07gt48OENRFUy2AKmxvtZmI1PV6x9MCpct5VbdHACgjNAfiOAgDv3FBQ43CLh2ymLDhtEL/3phA==
+
+"@u-c-s/zola-darwin-x64@0.19.2":
+  version "0.19.2"
+  resolved "https://registry.yarnpkg.com/@u-c-s/zola-darwin-x64/-/zola-darwin-x64-0.19.2.tgz#8364c47ce9f6c1383a7b2f03336a85c1bc2b369a"
+  integrity sha512-gLi4jZrcA+KQUMTS2eatGIYCWvhyO5SMZnPNN9uf3I8/55MlTuhBi9z22THu+rYPPY0pW0VqHwA0Wk4FOqYkVw==
+
+"@u-c-s/zola-linux-x64-gnu@0.19.2":
+  version "0.19.2"
+  resolved "https://registry.yarnpkg.com/@u-c-s/zola-linux-x64-gnu/-/zola-linux-x64-gnu-0.19.2.tgz#8d6bcbd123534b3d5134de02ff0b7d25868024c3"
+  integrity sha512-QzV5ICB/vi2grpDR4eZBLDqUCHYBmttAaiVA9xwvIiStBxkrLdrAF0p/hakM5YpVpYfjdzy7cmjTypg+6+j6kw==
+
+"@u-c-s/zola-win32-x64-msvc@0.19.2":
+  version "0.19.2"
+  resolved "https://registry.yarnpkg.com/@u-c-s/zola-win32-x64-msvc/-/zola-win32-x64-msvc-0.19.2.tgz#aca5833f889d83f24a5551c2edaa59fc919d8155"
+  integrity sha512-kVcvFEsDf3zbTZzRgBNhgykk73jnM1LyXuAdEWY536Xui5NLuVNJVO/L0q/rK7SDEHnlczcqIZsJ83+xrH5jkg==
+
 acorn-node@^1.8.2:
   version "1.8.2"
   resolved "https://registry.npmjs.org/acorn-node/-/acorn-node-1.8.2.tgz"
@@ -211,11 +231,6 @@ dlv@^1.1.3:
   version "1.1.3"
   resolved "https://registry.npmjs.org/dlv/-/dlv-1.1.3.tgz"
   integrity sha512-+HlytyjlPKnIG8XuRG8WvmBP8xs8P71y+SKKS6ZXWoEgLuePxtDoUEiH7WkdePWrQ5JBpE6aoVqfZfJUQkjXwA==
-
-dotenv@16.0.1:
-  version "16.0.1"
-  resolved "https://registry.npmjs.org/dotenv/-/dotenv-16.0.1.tgz"
-  integrity sha512-1K6hR6wtk2FviQ4kEiSjFiH5rpzEVi8WW0x96aztHVMhEspNpc4DVOUTEHtEva5VThQ8IaBX1Pe4gSzpVVUsKQ==
 
 emoji-regex@^8.0.0:
   version "8.0.0"
@@ -725,28 +740,12 @@ yargs@^17.3.1:
     y18n "^5.0.5"
     yargs-parser "^21.0.0"
 
-zola-bin-darwin@^0.16.2:
-  version "0.16.2"
-  resolved "https://registry.npmjs.org/zola-bin-darwin/-/zola-bin-darwin-0.16.2.tgz"
-  integrity sha512-r3UX4xG7KLZfy8ta9I6MIlPVi60yBJx2z0xdWHJNEUatbRsnSShp2WoJFce/SMTxqxOjbt9gmCJDcAPybNpaYg==
-
-zola-bin-linux@^0.16.2:
-  version "0.16.2"
-  resolved "https://registry.yarnpkg.com/zola-bin-linux/-/zola-bin-linux-0.16.2.tgz#e59f88b56c07644346e2f91b869d0bbf9bf9dcfa"
-  integrity sha512-ZiR1BOOWp6Nd9PqhwN7t7iUx7TokdWlnkmNxeYsGxoflL7ExTkT57yX8xperDO+U3Vut15VUZfFb3c30GKws8w==
-
-zola-bin-win32@^0.16.2:
-  version "0.16.2"
-  resolved "https://registry.yarnpkg.com/zola-bin-win32/-/zola-bin-win32-0.16.2.tgz#2c8c6478a14c7d3f32ebbe043feca280cd9bec7e"
-  integrity sha512-UVvpJllZoWZc/dmVfsI6eGG2R8G5Yqchgfa95RYi/I18ePN4Cz/0Wg3pInqCc37qL0DymYg8czODjQ5eLftYBQ==
-
-zola-bin@^0.3.5:
-  version "0.3.5"
-  resolved "https://registry.npmjs.org/zola-bin/-/zola-bin-0.3.5.tgz"
-  integrity sha512-2GjZ3IGdgmzbID3/wkaJo968Lkty/vzt2fbjuBZLCIsiER9LJd6jILYp2jVGm4AjzWsSyxNxCKvhovW32PQokA==
-  dependencies:
-    dotenv "16.0.1"
+zola-bin@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/zola-bin/-/zola-bin-1.0.0.tgz#fe972c73f19c292a0cfeee0b68368bcc3b62e1f3"
+  integrity sha512-M7XSvKnnadJaqNBuZFJWgi4QFOMs+2n/jrBaO6jb7rcA0BL26uOBN8rKb8dckfWfgfqrBAG3ukiMd3sHYKVC3w==
   optionalDependencies:
-    zola-bin-darwin "^0.16.2"
-    zola-bin-linux "^0.16.2"
-    zola-bin-win32 "^0.16.2"
+    "@u-c-s/zola-darwin-arm64" "0.19.2"
+    "@u-c-s/zola-darwin-x64" "0.19.2"
+    "@u-c-s/zola-linux-x64-gnu" "0.19.2"
+    "@u-c-s/zola-win32-x64-msvc" "0.19.2"

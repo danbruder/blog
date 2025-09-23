@@ -20,6 +20,6 @@
   "dependencies": {
     "concurrently": "^7.3.0",
     "rimraf": "^3.0.2",
-    "zola-bin": "^0.3.5"
+    "zola-bin": "^1.0.0"
   }
 }
