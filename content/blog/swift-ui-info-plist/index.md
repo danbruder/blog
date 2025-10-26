@@ -4,11 +4,10 @@ title: Where is Info.plist in SwiftUI project?
 slug: where-is-info-plist-in-swiftui-project
 aliases:
   [/blog/missing-info-plist-in-swiftui-project]
-taxonomies: 
-    category: 
-      - Mobile
-    tags:
-      - swift-ui
+categories: 
+  - Mobile
+tags:
+  - swift-ui
 ---
 
 I created a fresh SwiftUI project that needs access to the camera, but when I run it on my device, it crashes! 

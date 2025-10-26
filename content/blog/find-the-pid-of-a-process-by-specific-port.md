@@ -2,10 +2,9 @@
 date: 2017-11-14
 title: Find the PID of a process by specific port
 slug: find-the-pid-of-a-process-by-specific-port
-taxonomies: 
-    category: [Development]
-    tags:
-      - linux
+categories: [Development]
+tags:
+  - linux
 ---
 
 You can use the `lsof` utility to find what process is using a port. For example, to see what process is using port 8000:

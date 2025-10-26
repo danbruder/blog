@@ -1,17 +1,14 @@
-{% extends "base.html" %}
-
-{% block content %}
-
+{{ define "main" }}
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-2xl">
             <h1 class="md:text-5xl text-sky-200 ">
-                {{ page.title }}
+                {{ .Title }}
             </h1>
             <span class="text-gray-500 font-bold flex items-center space-x-3">
-                <div class="">{{page.date | date(format="%B %e, %Y")}}</div>
+                <div class="">{{ .Date.Format "January 2, 2006" }}</div>
             </span>
             <div class="markdown-content">
-                {{ page.content | safe }}
+                {{ .Content }}
             </div>
 
 
@@ -26,7 +23,7 @@
                     <input type="email" class="bg-zinc-700 text-zinc-100 rounded my-2" placeholder="email" name="email" id="bd-email" />
                     <input type="submit" class="bg-sky-900 text-sky-400 p-2 rounded border border-sky-900 bg-opacity-50" value="Subscribe" />
             </form>
-            
+
 
             <h3 class="mt-12">
               Made it this far? Have a go at the game of <a class="underline" href="/snake">snake</a>
@@ -34,4 +31,4 @@
 
         </div>
     </div>
-{% endblock content %}
+{{ end }}

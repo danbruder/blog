@@ -2,10 +2,9 @@
 date: 2018-07-19
 title: Using Tachyons is a huge productivity boost
 slug: using-tachyons-is-a-huge-productivity-boost
-taxonomies: 
-    category: [ Frontend ]
-    tags:
-      - css
+categories: [ Frontend ]
+tags:
+  - css
 ---
 
 I come from the dark days of CSS when browser support was so-so and you had to have fallbacks for your fallbacks for good ol' IE9. 

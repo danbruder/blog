@@ -2,9 +2,8 @@
 date: 2017-05-09
 title: "Hi, I'm Dan"
 slug: about
-taxonomies:
-  category: []
-  tags: []
+categories: []
+tags: []
 ---
 
 <img class="portrait" src="/my-face-new.jpg"/>

@@ -2,11 +2,10 @@
 date: 2018-09-27
 title: What is the alpine equivalent to build-essential?
 slug: what-is-the-alpine-equivalent-to-build-essential
-taxonomies: 
-    category: [ Development ]
-    tags:
-      - linux
-      - docker
+categories: [ Development ]
+tags:
+  - linux
+  - docker
 ---
 
 Answer: 

@@ -2,10 +2,9 @@
 date: 2019-08-30
 title: Rust Enums as Constructors
 slug: rust-enums-as-constructors
-taxonomies: 
-    category: [Backend]
-    tags:
-      - rust
+categories: [Backend]
+tags:
+  - rust
 ---
 
 In my previous post, [Pattern Matching Multiple Variants in Rust](/blog/pattern-matching-multiple-variants-in-rust), I talked about matching against multiple enums variants for a single branch. 

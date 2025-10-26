@@ -3,9 +3,8 @@ date: 2020-01-24
 title: Using ANY to bind a WHERE IN Diesel sql_query
 slug: using-any-to-bind-a-where-in-diesel-sql-query
 aliases: [/blog/using-any-to-bind-a-where-in-diesel-sql_query]
-taxonomies: 
-  category: [Backend]
-  tags: [rust]
+categories: [Backend]
+tags: [rust]
 ---
 
 Say you have a query that you want to run in diesel that selects records using `WHERE IN`:

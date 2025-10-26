@@ -3,9 +3,8 @@ date: 2025-09-23
 title: "Advice for new mangers"
 slug: advice-for-new-managers
 draft: false
-taxonomies: 
-    category: []
-    tags:
+categories: []
+tags:
 ---
 
 Things I told someone today who is starting their journey as an engineering manager: 

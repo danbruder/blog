@@ -2,10 +2,9 @@
 date: 2018-01-03
 title: How to delete a git tag
 slug: how-to-delete-a-git-tag
-taxonomies: 
-    category: [Development]
-    tags:
-      - git
+categories: [Development]
+tags:
+  - git
 ---
 
 To delete a local tag:

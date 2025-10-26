@@ -2,10 +2,9 @@
 date: 2018-08-10
 title: Default value for a field in changeset (use ecto schema default)
 slug: default-value-for-a-field-in-changeset-use-ecto-schema-default
-taxonomies: 
-    category: [Backend]
-    tags:
-      - elixir
+categories: [Backend]
+tags:
+  - elixir
 ---
 
 Set a default value for an ecto schema like so: 

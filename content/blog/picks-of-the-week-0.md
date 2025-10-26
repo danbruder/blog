@@ -3,9 +3,8 @@ date: 2022-10-21
 title: Picks of the week 0 - Seinfeld's writing process, The Founder Mindset
 slug: picks-of-the-week-0
 aliases: []
-taxonomies:
-  category: [picks]
-  tags: []
+categories: [picks]
+tags: []
 ---
 
 <div class=" mb-4">

@@ -3,10 +3,9 @@ date: 2024-03-31
 title: ElixirLS and coc-elixir setup on MacOS
 slug: elixir-ls-and-coc-elixir-setup-on-macos
 draft: true
-taxonomies: 
-    category: 
-      - Elixir
-    tags:
+categories: 
+  - Elixir
+tags:
 ---
 
 To use coc-elixir with ElixirLS, this is the winning combination: 

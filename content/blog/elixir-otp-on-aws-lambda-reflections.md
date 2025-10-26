@@ -2,13 +2,12 @@
 date: 2018-12-13
 title: Elixir/OTP on AWS Lambda - Reflections
 slug: elixir-otp-on-aws-lambda-reflections
-taxonomies: 
-    category: [Serverless]
-    tags:
-      - elixir
-      - architecture
-      - aws
-      - devops
+categories: [Serverless]
+tags:
+  - elixir
+  - architecture
+  - aws
+  - devops
 ---
 
 You can't talk about Elixir without talking about OTP. It is integral to the language and ecosystem and a compelling reason to use Elixir. But what about using Elixir in an environment that side-steps the benefits of OTP?

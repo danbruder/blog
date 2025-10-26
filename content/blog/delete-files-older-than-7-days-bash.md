@@ -2,10 +2,9 @@
 date: 2024-03-12
 title: Delete files older than 7 days with bash
 slug: delete-files-older-than-7-days-with-bash
-taxonomies: 
-    category: [ Development ]
-    tags:
-      - linux
+categories: [ Development ]
+tags:
+  - linux
 ---
 
 To delete files older than 7 days with bash, you can use the following command:

@@ -2,10 +2,9 @@
 date: 2018-09-06
 title: "Infusionsoft: How to find a list of contacts that finished a sequence"
 slug: infusionsoft-how-to-find-a-list-of-contacts-that-finished-a-sequence
-taxonomies: 
-    category: [External Services]
-    tags:
-      - Infusionsoft
+categories: [External Services]
+tags:
+  - Infusionsoft
 ---
 
 I recently ran into a situation where I needed to find users who made it to the end of a particular sequence in an email campaign. 

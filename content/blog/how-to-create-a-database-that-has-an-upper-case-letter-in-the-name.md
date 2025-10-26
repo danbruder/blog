@@ -4,9 +4,8 @@ title: How to create a Postgres database that has an upper-case letter in the na
 slug: how-to-create-a-postgres-database-that-has-an-upper-case-letter-in-the-name
 aliases:
   [/blog/how-to-create-a-database-that-has-an-upper-case-letter-in-the-name]
-taxonomies:
-  category: []
-  tags: []
+categories: []
+tags: []
 ---
 
 Answer: **Surround the name with quotes!**

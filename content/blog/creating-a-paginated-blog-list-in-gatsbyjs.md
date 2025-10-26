@@ -2,11 +2,10 @@
 date: 2018-07-20
 title: Creating a paginated blog list in GatsbyJS
 slug: creating-a-paginated-blog-list-in-gatsbyjs
-taxonomies: 
-    category: [Frontend]
-    tags:
-      - gatsby
-      - jam
+categories: [Frontend]
+tags:
+  - gatsby
+  - jam
 ---
 
 Here's how I added the pagination to the blog listing on this site. 

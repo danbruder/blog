@@ -2,11 +2,10 @@
 date: 2020-11-28
 title: How to return a warp filter from a function in rust
 slug: how-to-return-a-warp-filter-from-a-function-in-rust
-taxonomies: 
-    category: 
-      - Backend
-    tags:
-      - rust
+categories: 
+  - Backend
+tags:
+  - rust
 ---
 
 To test a warp app, you provide your `Filter` to a mock server which you can then make requests against and assert responses. 

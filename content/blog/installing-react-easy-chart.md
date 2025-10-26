@@ -2,10 +2,9 @@
 date: 2017-09-05
 title: Installing react-easy-chart
 slug: installing-react-easy-chart
-taxonomies: 
-    category: [Frontend]
-    tags:
-      - reactjs
+categories: [Frontend]
+tags:
+  - reactjs
 ---
 
 ```bash

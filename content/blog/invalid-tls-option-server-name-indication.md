@@ -2,11 +2,10 @@
 date: 2023-07-08
 title: "ssl connect: Invalid TLS option: {server_name_indication:..."
 slug: invalid-tls-option-server-name-indication
-taxonomies:
-  category: [Backend]
-  tags:
-    - elixir
-    - ecto
+categories: [Backend]
+tags:
+- elixir
+- ecto
 ---
 
 Following this guide from [neon.tech](https://neon.tech/docs/guides/elixir-ecto) on setting up Ecto with Neon I ran into this error:

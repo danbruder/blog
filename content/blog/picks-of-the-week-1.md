@@ -3,9 +3,8 @@ date: 2023-02-25
 title: Picks of the week 1 - Scaling Insights | Rescue Missions | Pattern for Growth
 slug: picks-of-the-week-1
 aliases: []
-taxonomies:
-  category: [picks]
-  tags: []
+categories: [picks]
+tags: []
 ---
 
 <div class=" mb-4">

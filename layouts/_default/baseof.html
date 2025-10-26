@@ -1,33 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        {% set favicon = resize_image(path=config.extra.favicon, format="png", width=32, height=32) %}
-        {% set logo = resize_image(path=config.extra.favicon, format="png", width=256, height=256) %}
-        <link rel="shortcut icon" href="{{ favicon.url | safe }}" type="image/png">
-        <link rel="icon" href="{{ favicon.url | safe }}" type="image/png">
+        <link rel="shortcut icon" href="{{ .Site.Params.favicon | relURL }}" type="image/png">
+        <link rel="icon" href="{{ .Site.Params.favicon | relURL }}" type="image/png">
 
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta http-equiv="X-UA-Compatible" content="ie=edge" />
         <meta charset="utf-8">
 
-        <title>{{ config.title }}</title>
+        <title>{{ .Site.Title }}</title>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,700;1,400;1,700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Work+Sans:wght@700&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="{{ get_url(path="output.css") | safe }}" />
+        <link rel="stylesheet" href="{{ "output.css" | relURL }}" />
 
         <script async src="https://rum.cronitor.io/script.js"></script>
         <script>
 window.cronitor = window.cronitor || function() { (window.cronitor.q = window.cronitor.q || []).push(arguments); };
 cronitor('config', { clientKey: '90e41c2012125c46121a852d0e3af6e1' });
         </script>
-        <script src="{{ get_url(path="paintWorklet.js") | safe }}"></script>
-        <script src="{{ get_url(path="output.js") | safe }}"></script>
-
-        {% block title -%}
-            {% set section =  load_data(path=current_path ~ "_index.md", metadata_only=true, required = false)  -%}
-        {% endblock title -%}
+        <script src="{{ "paintWorklet.js" | relURL }}"></script>
+        <script src="{{ "output.js" | relURL }}"></script>
     </head>
 
     <body class=" painted bg-zinc-900 text-zinc-50 flex flex-col min-h-screen">
@@ -36,7 +30,7 @@ cronitor('config', { clientKey: '90e41c2012125c46121a852d0e3af6e1' });
                 <div class="mx-auto max-w-2xl flex justify-between">
                     <div>
                         <a href="/" class="flex items-center space-x-3 ">
-                            <img class="w-6 block rounded-full" src="{{ logo.url }} "/>
+                            <img class="w-6 block rounded-full" src="{{ .Site.Params.favicon | relURL }}" />
                             <span class="font-fancy ">danbruder</span>
                         </a>
                     </div>
@@ -51,8 +45,7 @@ cronitor('config', { clientKey: '90e41c2012125c46121a852d0e3af6e1' });
         </header>
 
         <div class="flex-grow">
-            {% block content -%}
-            {% endblock content -%}
+            {{ block "main" . }}{{ end }}
         </div>
 
         <footer class="mt-24">

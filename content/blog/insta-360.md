@@ -3,9 +3,8 @@ date: 2025-05-03
 title: "TBD"
 slug: insta-360
 draft: true
-taxonomies: 
-    category: []
-    tags:
+categories: []
+tags:
 ---
 
 # Braindump of everything I remember 

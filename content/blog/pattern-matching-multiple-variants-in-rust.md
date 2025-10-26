@@ -2,10 +2,9 @@
 date: 2019-08-16
 title: Pattern Matching Multiple Variants in Rust
 slug: pattern-matching-multiple-variants-in-rust
-taxonomies: 
-    category: [Backend]
-    tags:
-      - rust
+categories: [Backend]
+tags:
+  - rust
 ---
 
 One of my favorite features of Rust is the `enum` data type and the pattern matching capabilities of `match`. It allows me to be sure that I have covered every case and if not, the compiler will let me know. 

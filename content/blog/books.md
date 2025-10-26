@@ -2,9 +2,8 @@
 date: 2017-05-10
 title: Books
 slug: book
-taxonomies: 
-    category: []
-    tags: []
+categories: []
+tags: []
 ---
 
 _Updated 6-19-2021_ 

@@ -2,11 +2,10 @@
 date: 2024-03-23
 title: Creating a dynamic background image with CSS Painting API
 slug: creating-a-dynamic-background-image-with-css-painting-api
-taxonomies: 
-    category: 
-      - CSS
-    tags:
-      - CSS
+categories: 
+  - CSS
+tags:
+  - CSS
 ---
 
 The [CSS Painting API](https://developer.mozilla.org/en-US/docs/Web/API/CSS_Painting_API) allows you to create custom values for `paint()` which can be used in `background-image` to set custom backgrounds on an element.

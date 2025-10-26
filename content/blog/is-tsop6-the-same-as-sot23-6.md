@@ -2,9 +2,8 @@
 date: 2018-08-27
 title: Is TSOP6 the same as SOT23-6?
 slug: is-tsop6-the-same-as-sot23-6
-taxonomies: 
-    category: [Electronics]
-    tags: []
+categories: [Electronics]
+tags: []
 ---
 
 You bet it is!

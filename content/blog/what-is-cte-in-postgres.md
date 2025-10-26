@@ -2,10 +2,9 @@
 date: 2024-03-10
 title: What is a CTE in Postgres? 
 slug: what-is-cte-in-postgres
-taxonomies: 
-    category: [Development]
-    tags:
-      - postgres
+categories: [Development]
+tags:
+  - postgres
 ---
 
 A common table expression (`CTE`) is a temporary result set that you can reference within a `SELECT`, `INSERT`, `UPDATE`, or `DELETE` statement.

@@ -2,9 +2,8 @@
 date: 2019-07-08
 title: "Elm Compiler \"Map.!: given key is not an element in the map\""
 slug: elm-compiler-map-given-key-is-not-an-element-in-the-map
-taxonomies: 
-    category: [Tips]
-    tags: []
+categories: [Tips]
+tags: []
 ---
 
 There's an issue with the Elm compiler documented [here](https://github.com/elm/compiler/issues/1851) that results in the error message: 

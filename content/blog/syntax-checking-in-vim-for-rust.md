@@ -2,11 +2,10 @@
 date: 2018-04-04
 title: Syntax Checking in Vim for Rust
 slug: syntax-checking-in-vim-for-rust
-taxonomies: 
-    category: [ Development ]
-    tags:
-      - vim
-      - rust
+categories: [ Development ]
+tags:
+  - vim
+  - rust
 ---
 
 There is a Vim plugin for Rust that supports syntax checking through Syntastic and auto formatting through RustFmt.

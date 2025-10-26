@@ -1,8 +1,8 @@
 [build]
 publish = "public"
-command = "yarn install && yarn run build"
+command = "yarn install && yarn run build && hugo --minify"
 
 [build.environment]
 # Set the version name that you want to use and Netlify will automatically use it.
-ZOLA_VERSION = "0.13.0"
+HUGO_VERSION = "0.135.0"
 

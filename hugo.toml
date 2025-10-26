@@ -1,0 +1,17 @@
+baseURL = "https://danbruder.com/"
+title = "Dan Bruder | Software Engineering Manager"
+languageCode = "en-us"
+
+# Taxonomies
+[taxonomies]
+  category = "categories"
+  tag = "tags"
+
+# Syntax highlighting
+[markup]
+  [markup.highlight]
+    style = "onedark"
+    lineNos = false
+
+[params]
+  favicon = "my-face-new.jpg"

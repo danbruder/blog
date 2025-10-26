@@ -2,11 +2,10 @@
 date: 2024-03-17
 title: What's the difference between debouncing and throttling in RxJS?
 slug: difference-between-debouncing-and-throttling-rxjs
-taxonomies: 
-    category: 
-      - Development
-    tags:
-      - rxjs
+categories: 
+  - Development
+tags:
+  - rxjs
 ---
 
 `Debouncing` and `Throttling` are two different techniques to control the frequency of events. They are often used when building UIs to limit the number of events that are processed.
