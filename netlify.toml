@@ -1,6 +1,6 @@
 [build]
 publish = "public"
-command = "yarn run build"
+command = "yarn install && yarn run build"
 
 [build.environment]
 # Set the version name that you want to use and Netlify will automatically use it.
