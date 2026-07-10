@@ -1,0 +1,34 @@
+<.flash_group flash={@flash} />
+
+<header class="py-4">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-2xl flex justify-between">
+      <div>
+        <a href="/" class="flex items-center space-x-3">
+          <img class="w-6 block rounded-full" src={~p"/images/my-face-new.jpg"} />
+          <span class="font-fancy">danbruder</span>
+        </a>
+      </div>
+      <div>
+        <a href="/blog/about" class="group relative">
+          <span class="inline-block">👋🏻</span>
+          <span class="font-fancy text-sm">about me</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="flex-grow">
+  {@inner_content}
+</div>
+
+<footer class="mt-24">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-2xl">
+      <div class="flex justify-between items-center text-sm py-6 text-zinc-500">
+        <span>&copy; {Date.utc_today().year} Dan Bruder</span>
+      </div>
+    </div>
+  </div>
+</footer>

@@ -1,11 +1,24 @@
-# Project dependencies
-.cache
-node_modules
-yarn-error.log
+/_build/
+/cover/
+/deps/
+/doc/
+/.fetch
+erl_crash.dump
+*.ez
+*.beam
+/config/*.secret.exs
+.elixir_ls/
 
-# Build directory
-/public
-.DS_Store
+# Phoenix assets build output
+/priv/static/assets/
+
+# SQLite dev/test databases
+*.db
+*.db-shm
+*.db-wal
+
+# Env files
 .env
-.tags*
-tags*
+.env.*
+
+.DS_Store

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="csrf-token" content={get_csrf_token()} />
+
+    <link rel="icon" href={~p"/images/favicon.png"} type="image/png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,700;1,400;1,700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Work+Sans:wght@700&display=swap"
+      rel="stylesheet"
+    />
+
+    <.live_title default="Dan Bruder | Software Engineering Manager">
+      {assigns[:page_title]}
+    </.live_title>
+
+    <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
+    <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
+    </script>
+  </head>
+  <body class="painted bg-zinc-900 text-zinc-50 flex flex-col min-h-screen">
+    {@inner_content}
+  </body>
+</html>

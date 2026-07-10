@@ -1,0 +1,9 @@
+_build/
+deps/
+.git/
+.github/
+node_modules/
+*.db
+*.db-shm
+*.db-wal
+/priv/static/assets/

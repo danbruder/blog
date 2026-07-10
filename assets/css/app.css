@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.painted {
+  background-image: paint(myPaintedBackground);
+}
+
+button,
+.snake,
+img {
+  @apply rounded-xl shadow-lg shadow-blue-100/25 border-2 border-blue-200;
+  @apply hover:shadow-indigo-500/90 transition-shadow ease-in-out duration-300;
+}
+
+.embeddable-buttondown-form,
+.browser {
+  @apply rounded-xl shadow shadow-blue-600/50 border border-zinc-600;
+  @apply hover:shadow-indigo-500/90 transition-shadow ease-in-out duration-300;
+}
+
+pre {
+  padding: 1rem;
+  overflow: auto;
+  font-family: "Space Mono", monospace;
+  @apply text-sm my-8;
+  @apply rounded-xl shadow shadow-blue-600/50 border border-zinc-600;
+  @apply hover:shadow-indigo-500/90 transition-shadow ease-in-out duration-300;
+}
+
+h1 {
+  @apply text-3xl mt-8 mb-2;
+}
+h2 {
+  @apply text-2xl mt-6 mb-2;
+}
+h3 {
+  @apply text-xl mt-5 mb-2;
+}
+h4 {
+  @apply text-base mt-3 mb-2;
+}
+h5 {
+  @apply my-2;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Work Sans", sans-serif;
+}
+.font-fancy {
+  font-family: "Work Sans", sans-serif;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+}
+
+a {
+  @apply text-blue-100 hover:text-blue-300 transition-colors ease-in-out duration-300;
+}
+
+.markdown-content p code {
+  @apply text-sm px-1 py-px text-orange-200 bg-orange-500 bg-opacity-20;
+}
+
+.markdown-content {
+  @apply mt-8;
+}
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+  @apply text-teal-100;
+}
+
+.markdown-content ol,
+.markdown-content ul {
+  @apply p-4;
+}
+.markdown-content ul li {
+  @apply list-disc;
+}
+.markdown-content ol li {
+  @apply list-decimal;
+}
+.markdown-content li {
+  @apply text-base;
+}
+.markdown-content p {
+  @apply text-base mb-4;
+}
+
+.link {
+  @apply underline text-orange-200;
+  @apply hover:text-orange-300 transition-colors ease-in-out duration-300;
+}
+.markdown-content a {
+  @apply underline text-orange-200;
+  @apply hover:text-orange-300 transition-colors ease-in-out duration-300;
+}
+
+.markdown-content blockquote {
+  @apply p-4 bg-zinc-800 border-l-4 border-orange-200 rounded mb-4 inline-block;
+}
+
+.markdown-content blockquote p {
+  @apply text-orange-200;
+}
+
+.markdown-content blockquote p:last-child {
+  @apply mb-0;
+}
