@@ -51,7 +51,7 @@ defmodule Blog.ContentImporter do
 
         %{
           title: meta[:title] || fallback_slug,
-          slug: meta[:slug] || fallback_slug,
+          slug: normalize_slug(meta[:slug] || fallback_slug),
           body: String.trim(body),
           kind: kind,
           published: meta[:draft] != true,
@@ -63,7 +63,7 @@ defmodule Blog.ContentImporter do
       nil ->
         %{
           title: fallback_slug,
-          slug: fallback_slug,
+          slug: normalize_slug(fallback_slug),
           body: String.trim(contents),
           kind: kind,
           published: true,
@@ -147,6 +147,15 @@ defmodule Blog.ContentImporter do
 
   defp parse_value(:draft, value), do: unquote_value(value) == "true"
   defp parse_value(_key, value), do: unquote_value(value)
+
+  # Legacy Zola slugs occasionally contain characters (e.g. underscores) that
+  # the Post changeset rejects. Normalize them to the lowercase/hyphen form.
+  defp normalize_slug(slug) do
+    slug
+    |> String.downcase()
+    |> String.replace(~r/[^a-z0-9]+/, "-")
+    |> String.trim("-")
+  end
 
   defp unquote_value(v) do
     v

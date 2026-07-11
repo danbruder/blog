@@ -21,7 +21,7 @@ defmodule Blog.Content.Post do
   def changeset(post, attrs) do
     post
     |> cast(attrs, [:title, :slug, :body, :kind, :published, :category, :tags, :published_at])
-    |> validate_required([:title, :slug, :body, :kind, :published])
+    |> validate_required([:title, :slug, :kind, :published])
     |> validate_inclusion(:kind, @kinds)
     |> validate_format(:slug, ~r/^[a-z0-9]+(?:-[a-z0-9]+)*$/,
       message: "must be lowercase letters, numbers, and hyphens only"
