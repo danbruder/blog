@@ -2,10 +2,12 @@ defmodule BlogWeb.PresenceTracker do
   @moduledoc """
   `on_mount` hook that tracks each connected public LiveView as a live
   viewer, tagged with a best-effort country lookup, under the
-  #{inspect(__MODULE__)}.topic/0 presence topic.
+  #{inspect(__MODULE__)}.topic/0 presence topic. Also keeps a
+  `:viewer_count` assign live-updated, for the site-wide viewer bubble.
   """
 
   import Phoenix.LiveView
+  import Phoenix.Component, only: [assign: 3]
 
   alias BlogWeb.Presence
 
@@ -22,10 +24,25 @@ defmodule BlogWeb.PresenceTracker do
           country: country,
           joined_at: System.system_time(:second)
         })
+
+      Phoenix.PubSub.subscribe(Blog.PubSub, @topic)
     end
+
+    socket =
+      socket
+      |> assign(:viewer_count, viewer_count())
+      |> attach_hook(:presence_viewer_count, :handle_info, &handle_presence_diff/2)
 
     {:cont, socket}
   end
+
+  defp handle_presence_diff(%{event: "presence_diff"}, socket) do
+    {:halt, assign(socket, :viewer_count, viewer_count())}
+  end
+
+  defp handle_presence_diff(_message, socket), do: {:cont, socket}
+
+  defp viewer_count, do: @topic |> Presence.list() |> map_size()
 
   defp client_ip(socket) do
     x_headers = get_connect_info(socket, :x_headers) || []

@@ -32,3 +32,14 @@
     </div>
   </div>
 </footer>
+
+<div
+  :if={assigns[:viewer_count]}
+  class="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full bg-zinc-900/90 border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 shadow-lg backdrop-blur"
+>
+  <span class="relative flex h-2 w-2">
+    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+    <span class="relative inline-flex h-2 w-2 rounded-full bg-sky-400"></span>
+  </span>
+  {@viewer_count} {if @viewer_count == 1, do: "viewer", else: "viewers"}
+</div>
