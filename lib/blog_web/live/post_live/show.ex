@@ -32,7 +32,7 @@ defmodule BlogWeb.PostLive.Show do
           <div>{Calendar.strftime(@post.published_at, "%B %-d, %Y")}</div>
         </span>
 
-        <div class="markdown-content">
+        <div id="post-body" phx-hook="Highlight" phx-update="ignore" class="markdown-content">
           {Phoenix.HTML.raw(@body_html)}
         </div>
 

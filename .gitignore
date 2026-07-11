@@ -12,6 +12,9 @@ erl_crash.dump
 # Phoenix assets build output
 /priv/static/assets/
 
+# npm dependencies (assets JS toolchain + any legacy root install)
+node_modules/
+
 # SQLite dev/test databases
 *.db
 *.db-shm

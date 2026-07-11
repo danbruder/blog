@@ -1,7 +1,11 @@
 module.exports = {
   content: [
     "./js/**/*.js",
-    "../lib/blog_web/**/*.*ex"
+    "../lib/blog_web/**/*.*ex",
+    // Post/page bodies live in the DB but originate from these markdown
+    // files, whose embedded HTML uses Tailwind classes (e.g. the `.browser`
+    // chrome). Scan them so those classes aren't purged.
+    "../priv/legacy_content/**/*.md"
   ],
   theme: {
     extend: {

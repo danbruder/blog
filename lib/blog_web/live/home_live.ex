@@ -5,7 +5,7 @@ defmodule BlogWeb.HomeLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    posts = Content.list_published_posts(15)
+    posts = Content.list_published_posts()
     {:ok, assign(socket, posts: posts, page_title: "Dan Bruder | Software Engineering Manager")}
   end
 

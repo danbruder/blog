@@ -22,7 +22,7 @@ config :esbuild,
   version: "0.21.5",
   blog: [
     args:
-      ~w(js/app.js --bundle --target=es2020 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/*),
+      ~w(js/app.js js/paintWorklet.js --bundle --target=es2020 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/*),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]

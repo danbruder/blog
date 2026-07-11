@@ -2,10 +2,28 @@
 import "phoenix_html"
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
+import hljs from "highlight.js/lib/common"
+
+// Syntax-highlight code blocks in rendered markdown. Earmark emits
+// <pre><code class="elixir">…</code></pre>; highlight.js reads that class.
+function highlightIn(el) {
+  el.querySelectorAll("pre code").forEach((block) => {
+    delete block.dataset.highlighted
+    hljs.highlightElement(block)
+  })
+}
+
+let Hooks = {
+  Highlight: {
+    mounted() { highlightIn(this.el) },
+    updated() { highlightIn(this.el) }
+  }
+}
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
+  hooks: Hooks,
   params: {_csrf_token: csrfToken}
 })
 
