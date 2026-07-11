@@ -38,3 +38,50 @@ ship it.
 - Tags/category browsing (data is imported, but there's no UI for it yet)
 - Allowing developer profile to run on iOS build
 - Adding image resizing to a route in Elixir
+
+## Todos from design/content review (2026-07)
+
+Quick fixes:
+
+- [ ] Fix the typo in the newest post title: "Advice for new mangers" →
+  "managers" (in `priv/legacy_content/posts/advice-for-new-managers.md` AND
+  via `/admin` on prod, since the seeder won't overwrite existing rows)
+- [ ] Make the title consistent everywhere: `<title>`/page titles say
+  "Software Engineering Manager", hero says "engineering director" — use
+  the current title (Director) in all places
+
+Content:
+
+- [ ] Rewrite the about page: update stale numbers ("14 years", frontmatter
+  dated 2017), add contact info + GitHub/LinkedIn/resume links (currently
+  none exist anywhere on the site), surface the Software Unscripted podcast
+  link more prominently
+- [ ] Add a "Selected writing" section (3–5 hand-picked essays) at the top
+  of the homepage; move TIL-style notes to a lighter `/notes` list
+- [ ] Add a "Projects" section: this blog (Phoenix/LiveView CMS),
+  multiplayer snake + live presence, litehouse — with GitHub links
+- [ ] Finish and publish one flagship draft: "Never Rewrite Again™",
+  "How I Make Software" (both empty drafts), or the Insta360 stitching
+  war story (`insta-360.md`, half-written braindump)
+- [ ] Update the books page (last updated 2021)
+- [ ] Consider writing about how the team uses AI tooling
+
+Sharing / discoverability:
+
+- [ ] Add meta description, Open Graph + Twitter card tags, and og:image to
+  `root.html.heex`
+- [ ] Add an Atom/RSS feed route (live site 404s on /atom.xml and /rss.xml)
+  and a sitemap
+
+Design:
+
+- [ ] Consolidate accent colors (links are blue-100/orange-200 depending on
+  context; headings sky-200/teal-100) into one system in `app.css`
+- [ ] Remove the glow border/shadow from content images (`button, .snake,
+  img` rule) — keep it for interactive elements only
+- [ ] Homepage hierarchy: "Latest Posts" is a gray h4 while post titles are
+  huge blue h2s; add one-line excerpts under featured posts
+- [ ] Accessibility: alt text on the header avatar, replace `<label>` used
+  for post dates, bump gray-500 date contrast
+- [ ] Move the "have a go at snake" CTA off every post into the footer or a
+  `/fun` page
