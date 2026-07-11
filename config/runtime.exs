@@ -36,6 +36,16 @@ if config_env() == :prod do
 
   config :blog, BlogWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
+    # Allow LiveView sockets from every host this app is reachable at. Listing
+    # them explicitly (rather than relying on the :url host default) lets us
+    # move PHX_HOST to danbruder.com without breaking the derived
+    # blog.lh.danbruder.com host, and keeps both working during the cutover.
+    check_origin: [
+      "https://danbruder.com",
+      "https://www.danbruder.com",
+      "https://blog.lh.danbruder.com",
+      "//#{host}"
+    ],
     http: [ip: {0, 0, 0, 0, 0, 0, 0, 0}, port: port],
     secret_key_base: secret_key_base
 end
