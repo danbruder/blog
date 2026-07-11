@@ -1,0 +1,30 @@
+name: litehouse deploy
+on:
+  push:
+    branches: [main, master]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/danbruder/blog:latest
+            ghcr.io/danbruder/blog:${{ github.sha }}
+      - name: notify litehouse
+        run: |
+          curl -fsS -X POST "https://admin2.lh.danbruder.com/api/hooks/deploy" \
+            -H "Authorization: Bearer ${{ secrets.LITEHOUSE_DEPLOY_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"app\":\"blog\",\"image\":\"ghcr.io/danbruder/blog:${{ github.sha }}\",\"sha\":\"${{ github.sha }}\"}"
