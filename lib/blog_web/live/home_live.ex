@@ -6,7 +6,7 @@ defmodule BlogWeb.HomeLive do
   @impl true
   def mount(_params, _session, socket) do
     posts = Content.list_published_posts()
-    {:ok, assign(socket, posts: posts, page_title: "Dan Bruder | Software Engineering Manager")}
+    {:ok, assign(socket, posts: posts, page_title: "Dan Bruder | Engineering Director")}
   end
 
   @impl true
@@ -27,9 +27,9 @@ defmodule BlogWeb.HomeLive do
           <h2 class="text-xl md:text-3xl text-sky-200">
             <.link navigate={~p"/blog/#{post.slug}"}>{post.title}</.link>
           </h2>
-          <label :if={post.published_at} class="text-gray-500">
+          <time :if={post.published_at} datetime={Date.to_iso8601(post.published_at)} class="text-zinc-400">
             {Calendar.strftime(post.published_at, "%B %-d, %Y")}
-          </label>
+          </time>
         </div>
       </div>
     </div>

@@ -42,6 +42,35 @@ defmodule Blog.ContentTest do
     assert Content.get_published_by_slug("hello-world") == nil
   end
 
+  test "excerpt/2 strips markdown and collapses whitespace" do
+    body = "# A heading\n\nSome **bold** text with a [link](http://x) and `code`."
+    excerpt = Content.excerpt(body)
+
+    refute excerpt =~ "#"
+    refute excerpt =~ "**"
+    refute excerpt =~ "["
+    assert excerpt =~ "Some bold text"
+    assert excerpt =~ "link"
+  end
+
+  test "excerpt/2 strips raw HTML tags found in legacy posts" do
+    body = ~s(<img class="portrait" src="/images/x.jpg"/> Hello there.)
+    excerpt = Content.excerpt(body)
+
+    refute excerpt =~ "<"
+    refute excerpt =~ "img"
+    assert excerpt =~ "Hello there."
+  end
+
+  test "excerpt/2 truncates on a word boundary with an ellipsis" do
+    body = String.duplicate("word ", 100)
+    excerpt = Content.excerpt(body, 40)
+
+    assert String.length(excerpt) <= 41
+    assert String.ends_with?(excerpt, "…")
+    refute excerpt =~ ~r/\Sword…\z/
+  end
+
   defp errors_on(changeset) do
     Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
       Enum.reduce(opts, msg, fn {key, value}, acc ->

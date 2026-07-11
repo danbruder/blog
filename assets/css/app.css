@@ -2,15 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Accent color system: one cool token for headings, one warm token for links.
+   Everything that used sky/teal for headings or blue/orange for links now
+   resolves through these. */
+:root {
+  --accent-heading: theme("colors.sky.200");
+  --accent-link: theme("colors.orange.200");
+  --accent-link-hover: theme("colors.orange.300");
+}
+
 .painted {
   background-image: paint(myPaintedBackground);
 }
 
+/* Interactive elements keep the colored border + hover glow. */
 button,
-.snake,
-img {
+.snake {
   @apply rounded-xl shadow-lg shadow-blue-100/25 border-2 border-blue-200;
   @apply hover:shadow-indigo-500/90 transition-shadow ease-in-out duration-300;
+}
+
+/* Content images get a plain rounded border only — no glow. */
+img {
+  @apply rounded-xl border border-zinc-700;
 }
 
 .embeddable-buttondown-form,
@@ -68,7 +82,11 @@ body {
 }
 
 a {
-  @apply text-blue-100 hover:text-blue-300 transition-colors ease-in-out duration-300;
+  color: var(--accent-link);
+  @apply transition-colors ease-in-out duration-300;
+}
+a:hover {
+  color: var(--accent-link-hover);
 }
 
 .markdown-content p code {
@@ -81,7 +99,7 @@ a {
 .markdown-content h1,
 .markdown-content h2,
 .markdown-content h3 {
-  @apply text-teal-100;
+  color: var(--accent-heading);
 }
 
 .markdown-content ol,
@@ -102,12 +120,18 @@ a {
 }
 
 .link {
-  @apply underline text-orange-200;
-  @apply hover:text-orange-300 transition-colors ease-in-out duration-300;
+  color: var(--accent-link);
+  @apply underline transition-colors ease-in-out duration-300;
+}
+.link:hover {
+  color: var(--accent-link-hover);
 }
 .markdown-content a {
-  @apply underline text-orange-200;
-  @apply hover:text-orange-300 transition-colors ease-in-out duration-300;
+  color: var(--accent-link);
+  @apply underline transition-colors ease-in-out duration-300;
+}
+.markdown-content a:hover {
+  color: var(--accent-link-hover);
 }
 
 .markdown-content blockquote {

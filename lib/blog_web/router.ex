@@ -14,10 +14,15 @@ defmodule BlogWeb.Router do
     plug(BlogWeb.AdminAuth)
   end
 
+  pipeline :feeds do
+    plug(:accepts, ["xml"])
+  end
+
   scope "/", BlogWeb do
     pipe_through(:browser)
 
-    live_session :public, on_mount: {BlogWeb.PresenceTracker, :track} do
+    live_session :public,
+      on_mount: [{BlogWeb.PresenceTracker, :track}, {BlogWeb.CurrentPath, :default}] do
       live("/", HomeLive, :index)
       live("/blog/:slug", PostLive.Show, :show)
       live("/snake", SnakeLive, :index)
@@ -28,6 +33,15 @@ defmodule BlogWeb.Router do
     get("/admin/login", AdminSessionController, :new)
     post("/admin/login", AdminSessionController, :create)
     delete("/admin/logout", AdminSessionController, :delete)
+  end
+
+  scope "/", BlogWeb do
+    pipe_through(:feeds)
+
+    get("/rss.xml", FeedController, :rss)
+    get("/feed.xml", FeedController, :rss)
+    get("/atom.xml", FeedController, :atom)
+    get("/sitemap.xml", FeedController, :sitemap)
   end
 
   scope "/admin", BlogWeb.Admin, as: :admin do

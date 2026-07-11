@@ -8,6 +8,27 @@
 
     <link rel="icon" href={~p"/images/favicon.png"} type="image/png" />
 
+    <meta name="description" content={BlogWeb.SEO.description(assigns)} />
+    <link rel="canonical" href={BlogWeb.SEO.canonical_url(assigns)} />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Dan Bruder"
+      href={~p"/rss.xml"}
+    />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Dan Bruder" />
+    <meta property="og:title" content={BlogWeb.SEO.title(assigns)} />
+    <meta property="og:description" content={BlogWeb.SEO.description(assigns)} />
+    <meta property="og:url" content={BlogWeb.SEO.canonical_url(assigns)} />
+    <meta property="og:image" content={BlogWeb.SEO.og_image()} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={BlogWeb.SEO.title(assigns)} />
+    <meta name="twitter:description" content={BlogWeb.SEO.description(assigns)} />
+    <meta name="twitter:image" content={BlogWeb.SEO.og_image()} />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
     <link
@@ -15,7 +36,7 @@
       rel="stylesheet"
     />
 
-    <.live_title default="Dan Bruder | Software Engineering Manager">
+    <.live_title default="Dan Bruder | Engineering Director">
       {assigns[:page_title]}
     </.live_title>
 

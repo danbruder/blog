@@ -17,6 +17,7 @@ defmodule BlogWeb.PostLive.Show do
          assign(socket,
            post: post,
            page_title: post.title,
+           meta_description: Content.excerpt(post),
            body_html: Content.render_body(post)
          )}
     end
@@ -28,8 +29,10 @@ defmodule BlogWeb.PostLive.Show do
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="mx-auto max-w-2xl">
         <h1 class="md:text-5xl text-sky-200">{@post.title}</h1>
-        <span :if={@post.published_at} class="text-gray-500 font-bold flex items-center space-x-3">
-          <div>{Calendar.strftime(@post.published_at, "%B %-d, %Y")}</div>
+        <span :if={@post.published_at} class="text-zinc-400 font-bold flex items-center space-x-3">
+          <time datetime={Date.to_iso8601(@post.published_at)}>
+            {Calendar.strftime(@post.published_at, "%B %-d, %Y")}
+          </time>
         </span>
 
         <div id="post-body" phx-hook="Highlight" phx-update="ignore" class="markdown-content">

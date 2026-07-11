@@ -64,4 +64,35 @@ defmodule Blog.Content do
       {:error, html, _errors} -> html
     end
   end
+
+  @doc """
+  Plain-text excerpt of a post body, suitable for a `<meta description>`.
+  Strips markdown, collapses whitespace, and truncates on a word boundary.
+  """
+  def excerpt(post_or_body, max \\ 160)
+
+  def excerpt(%Post{body: body}, max), do: excerpt(body || "", max)
+
+  def excerpt(body, max) when is_binary(body) do
+    text =
+      body
+      |> String.replace(~r/```.*?```/s, " ")
+      |> String.replace(~r/`[^`]*`/, " ")
+      |> String.replace(~r/<[^>]+>/, " ")
+      |> String.replace(~r/!\[[^\]]*\]\([^)]*\)/, " ")
+      |> String.replace(~r/\[([^\]]*)\]\([^)]*\)/, "\\1")
+      |> String.replace(~r/^[#>\-\*\s]+/m, " ")
+      |> String.replace(~r/[*_~`>#]/, "")
+      |> String.replace(~r/\s+/, " ")
+      |> String.trim()
+
+    if String.length(text) <= max do
+      text
+    else
+      text
+      |> String.slice(0, max)
+      |> String.replace(~r/\s+\S*$/, "")
+      |> Kernel.<>("…")
+    end
+  end
 end
