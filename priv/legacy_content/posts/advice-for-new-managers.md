@@ -1,6 +1,6 @@
 ---
 date: 2025-09-23
-title: "Advice for new mangers"
+title: "Advice for new managers"
 slug: advice-for-new-managers
 draft: false
 taxonomies: 
