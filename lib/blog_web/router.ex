@@ -21,7 +21,7 @@ defmodule BlogWeb.Router do
     live("/blog/:slug", PostLive.Show, :show)
 
     get("/rpsb", FunController, :rpsb)
-    get("/snake", FunController, :snake)
+    live("/snake", SnakeLive, :index)
 
     get("/admin/login", AdminSessionController, :new)
     post("/admin/login", AdminSessionController, :create)

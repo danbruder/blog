@@ -17,6 +17,12 @@ let Hooks = {
   Highlight: {
     mounted() { highlightIn(this.el) },
     updated() { highlightIn(this.el) }
+  },
+  // LiveView has no native phx-dblclick; bridge a dblclick into a server event.
+  DblClickEdit: {
+    mounted() {
+      this.el.addEventListener("dblclick", () => this.pushEvent("edit_name", {}))
+    }
   }
 }
 
