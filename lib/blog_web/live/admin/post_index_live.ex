@@ -24,6 +24,9 @@ defmodule BlogWeb.Admin.PostIndexLive do
         <div class="flex items-center justify-between mb-8">
           <h1 class="text-3xl text-sky-200">Posts</h1>
           <div class="flex items-center gap-3">
+            <.link navigate={~p"/admin/viewers"} class="text-sm text-zinc-400 underline">
+              Viewers
+            </.link>
             <.link navigate={~p"/admin/posts/new"}>
               <.button>New post</.button>
             </.link>

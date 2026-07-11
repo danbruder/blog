@@ -17,11 +17,13 @@ defmodule BlogWeb.Router do
   scope "/", BlogWeb do
     pipe_through(:browser)
 
-    live("/", HomeLive, :index)
-    live("/blog/:slug", PostLive.Show, :show)
+    live_session :public, on_mount: {BlogWeb.PresenceTracker, :track} do
+      live("/", HomeLive, :index)
+      live("/blog/:slug", PostLive.Show, :show)
+      live("/snake", SnakeLive, :index)
+    end
 
     get("/rpsb", FunController, :rpsb)
-    live("/snake", SnakeLive, :index)
 
     get("/admin/login", AdminSessionController, :new)
     post("/admin/login", AdminSessionController, :create)
@@ -36,6 +38,7 @@ defmodule BlogWeb.Router do
       live("/", PostIndexLive, :index)
       live("/posts/new", PostFormLive, :new)
       live("/posts/:id/edit", PostFormLive, :edit)
+      live("/viewers", PresenceLive, :index)
     end
   end
 end

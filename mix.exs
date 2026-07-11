@@ -16,7 +16,7 @@ defmodule Blog.MixProject do
   def application do
     [
       mod: {Blog.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :inets, :ssl]
     ]
   end
 
@@ -39,7 +39,8 @@ defmodule Blog.MixProject do
       {:jason, "~> 1.4"},
       {:earmark, "~> 1.4"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.2", runtime: Mix.env() == :dev}
+      {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
+      {:lazy_html, ">= 0.1.0", only: :test}
     ]
   end
 

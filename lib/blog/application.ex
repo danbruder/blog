@@ -9,6 +9,8 @@ defmodule Blog.Application do
       BlogWeb.Telemetry,
       Blog.Repo,
       {Phoenix.PubSub, name: Blog.PubSub},
+      BlogWeb.Presence,
+      Blog.GeoIP,
       Blog.SnakeGame,
       BlogWeb.Endpoint
     ]

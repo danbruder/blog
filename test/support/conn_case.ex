@@ -7,6 +7,8 @@ defmodule BlogWeb.ConnCase do
       import Phoenix.ConnTest
       import BlogWeb.ConnCase
 
+      unquote(BlogWeb.verified_routes())
+
       @endpoint BlogWeb.Endpoint
     end
   end

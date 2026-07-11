@@ -7,10 +7,13 @@ config :blog, Blog.Repo,
 
 config :blog, BlogWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
-  secret_key_base: "test-only-secret-key-base-not-for-production-use-0123456789ab",
+  secret_key_base: "test-only-secret-key-base-not-for-production-use-0123456789abcdef",
   server: false
 
 config :blog, :admin_password, "test-admin-password"
+
+# Avoid real network calls to the geo-IP lookup service during tests.
+config :blog, :geoip_enabled, false
 
 config :logger, level: :warning
 
