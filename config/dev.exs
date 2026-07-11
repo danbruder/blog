@@ -25,6 +25,10 @@ config :blog, BlogWeb.Endpoint,
     ]
   ]
 
+# Dev-only admin password for /admin/login. In prod this comes from the
+# ADMIN_PASSWORD environment variable (see runtime.exs).
+config :blog, :admin_password, "admin"
+
 config :blog, dev_routes: true
 
 config :logger, :console, format: "[$level] $message\n"

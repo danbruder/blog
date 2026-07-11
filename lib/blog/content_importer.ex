@@ -8,12 +8,13 @@ defmodule Blog.ContentImporter do
 
   alias Blog.Content
 
-  def seed_if_empty do
-    if Content.any_posts?() do
-      :ok
-    else
-      import_all()
-    end
+  @doc """
+  Seed the legacy content into the database. Idempotent: each post/page is
+  keyed by its slug, so posts that already exist are skipped and only missing
+  ones are inserted. Safe to run on every boot.
+  """
+  def seed do
+    import_all()
   end
 
   def import_all do
@@ -33,12 +34,17 @@ defmodule Blog.ContentImporter do
     |> Enum.each(fn path ->
       attrs = parse(File.read!(path), kind, Path.basename(path, ".md"))
 
-      case Content.create_post(attrs) do
-        {:ok, _post} ->
-          :ok
+      if Content.get_by_slug(attrs.slug) do
+        # Already seeded on a previous boot; leave it (and any edits) alone.
+        :ok
+      else
+        case Content.create_post(attrs) do
+          {:ok, _post} ->
+            :ok
 
-        {:error, changeset} ->
-          raise "failed to import #{path}: #{inspect(changeset.errors)}"
+          {:error, changeset} ->
+            raise "failed to import #{path}: #{inspect(changeset.errors)}"
+        end
       end
     end)
   end

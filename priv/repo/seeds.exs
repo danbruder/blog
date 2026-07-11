@@ -1,1 +1,1 @@
-Blog.ContentImporter.seed_if_empty()
+Blog.ContentImporter.seed()

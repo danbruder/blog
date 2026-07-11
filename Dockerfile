@@ -1,9 +1,9 @@
 # Multi-stage build for a Phoenix release, following the official
 # hexpm/elixir base images (Elixir/OTP/Debian versions must be kept in sync
 # with each other -- see https://hub.docker.com/r/hexpm/elixir/tags).
-ARG ELIXIR_VERSION=1.17.3
-ARG OTP_VERSION=27.1
-ARG DEBIAN_VERSION=bookworm-20241016
+ARG ELIXIR_VERSION=1.18.4
+ARG OTP_VERSION=27.3.4.14
+ARG DEBIAN_VERSION=bookworm-20260623
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}-slim"
@@ -12,6 +12,8 @@ FROM ${BUILDER_IMAGE} AS builder
 
 RUN apt-get update -y \
     && apt-get install -y build-essential git ca-certificates curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -32,6 +34,28 @@ COPY priv priv
 COPY lib lib
 COPY assets assets
 
+# JS deps for the esbuild bundle (highlight.js, etc.). node_modules is
+# .dockerignore'd, so install fresh from the committed lockfile.
+RUN cd assets && npm ci
+
+# The Tailwind standalone binary is fetched from GitHub by Erlang's :ssl,
+# which fails on some OTP versions against GitHub's cert chain. Fetch it
+# with curl (system TLS) into the path `mix tailwind` expects, so
+# `assets.setup` finds it and skips the download. esbuild's binary comes
+# from the npm registry and downloads fine via the mix task.
+ARG TAILWIND_VERSION=3.4.3
+RUN set -eux; \
+    case "$(dpkg --print-architecture)" in \
+      amd64) TW_ARCH=linux-x64 ;; \
+      arm64) TW_ARCH=linux-arm64 ;; \
+      *) echo "unsupported arch"; exit 1 ;; \
+    esac; \
+    mkdir -p _build; \
+    curl -fsSL -o "_build/tailwind-${TW_ARCH}-${TAILWIND_VERSION}" \
+      "https://github.com/tailwindlabs/tailwindcss/releases/download/v${TAILWIND_VERSION}/tailwindcss-${TW_ARCH}"; \
+    chmod +x "_build/tailwind-${TW_ARCH}-${TAILWIND_VERSION}"
+
+RUN mix assets.setup
 RUN mix assets.deploy
 RUN mix compile
 

@@ -20,12 +20,19 @@ img {
 }
 
 pre {
-  padding: 1rem;
+  /* No inner padding: the highlighted `code.hljs` block supplies the padding
+     (see the highlight.js theme below). Doubling them looks off. */
+  padding: 0;
   overflow: auto;
   font-family: "Space Mono", monospace;
   @apply text-sm my-8;
   @apply rounded-xl shadow shadow-blue-600/50 border border-zinc-600;
   @apply hover:shadow-indigo-500/90 transition-shadow ease-in-out duration-300;
+}
+
+/* Fill the <pre> box and provide the single, consistent code padding. */
+.markdown-content pre code.hljs {
+  padding: 1rem;
 }
 
 h1 {

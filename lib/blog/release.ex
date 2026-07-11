@@ -19,7 +19,7 @@ defmodule Blog.Release do
     for repo <- repos() do
       {:ok, _, _} =
         Ecto.Migrator.with_repo(repo, fn _repo ->
-          Blog.ContentImporter.seed_if_empty()
+          Blog.ContentImporter.seed()
         end)
     end
   end
