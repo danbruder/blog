@@ -19,11 +19,13 @@ defmodule Blog.ContentImporter do
 
   def import_all do
     import_dir(posts_dir(), "post")
+    import_dir(notes_dir(), "note")
     import_dir(pages_dir(), "page")
     :ok
   end
 
   defp posts_dir, do: Path.join(:code.priv_dir(:blog), "legacy_content/posts")
+  defp notes_dir, do: Path.join(:code.priv_dir(:blog), "legacy_content/notes")
   defp pages_dir, do: Path.join(:code.priv_dir(:blog), "legacy_content/pages")
 
   defp import_dir(dir, kind) do

@@ -118,7 +118,7 @@ defmodule BlogWeb.Admin.PostFormLive do
               field={@form[:kind]}
               type="select"
               label="Kind"
-              options={[{"Post", "post"}, {"Page", "page"}]}
+              options={[{"Post", "post"}, {"Note", "note"}, {"Page", "page"}]}
             />
             <.input field={@form[:published_at]} type="date" label="Published date" />
           </div>

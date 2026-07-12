@@ -8,6 +8,7 @@ defmodule BlogWeb.Router do
     plug(:put_root_layout, html: {BlogWeb.Layouts, :root})
     plug(:protect_from_forgery)
     plug(:put_secure_browser_headers)
+    plug(BlogWeb.Plugs.RedirectReclassifiedNote)
   end
 
   pipeline :require_admin do
@@ -25,6 +26,8 @@ defmodule BlogWeb.Router do
       on_mount: [{BlogWeb.PresenceTracker, :track}, {BlogWeb.CurrentPath, :default}] do
       live("/", HomeLive, :index)
       live("/blog/:slug", PostLive.Show, :show)
+      live("/notes", NoteLive.Index, :index)
+      live("/notes/:slug", PostLive.Show, :show)
       live("/snake", SnakeLive, :index)
     end
 

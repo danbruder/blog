@@ -16,6 +16,9 @@ defmodule BlogWeb.Admin.PostIndexLive do
     {:noreply, assign(socket, posts: Content.list_posts())}
   end
 
+  defp public_path(%{kind: "note", slug: slug}), do: "/notes/#{slug}"
+  defp public_path(%{slug: slug}), do: "/blog/#{slug}"
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -53,7 +56,7 @@ defmodule BlogWeb.Admin.PostIndexLive do
                 <span class="text-lg text-sky-100">{post.title}</span>
               </div>
               <div class="text-sm text-zinc-500">
-                /blog/{post.slug}
+                {public_path(post)}
                 <span :if={post.published_at}>
                   &middot; {Calendar.strftime(post.published_at, "%B %-d, %Y")}
                 </span>

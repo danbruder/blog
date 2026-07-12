@@ -31,6 +31,11 @@ defmodule BlogWeb.HomeLive do
             {Calendar.strftime(post.published_at, "%B %-d, %Y")}
           </time>
         </div>
+
+        <p class="mt-8 text-sm text-zinc-400">
+          Looking for smaller learnings and TILs?
+          <.link class="link" navigate={~p"/notes"}>Check out the notes</.link>.
+        </p>
       </div>
     </div>
     """

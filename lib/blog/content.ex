@@ -8,10 +8,14 @@ defmodule Blog.Content do
   alias Blog.Repo
   alias Blog.Content.Post
 
-  def list_published_posts(limit \\ nil) do
+  def list_published_posts(limit \\ nil), do: list_published_by_kind("post", limit)
+
+  def list_published_notes(limit \\ nil), do: list_published_by_kind("note", limit)
+
+  defp list_published_by_kind(kind, limit) do
     query =
       from(p in Post,
-        where: p.kind == "post" and p.published == true,
+        where: p.kind == ^kind and p.published == true,
         order_by: [desc: p.published_at, desc: p.id]
       )
 

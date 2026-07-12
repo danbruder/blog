@@ -2,7 +2,7 @@ defmodule Blog.Content.Post do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @kinds ~w(post page)
+  @kinds ~w(post page note)
 
   schema "posts" do
     field(:title, :string)

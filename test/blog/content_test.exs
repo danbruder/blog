@@ -32,6 +32,18 @@ defmodule Blog.ContentTest do
     assert slugs == [published.slug]
   end
 
+  test "list_published_notes/1 returns only notes, excluding posts and pages" do
+    {:ok, note} = Content.create_post(%{@valid_attrs | slug: "a-note", kind: "note"})
+    {:ok, _post} = Content.create_post(@valid_attrs)
+
+    {:ok, _draft_note} =
+      Content.create_post(%{@valid_attrs | slug: "draft-note", kind: "note", published: false})
+
+    slugs = Content.list_published_notes() |> Enum.map(& &1.slug)
+
+    assert slugs == [note.slug]
+  end
+
   test "render_body/1 renders markdown to html" do
     {:ok, post} = Content.create_post(@valid_attrs)
     assert Content.render_body(post) =~ "<strong>hi</strong>"
