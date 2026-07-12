@@ -20,9 +20,10 @@ defmodule BlogWeb.SnakeLive do
          player_id: id,
          game: state,
          page_title: "Snake",
+         game_name: "Snake",
          connected: true,
          editing_name: false
-       )}
+       ), layout: {BlogWeb.Layouts, :game}}
     else
       dims = SnakeGame.dims()
 
@@ -31,9 +32,10 @@ defmodule BlogWeb.SnakeLive do
          player_id: nil,
          game: %{cols: dims.cols, rows: dims.rows, players: [], foods: []},
          page_title: "Snake",
+         game_name: "Snake",
          connected: false,
          editing_name: false
-       )}
+       ), layout: {BlogWeb.Layouts, :game}}
     end
   end
 
@@ -93,20 +95,12 @@ defmodule BlogWeb.SnakeLive do
     assigns = assign(assigns, :cell, @cell)
 
     ~H"""
-    <.page_hero
-      title="Snake"
-      eyebrow="Games"
-      subtitle="A single global game — everyone here shares the board. Arrow keys or WASD to steer; crash and you respawn."
-    />
-
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10" phx-window-keydown="key">
-      <div class="mx-auto max-w-5xl">
-
-        <div class="flex flex-col md:flex-row gap-6 items-start">
-          <div class="flex-1 min-w-0">
+    <div class="h-full flex flex-col p-4" phx-window-keydown="key">
+      <div class="flex-1 min-h-0 flex flex-col md:flex-row gap-4">
+          <div class="flex-1 min-w-0 min-h-0 flex items-center justify-center">
             <svg
               viewBox={"0 0 #{@game.cols * @cell} #{@game.rows * @cell}"}
-              class="snake bg-zinc-800 w-full h-auto"
+              class="snake bg-zinc-800 max-w-full max-h-full h-auto w-auto"
               preserveAspectRatio="xMidYMid meet"
             >
               <text
@@ -134,6 +128,10 @@ defmodule BlogWeb.SnakeLive do
               <% end %>
             </svg>
 
+            <p class="text-center text-xs text-gray-500 mt-2">
+              Arrow keys or WASD to steer · crash and you respawn
+            </p>
+
             <div class="flex justify-center items-center space-x-4 mt-6 md:hidden">
               <button phx-click="dir" phx-value-dir="left" class="bg-gray-700 uppercase px-3 py-2">←</button>
               <button phx-click="dir" phx-value-dir="up" class="bg-gray-700 uppercase px-3 py-2">↑</button>
@@ -142,7 +140,7 @@ defmodule BlogWeb.SnakeLive do
             </div>
           </div>
 
-          <div class="w-full md:w-56 shrink-0">
+          <div class="w-full md:w-56 shrink-0 md:max-h-full md:overflow-y-auto">
             <h4 class="text-lg text-gray-400 mb-3">
               Players ({length(@game.players)})
             </h4>
@@ -190,7 +188,6 @@ defmodule BlogWeb.SnakeLive do
           </div>
         </div>
       </div>
-    </div>
     """
   end
 end
