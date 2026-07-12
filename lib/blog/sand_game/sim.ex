@@ -87,6 +87,8 @@ defmodule Blog.SandGame.Sim do
 
     if doused? do
       set(cur, i, @empty)
+      # Settle the doused cell so a neighbour can't flow into it this same tick.
+      set(moved, i, 1)
     else
       Enum.each(neighbors, fn j ->
         if get(cur, j) == @wood and rand(seed, i, j) < p_ignite do

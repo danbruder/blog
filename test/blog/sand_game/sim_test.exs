@@ -76,4 +76,35 @@ defmodule Blog.SandGame.SimTest do
     assert at({g2, w, h}, 0, 0) == 3
     assert at({g2, w, h}, 1, 0) == 4
   end
+
+  test "fire ignites adjacent wood when p_ignite is 1.0" do
+    # fire at (0,0), wood at (1,0)
+    {g, w, h} = grid([[5, 4]])
+    g2 = Sim.step(g, w, h, seed: 1, p_ignite: 1.0, p_burnout: 0.0)
+    assert at({g2, w, h}, 1, 0) == 5
+  end
+
+  test "fire does not ignite wood when p_ignite is 0.0" do
+    {g, w, h} = grid([[5, 4]])
+    g2 = Sim.step(g, w, h, seed: 1, p_ignite: 0.0, p_burnout: 0.0)
+    assert at({g2, w, h}, 1, 0) == 4
+  end
+
+  test "fire adjacent to water is extinguished" do
+    {g, w, h} = grid([[5, 2]])
+    g2 = Sim.step(g, w, h, seed: 1, p_ignite: 1.0, p_burnout: 0.0)
+    assert at({g2, w, h}, 0, 0) == 0
+  end
+
+  test "fire burns out when p_burnout is 1.0" do
+    {g, w, h} = grid([[5]])
+    g2 = Sim.step(g, w, h, seed: 1, p_ignite: 0.0, p_burnout: 1.0)
+    assert at({g2, w, h}, 0, 0) == 0
+  end
+
+  test "isolated fire persists when p_burnout is 0.0" do
+    {g, w, h} = grid([[5]])
+    g2 = Sim.step(g, w, h, seed: 1, p_ignite: 0.0, p_burnout: 0.0)
+    assert at({g2, w, h}, 0, 0) == 5
+  end
 end
