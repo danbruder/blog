@@ -30,4 +30,11 @@ defmodule BlogWeb.NoteLive.IndexTest do
     assert html =~ "My Note"
     refute html =~ "My Post"
   end
+
+  test "sidebar marks the current section's nav link active", %{conn: conn} do
+    {:ok, _view, html} = live(conn, ~p"/notes")
+
+    # The active nav link carries these classes; inactive links use hover:* instead.
+    assert html =~ "no-underline bg-zinc-800 text-[color:var(--accent-heading)]"
+  end
 end

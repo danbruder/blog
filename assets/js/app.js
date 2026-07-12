@@ -24,13 +24,20 @@ let Hooks = {
       this.el.addEventListener("dblclick", () => this.pushEvent("edit_name", {}))
     }
   },
-  // Toggles the mobile nav list open/closed on small screens.
+  // Toggles the mobile nav open/closed on small screens, and closes it again
+  // once the visitor taps a link (LiveView keeps the layout DOM across
+  // navigation, so the menu would otherwise stay open over the new page).
   MobileNav: {
     mounted() {
+      const nav = document.getElementById("mobile-nav")
       this.el.addEventListener("click", () => {
-        const nav = document.getElementById("mobile-nav")
         if (nav) nav.classList.toggle("hidden")
       })
+      if (nav) {
+        nav.addEventListener("click", (e) => {
+          if (e.target.closest("a")) nav.classList.add("hidden")
+        })
+      }
     }
   }
 }

@@ -1,7 +1,7 @@
 defmodule Blog.SnakeGame do
   @moduledoc """
   A single, global, multiplayer game of snake shared by everyone currently
-  viewing `/snake`.
+  viewing `/games/snake`.
 
   This is one authoritative GenServer (registered by module name) that owns the
   whole board. Each connected `BlogWeb.SnakeLive` process `join/1`s to get its

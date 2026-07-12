@@ -8,6 +8,5 @@ defmodule BlogWeb.RedirectController do
     conn
     |> put_status(:moved_permanently)
     |> redirect(to: ~p"/games/snake")
-    |> halt()
   end
 end
