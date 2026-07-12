@@ -22,17 +22,17 @@ end %>
     <div class="md:sticky md:top-0 flex flex-col md:h-screen">
       <%!-- Brand block: matches the hero band height and carries its own
             bottom border, so the divider lines up with the hero's border. --%>
-      <div class="flex items-center justify-between gap-3 px-6 py-4 md:h-60 md:py-0 md:flex-col md:items-stretch md:justify-center md:border-b border-zinc-800">
+      <div class="flex items-center justify-between gap-3 px-8 py-6 md:h-64 md:py-0 md:flex-col md:items-stretch md:justify-center md:border-b border-zinc-800">
         <.link navigate={~p"/"} class="flex items-center gap-3 md:block no-underline">
           <img
             class="w-10 h-10 md:w-24 md:h-24 block rounded-full object-cover md:mx-auto md:mb-3"
             src={~p"/images/my-face-new.jpg"}
             alt="Dan Bruder"
           />
-          <span class="font-fancy text-lg md:text-2xl text-zinc-50 md:block">Dan Bruder</span>
+          <span class="font-fancy text-lg md:text-2xl text-zinc-50 md:block md:text-center">Dan Bruder</span>
         </.link>
 
-        <p class="mt-2 text-sm text-zinc-400 hidden md:block">
+        <p class="mt-2 text-sm text-zinc-400 hidden md:block md:text-center">
           Engineering director making
           <a class="link" href="https://www.dronedeploy.com/">reality capture</a> easy.
         </p>

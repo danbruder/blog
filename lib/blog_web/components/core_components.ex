@@ -235,8 +235,8 @@ defmodule BlogWeb.CoreComponents do
   def page_hero(assigns) do
     ~H"""
     <section class="painted relative overflow-hidden bg-zinc-950 border-b border-zinc-800">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-3xl relative z-10 py-12 md:py-16">
+      <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
+        <div class="mx-auto max-w-3xl relative z-10 py-14 md:py-20">
           <p :if={@eyebrow} class="font-fancy text-sm uppercase tracking-wide text-zinc-400">
             {@eyebrow}
           </p>
