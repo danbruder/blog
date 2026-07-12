@@ -54,6 +54,62 @@ identical (both are markdown + a date), so:
   attempting the README's separate "Selected writing" curation item here —
   out of scope.
 
+## Redirects: old `/blog/:slug` → `/notes/:slug`
+
+Every reclassified slug currently has an indexed/bookmarked/linked-to
+`/blog/:slug` URL that must keep working. **Decision:** a genuine HTTP 301
+via a plug, not a LiveView `redirect/2` call in `mount/3`.
+
+Why not just redirect inside `PostLive.Show`'s `mount/3` (the pattern
+already used there for the not-found case)? Two reasons:
+- `Phoenix.LiveView.redirect/2` has no way to set the response status, so a
+  dead-render hit (a crawler or a browser opening the bare URL) gets a 302,
+  not a 301 — bad for search engines eventually consolidating onto the new
+  URL.
+- Getting a real 301 requires a plug, and adding that plug to only the
+  `/blog/:slug` route would need pulling it into its own `live_session`,
+  which would break same-session live-navigation (SPA-style, no full page
+  reload) between the homepage and *every* post, not just the reclassified
+  ones — a regression to the common case for the sake of the rare one.
+
+Instead: a small plug appended to the existing `:browser` pipeline (used by
+all public routes) that only acts on `path_info == ["blog", slug]`:
+
+```elixir
+defmodule BlogWeb.Plugs.RedirectReclassifiedNote do
+  import Plug.Conn
+  alias Blog.Content
+
+  def init(opts), do: opts
+
+  def call(%Plug.Conn{path_info: ["blog", slug]} = conn, _opts) do
+    case Content.get_published_by_slug(slug) do
+      %{kind: "note"} ->
+        conn
+        |> put_status(:moved_permanently)
+        |> Phoenix.Controller.redirect(to: "/notes/#{slug}")
+        |> halt()
+
+      _ ->
+        conn
+    end
+  end
+
+  def call(conn, _opts), do: conn
+end
+```
+
+This is keyed off the *current* `kind` value, not a hardcoded slug list —
+so it also covers any future note that someone tries to reach via
+`/blog/:slug` by hand, not just today's 36. Every other route (`/`,
+`/blog/:slug` for an actual post, `/snake`, `/notes`, `/notes/:slug`,
+`/admin/*`) falls through the `path_info` guard unchanged, so this doesn't
+touch existing `live_session` grouping or navigation behavior. The extra
+`get_published_by_slug` lookup on real `/blog/:slug` post requests (the
+plug runs, finds `kind: "post"`, falls through, then `PostLive.Show.mount/3`
+queries again) is a second cheap SQLite read per request — acceptable for
+this site's traffic; not worth a shared-lookup optimization here.
+
 ## Admin (`lib/blog_web/live/admin/`)
 
 - `PostFormLive`: add `{"Note", "note"}` to the Kind `<select>` options.
@@ -172,6 +228,11 @@ Two calls worth double-checking with Dan:
   omits the newsletter form and snake footer.
 - Migration test/smoke check: after running it, `Repo.aggregate` confirms
   36 rows have `kind: "note"`.
+- `BlogWeb.Plugs.RedirectReclassifiedNoteTest` (or a router test): `GET
+  /blog/:slug` for a note-kind slug returns 301 with `location:
+  /notes/:slug`; for a post-kind slug it passes through untouched (200,
+  normal post render); a nonexistent slug also passes through untouched
+  (falls to `PostLive.Show`'s existing not-found handling).
 
 ## Out of scope
 
