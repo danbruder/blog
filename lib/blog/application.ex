@@ -12,6 +12,7 @@ defmodule Blog.Application do
       BlogWeb.Presence,
       Blog.GeoIP,
       Blog.SnakeGame,
+      Blog.SandGame,
       BlogWeb.Endpoint
     ]
 
