@@ -30,6 +30,7 @@ defmodule BlogWeb.Router do
       live("/notes/:slug", PostLive.Show, :show)
       live("/games", GamesLive.Index, :index)
       live("/games/snake", SnakeLive, :index)
+      live("/games/sand", SandLive, :index)
       live("/podcasts", PodcastLive.Index, :index)
       live("/projects", ProjectLive.Index, :index)
     end

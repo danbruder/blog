@@ -7,6 +7,12 @@ defmodule BlogWeb.GamesLive.Index do
       href: "/games/snake",
       blurb: "A single global multiplayer snake — everyone shares one board.",
       emoji: "🐍"
+    },
+    %{
+      name: "Sand",
+      href: "/games/sand",
+      blurb: "A shared falling-sand sandbox — paint sand, water, fire, and watch it flow.",
+      emoji: "🏖️"
     }
   ]
 
