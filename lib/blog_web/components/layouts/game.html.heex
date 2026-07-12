@@ -1,0 +1,24 @@
+<div class="h-[100dvh] flex flex-col overflow-hidden bg-zinc-900 text-zinc-50">
+  <header class="painted shrink-0 relative overflow-hidden border-b border-zinc-800">
+    <div class="relative z-10 flex items-center justify-between px-4 py-3">
+      <.link
+        navigate={~p"/games"}
+        class="font-fancy text-sm text-zinc-200 no-underline hover:text-white"
+      >
+        ← Back
+      </.link>
+      <span class="font-fancy text-lg text-[color:var(--accent-heading)]">
+        {assigns[:game_name]}
+      </span>
+      <span class="text-sm text-zinc-400 w-16 text-right">
+        <span :if={assigns[:viewer_count]}>{@viewer_count} 👀</span>
+      </span>
+    </div>
+  </header>
+
+  <main class="flex-1 min-h-0 overflow-hidden">
+    {@inner_content}
+  </main>
+</div>
+
+<.flash_group flash={@flash} />
