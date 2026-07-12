@@ -26,15 +26,19 @@ defmodule BlogWeb.PostLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-2xl">
-        <h1 class="md:text-5xl text-sky-200">{@post.title}</h1>
-        <span :if={@post.published_at} class="text-zinc-400 font-bold flex items-center space-x-3">
-          <time datetime={Date.to_iso8601(@post.published_at)}>
-            {Calendar.strftime(@post.published_at, "%B %-d, %Y")}
-          </time>
-        </span>
+    <.page_hero title={@post.title} title_class="text-3xl md:text-5xl">
+      <span
+        :if={@post.published_at}
+        class="text-zinc-300 font-bold flex items-center space-x-3 mt-3"
+      >
+        <time datetime={Date.to_iso8601(@post.published_at)}>
+          {Calendar.strftime(@post.published_at, "%B %-d, %Y")}
+        </time>
+      </span>
+    </.page_hero>
 
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+      <div class="mx-auto max-w-3xl">
         <div id="post-body" phx-hook="Highlight" phx-update="ignore" class="markdown-content">
           {Phoenix.HTML.raw(@body_html)}
         </div>
@@ -64,7 +68,7 @@ defmodule BlogWeb.PostLive.Show do
 
         <h3 :if={@post.kind == "post"} class="mt-12">
           Made it this far? Have a go at the game of
-          <a class="underline" href={~p"/snake"}>snake</a>
+          <a class="underline" href={~p"/games/snake"}>snake</a>
         </h3>
       </div>
     </div>

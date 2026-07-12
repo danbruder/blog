@@ -12,22 +12,20 @@ defmodule BlogWeb.HomeLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-2xl">
-        <div class="text-center py-12 md:py-24">
-          <h1 class="md:text-6xl text-sky-200">Hi, I'm Dan</h1>
-          <span class="text-xl text-stone-200">
-            I'm an engineering director working on <br /> making
-            <a class="link" href="https://www.dronedeploy.com/">reality capture</a> easy
-          </span>
-        </div>
+    <.page_hero title="Writing" subtitle="Essays on software, management, and building things." />
 
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+      <div class="mx-auto max-w-3xl">
         <h4 class="text-lg md:text-xl text-gray-500">Latest Posts</h4>
         <div :for={post <- @posts} class="mb-6">
-          <h2 class="text-xl md:text-3xl text-sky-200">
+          <h2 class="text-xl md:text-3xl text-[color:var(--accent-heading)]">
             <.link navigate={~p"/blog/#{post.slug}"}>{post.title}</.link>
           </h2>
-          <time :if={post.published_at} datetime={Date.to_iso8601(post.published_at)} class="text-zinc-400">
+          <time
+            :if={post.published_at}
+            datetime={Date.to_iso8601(post.published_at)}
+            class="text-zinc-400"
+          >
             {Calendar.strftime(post.published_at, "%B %-d, %Y")}
           </time>
         </div>

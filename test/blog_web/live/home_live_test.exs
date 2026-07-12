@@ -18,6 +18,7 @@ defmodule BlogWeb.HomeLiveTest do
     {:ok, _view, html} = live(conn, ~p"/")
 
     assert html =~ "My First Post"
-    assert html =~ "Hi, I&#39;m Dan"
+    assert html =~ "Writing"
+    refute html =~ "Hi, I&#39;m Dan"
   end
 end

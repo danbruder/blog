@@ -93,14 +93,14 @@ defmodule BlogWeb.SnakeLive do
     assigns = assign(assigns, :cell, @cell)
 
     ~H"""
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" phx-window-keydown="key">
+    <.page_hero
+      title="Snake"
+      eyebrow="Games"
+      subtitle="A single global game — everyone here shares the board. Arrow keys or WASD to steer; crash and you respawn."
+    />
+
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10" phx-window-keydown="key">
       <div class="mx-auto max-w-5xl">
-        <h1 class="md:text-5xl text-sky-200">Snake</h1>
-        <p class="text-gray-400 mb-6">
-          A single global game — everyone here shares the board. Use
-          <span class="text-zinc-200">arrow keys</span> or
-          <span class="text-zinc-200">WASD</span> to steer your snake. Crash and you respawn.
-        </p>
 
         <div class="flex flex-col md:flex-row gap-6 items-start">
           <div class="flex-1 min-w-0">
