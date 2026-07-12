@@ -56,9 +56,13 @@ identical (both are markdown + a date), so:
 
 ## Redirects: old `/blog/:slug` → `/notes/:slug`
 
-Every reclassified slug currently has an indexed/bookmarked/linked-to
-`/blog/:slug` URL that must keep working. **Decision:** a genuine HTTP 301
-via a plug, not a LiveView `redirect/2` call in `mount/3`.
+Each of the 36 reclassified slugs currently has an indexed/bookmarked/
+linked-to `/blog/:slug` URL that must keep working. **Decision:** a genuine
+HTTP 301 via a plug, not a LiveView `redirect/2` call in `mount/3` — and
+scoped to exactly those 36 slugs (a static list), not a general "any
+note-kind slug" rule. Dan only cares about preserving the old URLs that
+already exist; new notes are created as notes from the start and never had
+a `/blog/:slug` URL to preserve, so there's nothing to redirect for them.
 
 Why not just redirect inside `PostLive.Show`'s `mount/3` (the pattern
 already used there for the not-found case)? Two reasons:
@@ -73,42 +77,42 @@ already used there for the not-found case)? Two reasons:
   ones — a regression to the common case for the sake of the rare one.
 
 Instead: a small plug appended to the existing `:browser` pipeline (used by
-all public routes) that only acts on `path_info == ["blog", slug]`:
+all public routes) that matches on a static list of the 36 migrated slugs —
+no database lookup, no dependency on `Blog.Content`:
 
 ```elixir
 defmodule BlogWeb.Plugs.RedirectReclassifiedNote do
   import Plug.Conn
-  alias Blog.Content
+
+  # The slugs moved from kind "post" to kind "note" in the 2026-07 notes
+  # migration (see docs/superpowers/specs/2026-07-11-notes-vs-posts-design.md).
+  # Old /blog/:slug links for these 301 to their new /notes/:slug location.
+  @moved_slugs ~w(
+    typeerror-require-is-not-a-function-webpack-faunadb
+    installing-react-easy-chart
+    ...
+    where-is-info-plist-in-swiftui-project
+  )
 
   def init(opts), do: opts
 
-  def call(%Plug.Conn{path_info: ["blog", slug]} = conn, _opts) do
-    case Content.get_published_by_slug(slug) do
-      %{kind: "note"} ->
-        conn
-        |> put_status(:moved_permanently)
-        |> Phoenix.Controller.redirect(to: "/notes/#{slug}")
-        |> halt()
-
-      _ ->
-        conn
-    end
+  def call(%Plug.Conn{path_info: ["blog", slug]} = conn, _opts) when slug in @moved_slugs do
+    conn
+    |> put_status(:moved_permanently)
+    |> Phoenix.Controller.redirect(to: "/notes/#{slug}")
+    |> halt()
   end
 
   def call(conn, _opts), do: conn
 end
 ```
 
-This is keyed off the *current* `kind` value, not a hardcoded slug list —
-so it also covers any future note that someone tries to reach via
-`/blog/:slug` by hand, not just today's 36. Every other route (`/`,
-`/blog/:slug` for an actual post, `/snake`, `/notes`, `/notes/:slug`,
-`/admin/*`) falls through the `path_info` guard unchanged, so this doesn't
-touch existing `live_session` grouping or navigation behavior. The extra
-`get_published_by_slug` lookup on real `/blog/:slug` post requests (the
-plug runs, finds `kind: "post"`, falls through, then `PostLive.Show.mount/3`
-queries again) is a second cheap SQLite read per request — acceptable for
-this site's traffic; not worth a shared-lookup optimization here.
+Every other route (`/`, `/blog/:slug` for a real post, `/snake`, `/notes`,
+`/notes/:slug`, `/admin/*`) falls through the guard clause unchanged — no
+DB query on the common path, no `live_session` restructuring, no change to
+existing navigation behavior. The `@moved_slugs` list is exactly the "→
+`note`" list below; if that list changes before implementation, update both
+together.
 
 ## Admin (`lib/blog_web/live/admin/`)
 
@@ -229,10 +233,9 @@ Two calls worth double-checking with Dan:
 - Migration test/smoke check: after running it, `Repo.aggregate` confirms
   36 rows have `kind: "note"`.
 - `BlogWeb.Plugs.RedirectReclassifiedNoteTest` (or a router test): `GET
-  /blog/:slug` for a note-kind slug returns 301 with `location:
-  /notes/:slug`; for a post-kind slug it passes through untouched (200,
-  normal post render); a nonexistent slug also passes through untouched
-  (falls to `PostLive.Show`'s existing not-found handling).
+  /blog/:slug` for a slug in `@moved_slugs` returns 301 with `location:
+  /notes/:slug`; for any other slug (a real post, a brand-new note not in
+  the list, or nonexistent) it passes through untouched.
 
 ## Out of scope
 
