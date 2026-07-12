@@ -1,7 +1,8 @@
 <.flash_group flash={@flash} />
 
 <% nav_items = [
-  {"Writing", ~p"/", "✍️"},
+  {"Home", ~p"/", "🏠"},
+  {"Writing", ~p"/writing", "✍️"},
   {"Notes", ~p"/notes", "🗒️"},
   {"Games", ~p"/games", "🎮"},
   {"Podcasts", ~p"/podcasts", "🎙️"},
@@ -9,10 +10,10 @@
 ] %>
 <% current = assigns[:current_path] || "/" %>
 <% active? = fn href ->
-  if href == "/" do
-    current == "/" or String.starts_with?(current, "/blog")
-  else
-    current == href or String.starts_with?(current, href <> "/")
+  cond do
+    href == "/" -> current == "/"
+    href == "/writing" -> current == "/writing" or String.starts_with?(current, "/blog")
+    true -> current == href or String.starts_with?(current, href <> "/")
   end
 end %>
 

@@ -4,21 +4,19 @@ defmodule BlogWeb.HomeLiveTest do
 
   alias Blog.Content
 
-  test "renders latest published posts", %{conn: conn} do
+  test "renders the landing with a band per subsection", %{conn: conn} do
     {:ok, _post} =
-      Content.create_post(%{
-        title: "My First Post",
-        slug: "my-first-post",
-        body: "hello",
-        kind: "post",
-        published: true,
-        published_at: ~D[2024-01-01]
-      })
+      Content.create_post(%{title: "My First Post", slug: "my-first-post", body: "hello", kind: "post", published: true, published_at: ~D[2024-01-01]})
 
     {:ok, _view, html} = live(conn, ~p"/")
 
-    assert html =~ "My First Post"
+    assert html =~ "Hi, I&#39;m Dan"
     assert html =~ "Writing"
-    refute html =~ "Hi, I&#39;m Dan"
+    assert html =~ "Notes"
+    assert html =~ "Games"
+    assert html =~ "Podcasts"
+    assert html =~ "Projects"
+    assert html =~ ~s(href="/writing")
+    assert html =~ "My First Post"
   end
 end
