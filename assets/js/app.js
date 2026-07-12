@@ -23,6 +23,15 @@ let Hooks = {
     mounted() {
       this.el.addEventListener("dblclick", () => this.pushEvent("edit_name", {}))
     }
+  },
+  // Toggles the mobile nav list open/closed on small screens.
+  MobileNav: {
+    mounted() {
+      this.el.addEventListener("click", () => {
+        const nav = document.getElementById("mobile-nav")
+        if (nav) nav.classList.toggle("hidden")
+      })
+    }
   }
 }
 

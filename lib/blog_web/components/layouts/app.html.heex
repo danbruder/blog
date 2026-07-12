@@ -1,41 +1,68 @@
 <.flash_group flash={@flash} />
 
-<header class="py-4">
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <div class="mx-auto max-w-2xl flex justify-between">
-      <div>
+<% nav_items = [
+  {"Writing", ~p"/", "✍️"},
+  {"Notes", ~p"/notes", "🗒️"},
+  {"Games", ~p"/games", "🎮"},
+  {"Podcasts", ~p"/podcasts", "🎙️"},
+  {"Projects", ~p"/projects", "🚧"}
+] %>
+<% current = assigns[:current_path] || "/" %>
+<% active? = fn href -> href == current or (href != "/" and String.starts_with?(current, href)) end %>
+
+<div class="flex min-h-screen flex-col md:flex-row">
+  <aside class="md:w-60 md:flex-shrink-0 md:border-r border-b md:border-b-0 border-zinc-800 bg-zinc-900">
+    <div class="md:sticky md:top-0 flex flex-col md:h-screen p-6">
+      <div class="flex items-center justify-between">
         <a href="/" class="flex items-center space-x-3">
           <img
-            class="w-6 h-6 block rounded-full object-cover"
+            class="w-10 h-10 block rounded-full object-cover"
             src={~p"/images/my-face-new.jpg"}
             alt="Dan Bruder"
           />
-          <span class="font-fancy">danbruder</span>
+          <span class="font-fancy text-lg">Dan Bruder</span>
         </a>
+        <button
+          id="mobile-nav-toggle"
+          phx-hook="MobileNav"
+          type="button"
+          class="md:hidden !border-0 !shadow-none text-zinc-300 px-2"
+          aria-label="Toggle navigation"
+        >☰</button>
       </div>
-      <div>
-        <a href="/blog/about" class="group relative">
-          <span class="inline-block">👋🏻</span>
-          <span class="font-fancy text-sm">about me</span>
-        </a>
+
+      <p class="mt-4 text-sm text-zinc-400 hidden md:block">
+        Engineering director making
+        <a class="link" href="https://www.dronedeploy.com/">reality capture</a> easy.
+      </p>
+
+      <nav id="mobile-nav" class="hidden md:flex flex-col gap-1 mt-6">
+        <.link
+          :for={{label, href, emoji} <- nav_items}
+          navigate={href}
+          class={[
+            "font-fancy px-3 py-2 rounded-lg no-underline",
+            active?.(href) && "bg-zinc-800 text-[color:var(--accent-heading)]",
+            !active?.(href) && "text-zinc-300 hover:bg-zinc-800/60"
+          ]}
+        >
+          <span class="mr-2">{emoji}</span>{label}
+        </.link>
+      </nav>
+
+      <div class="mt-auto pt-6 text-xs text-zinc-500 hidden md:flex flex-col gap-1">
+        <a class="text-zinc-400 no-underline hover:text-zinc-200" href="/blog/about">👋 about me</a>
+        <a class="text-zinc-400 no-underline hover:text-zinc-200" href={~p"/rss.xml"}>RSS</a>
+        <a class="text-zinc-400 no-underline hover:text-zinc-200" href="https://github.com/danbruder">GitHub</a>
+        <span class="mt-2">&copy; {Date.utc_today().year} Dan Bruder</span>
       </div>
     </div>
-  </div>
-</header>
+  </aside>
 
-<div class="flex-grow">
-  {@inner_content}
+  <main class="flex-1 min-w-0">
+    {@inner_content}
+  </main>
 </div>
-
-<footer class="mt-24">
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <div class="mx-auto max-w-2xl">
-      <div class="flex justify-between items-center text-sm py-6 text-zinc-500">
-        <span>&copy; {Date.utc_today().year} Dan Bruder</span>
-      </div>
-    </div>
-  </div>
-</footer>
 
 <div
   :if={assigns[:viewer_count]}
