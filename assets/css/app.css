@@ -146,6 +146,15 @@ a:hover {
   @apply mb-0;
 }
 
+/* Expanded from the legacy {{ youtube(id="...") }} shortcode. */
+.youtube-embed {
+  @apply mb-4 overflow-hidden rounded;
+  aspect-ratio: 16 / 9;
+}
+.youtube-embed iframe {
+  @apply h-full w-full border-0;
+}
+
 /* highlight.js atom-one-dark theme (vendored from node_modules) */
 pre code.hljs {
   display: block;

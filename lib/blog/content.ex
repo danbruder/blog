@@ -61,12 +61,30 @@ defmodule Blog.Content do
     Repo.exists?(Post)
   end
 
+  # Legacy Zola shortcode, e.g. {{ youtube(id="xbeH4Dogn2A") }}. The id
+  # charset is restricted so nothing else can be smuggled into the iframe src.
+  @youtube_shortcode ~r/\{\{\s*youtube\(\s*id\s*=\s*["']([A-Za-z0-9_-]+)["']\s*\)\s*\}\}/
+  @any_shortcode ~r/\{\{[^{}]*\}\}/
+
   @doc "Renders a post's markdown body to HTML."
-  def render_body(%Post{body: body}) do
-    case Earmark.as_html(body || "") do
+  def render_body(%Post{body: body}), do: render_markdown(body)
+
+  @doc "Renders a markdown string (with legacy shortcodes expanded) to HTML."
+  def render_markdown(body) do
+    body = expand_shortcodes(body || "")
+
+    case Earmark.as_html(body) do
       {:ok, html, _} -> html
       {:error, html, _errors} -> html
     end
+  end
+
+  defp expand_shortcodes(body) do
+    Regex.replace(@youtube_shortcode, body, fn _, id -> youtube_embed(id) end)
+  end
+
+  defp youtube_embed(id) do
+    ~s(<div class="youtube-embed"><iframe src="https://www.youtube-nocookie.com/embed/#{id}" title="YouTube video player" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>)
   end
 
   @doc """
@@ -80,6 +98,7 @@ defmodule Blog.Content do
   def excerpt(body, max) when is_binary(body) do
     text =
       body
+      |> String.replace(@any_shortcode, " ")
       |> String.replace(~r/```.*?```/s, " ")
       |> String.replace(~r/`[^`]*`/, " ")
       |> String.replace(~r/<[^>]+>/, " ")
