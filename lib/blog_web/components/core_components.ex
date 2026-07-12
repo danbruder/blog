@@ -220,4 +220,32 @@ defmodule BlogWeb.CoreComponents do
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
   end
+
+  @doc """
+  A hero band. The `.painted` class renders the dynamic paint-worklet shapes;
+  this is the only element on the page that carries them. Title (and optional
+  eyebrow / subtitle / extra slot) sit above the shapes.
+  """
+  attr :title, :string, required: true
+  attr :subtitle, :string, default: nil
+  attr :eyebrow, :string, default: nil
+  attr :title_class, :string, default: "text-3xl md:text-5xl"
+  slot :inner_block
+
+  def page_hero(assigns) do
+    ~H"""
+    <section class="painted relative overflow-hidden bg-zinc-950 border-b border-zinc-800">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-3xl relative z-10 py-12 md:py-16">
+          <p :if={@eyebrow} class="font-fancy text-sm uppercase tracking-wide text-zinc-400">
+            {@eyebrow}
+          </p>
+          <h1 class={["text-[color:var(--accent-heading)]", @title_class]}>{@title}</h1>
+          <p :if={@subtitle} class="mt-2 text-stone-200">{@subtitle}</p>
+          {render_slot(@inner_block)}
+        </div>
+      </div>
+    </section>
+    """
+  end
 end
