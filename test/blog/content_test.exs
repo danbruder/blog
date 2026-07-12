@@ -49,6 +49,31 @@ defmodule Blog.ContentTest do
     assert Content.render_body(post) =~ "<strong>hi</strong>"
   end
 
+  test "render_body/1 expands the legacy youtube shortcode into an iframe" do
+    body = ~s|Intro\n\n{{ youtube(id="xbeH4Dogn2A") }}\n\nOutro|
+    {:ok, post} = Content.create_post(%{@valid_attrs | body: body})
+    html = Content.render_body(post)
+
+    assert html =~ ~s(src="https://www.youtube-nocookie.com/embed/xbeH4Dogn2A")
+    assert html =~ ~s(class="youtube-embed")
+    refute html =~ "{{"
+  end
+
+  test "render_markdown/1 expands a shortcode indented inside an HTML block" do
+    body = "<div class=\" mb-4\">\n    {{ youtube(id=\"yNTmFORn3xQ\") }}\n</div>"
+    html = Content.render_markdown(body)
+
+    assert html =~ ~s(src="https://www.youtube-nocookie.com/embed/yNTmFORn3xQ")
+    refute html =~ "{{"
+  end
+
+  test "render_markdown/1 leaves shortcodes with unsafe ids untouched" do
+    body = ~s|{{ youtube(id="abc" onload="alert(1)") }}|
+    html = Content.render_markdown(body)
+
+    refute html =~ "<iframe"
+  end
+
   test "get_published_by_slug/1 returns nil for drafts" do
     {:ok, _} = Content.create_post(%{@valid_attrs | published: false})
     assert Content.get_published_by_slug("hello-world") == nil
@@ -72,6 +97,15 @@ defmodule Blog.ContentTest do
     refute excerpt =~ "<"
     refute excerpt =~ "img"
     assert excerpt =~ "Hello there."
+  end
+
+  test "excerpt/2 strips legacy shortcodes" do
+    body = ~s|{{ youtube(id="xbeH4Dogn2A") }}\n\nA great video.|
+    excerpt = Content.excerpt(body)
+
+    refute excerpt =~ "youtube"
+    refute excerpt =~ "{{"
+    assert excerpt =~ "A great video."
   end
 
   test "excerpt/2 truncates on a word boundary with an ellipsis" do

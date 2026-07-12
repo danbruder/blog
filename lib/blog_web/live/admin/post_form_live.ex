@@ -79,14 +79,7 @@ defmodule BlogWeb.Admin.PostFormLive do
     assign(socket, form: to_form(changeset))
   end
 
-  defp render_preview(nil), do: ""
-
-  defp render_preview(body) do
-    case Earmark.as_html(body) do
-      {:ok, html, _} -> html
-      {:error, html, _} -> html
-    end
-  end
+  defp render_preview(body), do: Content.render_markdown(body)
 
   defp slugify(title) do
     title
