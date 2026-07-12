@@ -28,9 +28,13 @@ defmodule BlogWeb.Router do
       live("/blog/:slug", PostLive.Show, :show)
       live("/notes", NoteLive.Index, :index)
       live("/notes/:slug", PostLive.Show, :show)
-      live("/snake", SnakeLive, :index)
+      live("/games", GamesLive.Index, :index)
+      live("/games/snake", SnakeLive, :index)
+      live("/podcasts", PodcastLive.Index, :index)
+      live("/projects", ProjectLive.Index, :index)
     end
 
+    get("/snake", RedirectController, :snake)
     get("/rpsb", FunController, :rpsb)
 
     get("/admin/login", AdminSessionController, :new)
