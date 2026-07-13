@@ -10,4 +10,10 @@ defmodule BlogWeb.WritingLiveTest do
     assert html =~ "A Post"
     refute html =~ "A Note"
   end
+
+  test "is also served at the root path", %{conn: conn} do
+    {:ok, _} = Content.create_post(%{title: "A Post", slug: "a-post", body: "x", kind: "post", published: true, published_at: ~D[2024-01-01]})
+    {:ok, _view, html} = live(conn, ~p"/")
+    assert html =~ "A Post"
+  end
 end

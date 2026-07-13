@@ -24,7 +24,7 @@ defmodule BlogWeb.Router do
 
     live_session :public,
       on_mount: [{BlogWeb.PresenceTracker, :track}, {BlogWeb.CurrentPath, :default}] do
-      live("/", HomeLive, :index)
+      live("/", WritingLive, :index)
       live("/writing", WritingLive, :index)
       live("/blog/:slug", PostLive.Show, :show)
       live("/notes", NoteLive.Index, :index)

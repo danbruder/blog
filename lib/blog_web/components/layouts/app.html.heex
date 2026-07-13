@@ -1,7 +1,6 @@
 <.flash_group flash={@flash} />
 
 <% nav_items = [
-  {"Home", ~p"/", "🏠"},
   {"Writing", ~p"/writing", "✍️"},
   {"Notes", ~p"/notes", "🗒️"},
   {"Podcasts", ~p"/podcasts", "🎙️"},
@@ -11,8 +10,7 @@
 <% current = assigns[:current_path] || "/" %>
 <% active? = fn href ->
   cond do
-    href == "/" -> current == "/"
-    href == "/writing" -> current == "/writing" or String.starts_with?(current, "/blog")
+    href == "/writing" -> current in ["/", "/writing"] or String.starts_with?(current, "/blog")
     true -> current == href or String.starts_with?(current, href <> "/")
   end
 end %>
@@ -33,8 +31,8 @@ end %>
         </.link>
 
         <p class="mt-2 text-sm text-zinc-400 hidden md:block md:text-center">
-          Engineering director making
-          <a class="link" href="https://www.dronedeploy.com/">reality capture</a> easy.
+          Engineering director at
+          <a class="link" href="https://www.dronedeploy.com/">DroneDeploy</a>.
         </p>
 
         <button
