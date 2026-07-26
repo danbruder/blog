@@ -330,11 +330,12 @@ pre code.hljs {
   letter-spacing: .08em; padding: 12px 18px; font-size: 13px; }
 @media (hover: hover) and (pointer: fine) { .sea-touch { display: none; } }
 
-.sea-banner { position: absolute; top: 8%; left: 0; right: 0; text-align: center;
+.sea-banner { position: absolute; top: 0; left: 0; transform: translate(-50%, -100%);
   font-family: "Space Grotesk", system-ui, sans-serif; font-weight: 700;
-  font-size: clamp(20px, 4vw, 40px); color: var(--color-ink);
-  text-transform: uppercase; letter-spacing: -0.01em; pointer-events: none;
-  opacity: 0; transition: opacity 200ms ease; }
+  font-size: clamp(13px, 1.8vw, 18px); color: var(--color-ink);
+  text-transform: uppercase; letter-spacing: 0.02em; white-space: nowrap;
+  background: var(--color-paper); border: 2px solid var(--color-ink);
+  padding: 5px 10px; pointer-events: none; opacity: 0; transition: opacity 150ms ease; }
 .sea-hint { position: absolute; top: 16px; left: 0; right: 0; text-align: center;
   font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
   color: var(--color-ink-2); pointer-events: none; }

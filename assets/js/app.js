@@ -55,6 +55,7 @@ let Hooks = {
     async enter() {
       if (this.running) return
       this.running = true
+      sessionStorage.removeItem("seaActive")
       this.el.classList.remove("hidden")
       const [mod, res] = await Promise.all([
         import("/assets/js/sea/index.js"),
@@ -79,6 +80,31 @@ let Hooks = {
     destroyed() {
       document.removeEventListener("theme:changed", this.onTheme)
       this.exit()
+    }
+  },
+  // Floating "back to your boat" button, shown on any page reached by docking
+  // out of Sea mode (sessionStorage.seaActive), so you don't have to cycle
+  // the whole Light -> Dark -> Sea toggle to get back.
+  SeaReturn: {
+    sync() {
+      const active = sessionStorage.seaActive === "1"
+      const inSea = document.documentElement.dataset.theme === "sea"
+      this.el.classList.toggle("hidden", !active || inSea)
+      this.el.classList.toggle("flex", active && !inSea)
+    },
+    mounted() {
+      this.sync()
+      this.onTheme = () => this.sync()
+      document.addEventListener("theme:changed", this.onTheme)
+      this.el.addEventListener("click", () => {
+        const theme = "sea"
+        document.documentElement.dataset.theme = theme
+        localStorage.theme = theme
+        document.dispatchEvent(new CustomEvent("theme:changed", {detail: {theme}}))
+      })
+    },
+    destroyed() {
+      document.removeEventListener("theme:changed", this.onTheme)
     }
   },
   // LiveView has no native phx-dblclick; bridge a dblclick into a server event.

@@ -6,6 +6,9 @@
 export function createControls(overlay) {
   const state = {throttle: 0, turn: 0, dock: false}
   const keys = new Set()
+  let touchActive = false
+  let touchTurn = 0
+  let touchThrottle = 0
 
   const onKey = (down) => (e) => {
     const k = e.key.toLowerCase()
@@ -44,17 +47,20 @@ export function createControls(overlay) {
     dx = Math.max(-1, Math.min(1, dx))
     dy = Math.max(-1, Math.min(1, dy))
     nub.style.transform = `translate(${dx * 34}px, ${dy * 34}px)`
-    state.turn = dx
-    state.throttle = Math.max(0, -dy)
+    touchTurn = dx
+    // Pulling the stick down reverses (negative throttle), pushing up goes forward.
+    touchThrottle = -dy
   }
   const resetTouch = () => {
     touchId = null
+    touchActive = false
     nub.style.transform = "translate(0,0)"
-    state.turn = 0
-    state.throttle = 0
+    touchTurn = 0
+    touchThrottle = 0
   }
   stick.addEventListener("touchstart", (e) => {
     touchId = e.changedTouches[0].identifier
+    touchActive = true
     setFromTouch(e.changedTouches[0])
     e.preventDefault()
   }, {passive: false})
@@ -66,17 +72,24 @@ export function createControls(overlay) {
   stick.addEventListener("touchcancel", resetTouch)
   pad.querySelector("[data-dock]").addEventListener("click", () => (state.dock = true))
 
-  // Fold keyboard into the state each time it's read.
+  // Recompute turn/throttle from whichever input source is active every call,
+  // so releasing a key (or the touch stick) actually zeroes it out instead of
+  // sticking at its last value.
   const read = () => {
+    if (touchActive) {
+      state.turn = touchTurn
+      state.throttle = touchThrottle
+      return state
+    }
+
     let turn = 0
     let throttle = 0
     if (keys.has("arrowleft") || keys.has("a")) turn -= 1
     if (keys.has("arrowright") || keys.has("d")) turn += 1
     if (keys.has("arrowup") || keys.has("w")) throttle += 1
-    if (keys.has("arrowdown") || keys.has("s")) throttle -= 0.4
-    // Keyboard overrides only when actually pressed; else keep touch values.
-    if (turn !== 0) state.turn = turn
-    if (throttle !== 0) state.throttle = Math.max(0, throttle)
+    if (keys.has("arrowdown") || keys.has("s")) throttle -= 0.6
+    state.turn = turn
+    state.throttle = throttle
     return state
   }
 

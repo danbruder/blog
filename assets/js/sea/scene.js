@@ -18,6 +18,12 @@ function toonGradient() {
   return tex
 }
 
+function hashStr(s) {
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
+  return h
+}
+
 // Ink outline: a slightly larger back-side copy of a geometry.
 function outline(geometry, scale = 1.06) {
   const mat = new THREE.MeshBasicMaterial({color: COL.ink, side: THREE.BackSide})
@@ -70,25 +76,44 @@ export class SeaScene {
     this.scene.add(this.water)
   }
 
+  // Radius/height vary per island, deterministically from its path, so every
+  // sailor sees the same shape and the archipelago doesn't look uniform.
   addIsland(island) {
     const group = new THREE.Group()
-    const geo = new THREE.ConeGeometry(7, 9, 5)
+    const h = hashStr(island.path)
+    const radius = 5 + ((h % 100) / 100) * 5 // 5..10
+    const height = 7 + (((h >> 8) % 100) / 100) * 9 // 7..16
+    island.radius = radius
+    island.height = height
+
+    const geo = new THREE.ConeGeometry(radius, height, 5)
     const mat = new THREE.MeshToonMaterial({color: COL.lime, gradientMap: this.gradient})
     const cone = new THREE.Mesh(geo, mat)
-    cone.position.y = 3
-    group.add(outline(geo).translateY(3))
+    cone.position.y = height / 2
+    group.add(outline(geo).translateY(height / 2))
     group.add(cone)
 
     // A little ink post so the island reads as a marker.
     const postGeo = new THREE.CylinderGeometry(0.25, 0.25, 6)
     const post = new THREE.Mesh(postGeo, new THREE.MeshBasicMaterial({color: COL.ink}))
-    post.position.y = 9
+    post.position.y = height + 3
     group.add(post)
 
     group.position.set(island.x, 0, island.z)
     group.userData.island = island
     this.scene.add(group)
     return group
+  }
+
+  // Projects a 3D world point to 2D screen pixels (for floating HTML labels).
+  // `visible` is false once the point is behind the camera.
+  project(x, y, z) {
+    const v = new THREE.Vector3(x, y, z).project(this.camera)
+    return {
+      x: (v.x * 0.5 + 0.5) * this.container.clientWidth,
+      y: (-v.y * 0.5 + 0.5) * this.container.clientHeight,
+      visible: v.z < 1
+    }
   }
 
   // Boat: ink-outlined hull + a lime sail carrying a flag canvas texture.

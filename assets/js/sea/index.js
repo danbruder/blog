@@ -1,7 +1,15 @@
 import {SeaScene, flagTexture} from "./scene.js"
 import {createControls} from "./controls.js"
 import {SeaNet} from "./net.js"
-import {nearestDockable, nearestIsland} from "./world.js"
+import {nearestDockable, nearestIsland, isCloseEnoughToDock, resolveCollision} from "./world.js"
+
+const MAX_SPEED = 0.6
+const ACCEL = 0.05
+const DECAY = 0.94 // per-frame friction applied when no throttle is held
+const TURN_RATE = 0.03
+const MIN_SPEED_TO_TURN = 0.05 // above this, turning is at full rate
+const STATIONARY_TURN_FACTOR = 0.35 // turning while dead in the water is slower, not blocked
+const CRASH_BOUNCE = -0.25 // reverses and dampens speed on collision
 
 let active = null
 
@@ -27,9 +35,11 @@ class Sea {
     this.scene = new SeaScene(el)
     for (const isl of islands) this.scene.addIsland(isl)
 
-    // Local boat starts at the harbor.
+    // Resume at the last saved spot (e.g. returning from a docked post);
+    // otherwise start at the harbor.
     const harbor = this.islandsByPath.get("/") || {x: 0, z: 0}
-    this.pos = {x: harbor.x, z: harbor.z + 20, h: Math.PI}
+    this.pos = loadPos() || {x: harbor.x, z: harbor.z + 20, h: Math.PI}
+    this.speed = 0
     this.selfBoat = this.scene.makeBoat(flagTexture("🏴"), true)
 
     this.controls = createControls(el)
@@ -51,6 +61,8 @@ class Sea {
     this.leaveBtn.textContent = "Leave the sea"
     this.leaveBtn.addEventListener("click", () => {
       const prev = localStorage.themePrev || "light"
+      sessionStorage.removeItem("seaActive")
+      savePos(this.pos)
       localStorage.theme = prev
       document.documentElement.dataset.theme = prev
       document.dispatchEvent(new CustomEvent("theme:changed", {detail: {theme: prev}}))
@@ -68,11 +80,29 @@ class Sea {
     this.t += 0.016
 
     const input = this.controls.read()
-    // Integrate simple boat motion.
-    this.pos.h -= input.turn * 0.03
-    const speed = input.throttle * 0.6
-    this.pos.x += Math.sin(this.pos.h) * speed
-    this.pos.z += Math.cos(this.pos.h) * speed
+
+    // Ease speed toward the throttle target, decaying with friction when the
+    // throttle is released — so letting go coasts to a stop instead of
+    // snapping, and tapping briefly doesn't leave the boat drifting forever.
+    const target = input.throttle * MAX_SPEED
+    if (target !== 0) {
+      this.speed += (target - this.speed) * ACCEL
+    } else {
+      this.speed *= DECAY
+      if (Math.abs(this.speed) < 0.002) this.speed = 0
+    }
+
+    // Turning works even standing still, but is slower than while under way.
+    const turnRate =
+      Math.abs(this.speed) > MIN_SPEED_TO_TURN ? TURN_RATE : TURN_RATE * STATIONARY_TURN_FACTOR
+    this.pos.h -= input.turn * turnRate
+
+    let nextX = this.pos.x + Math.sin(this.pos.h) * this.speed
+    let nextZ = this.pos.z + Math.cos(this.pos.h) * this.speed
+    const {x, z, hit} = resolveCollision(nextX, nextZ, this.islands)
+    if (hit) this.speed *= CRASH_BOUNCE
+    this.pos.x = x
+    this.pos.z = z
 
     this.selfBoat.position.set(this.pos.x, 0, this.pos.z)
     this.selfBoat.rotation.y = this.pos.h
@@ -155,20 +185,40 @@ class Sea {
     return s ? s.flag : "🏳️"
   }
 
+  // Floats the label above the actual island in the scene (not fixed to the
+  // top of the screen) by projecting its 3D position to screen pixels each
+  // frame, so it tracks the island as the chase cam moves.
   updateBanner() {
     const near = nearestIsland(this.pos.x, this.pos.z, this.islands)
-    if (near && near.distance < 40) {
-      this.banner.textContent =
-        near.distance < 9 ? `${near.island.title} — press Space to dock` : near.island.title
-      this.banner.style.opacity = "1"
-    } else {
+    if (!near || near.distance > 50) {
       this.banner.style.opacity = "0"
+      return
     }
+
+    const island = near.island
+    const topY = (island.height ?? 9) + 5
+    const p = this.scene.project(island.x, topY, island.z)
+    if (!p.visible) {
+      this.banner.style.opacity = "0"
+      return
+    }
+
+    this.banner.textContent = isCloseEnoughToDock(island, near.distance)
+      ? `${island.title} — press Space to dock`
+      : island.title
+    this.banner.style.left = `${p.x}px`
+    this.banner.style.top = `${p.y}px`
+    this.banner.style.opacity = "1"
   }
 
   dockTo(island) {
-    // Leaving Sea mode: restore the previous light/dark theme, then navigate.
+    // Leaving Sea mode to read a post: restore the previous light/dark theme,
+    // then navigate. Mark that a sea session is paused (and save where the
+    // boat was) so the destination page can offer a one-click way back to
+    // the boat, at the same spot.
     const prev = localStorage.themePrev || "light"
+    sessionStorage.seaActive = "1"
+    savePos(this.pos)
     localStorage.theme = prev
     document.documentElement.dataset.theme = prev
     document.dispatchEvent(new CustomEvent("theme:changed", {detail: {theme: prev}}))
@@ -194,4 +244,20 @@ function hash(s) {
   let h = 0
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 6283
   return h / 1000
+}
+
+function savePos(pos) {
+  sessionStorage.seaPos = JSON.stringify(pos)
+}
+
+function loadPos() {
+  try {
+    const raw = sessionStorage.seaPos
+    if (!raw) return null
+    const p = JSON.parse(raw)
+    if (typeof p.x === "number" && typeof p.z === "number" && typeof p.h === "number") return p
+  } catch (_) {
+    // ignore malformed/stale data
+  }
+  return null
 }
