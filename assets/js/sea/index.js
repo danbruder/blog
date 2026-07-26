@@ -58,9 +58,27 @@ class Sea {
     this.hint.textContent = "Arrows / WASD to sail · Space to dock · toggle theme to leave"
     el.appendChild(this.hint)
 
+    // Anchoring bar: a collapsed echo of the site sidebar (face + exit),
+    // kept on screen so sailing never feels fully detached from the site.
+    // Left rail at desktop widths, top strip on mobile — see .sea-anchor.
+    this.anchor = document.createElement("div")
+    this.anchor.className = "sea-anchor"
+
+    const face = document.createElement("a")
+    face.className = "sea-anchor-face"
+    face.href = "/"
+    face.setAttribute("aria-label", "Dan Bruder — home")
+    const faceImg = document.createElement("img")
+    faceImg.src = "/images/my-face-new.jpg"
+    faceImg.alt = "Dan Bruder"
+    face.appendChild(faceImg)
+
     this.leaveBtn = document.createElement("button")
-    this.leaveBtn.className = "sea-leave"
-    this.leaveBtn.textContent = "Leave the sea"
+    this.leaveBtn.className = "sea-anchor-leave"
+    this.leaveBtn.type = "button"
+    this.leaveBtn.setAttribute("aria-label", "Leave the sea")
+    this.leaveBtn.title = "Leave the sea"
+    this.leaveBtn.textContent = "×"
     this.leaveBtn.addEventListener("click", () => {
       const prev = localStorage.themePrev || "light"
       sessionStorage.removeItem("seaActive")
@@ -69,7 +87,10 @@ class Sea {
       document.documentElement.dataset.theme = prev
       document.dispatchEvent(new CustomEvent("theme:changed", {detail: {theme: prev}}))
     })
-    el.appendChild(this.leaveBtn)
+
+    this.anchor.appendChild(face)
+    this.anchor.appendChild(this.leaveBtn)
+    el.appendChild(this.anchor)
 
     this.t = 0
     this.running = true
@@ -254,7 +275,7 @@ class Sea {
     this.scene.dispose()
     if (this.banner.parentNode) this.banner.remove()
     if (this.hint.parentNode) this.hint.remove()
-    if (this.leaveBtn.parentNode) this.leaveBtn.remove()
+    if (this.anchor.parentNode) this.anchor.remove()
   }
 }
 

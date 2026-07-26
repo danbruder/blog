@@ -78,7 +78,7 @@ let Hooks = {
   SeaToggle: {
     sync() {
       const paused = sessionStorage.seaActive === "1"
-      this.el.textContent = paused ? "⛵ Back" : "⛵ Sea"
+      this.el.textContent = paused ? "⛵ Back to boat" : "⛵ Explore in 3D"
     },
     mounted() {
       this.sync()

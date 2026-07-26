@@ -200,16 +200,19 @@ export class SeaScene {
     pos.needsUpdate = true
   }
 
-  // Chase cam behind a boat group at heading h (radians).
+  // Chase cam behind a boat group at heading h (radians). Aims ahead of and
+  // above the boat rather than straight at it, which tilts the view up and
+  // keeps the boat low in the frame (bottom quarter-ish) so islands and
+  // labels ahead have more headroom on screen.
   chase(target, h) {
-    const back = new THREE.Vector3(Math.sin(h), 0, Math.cos(h))
+    const dir = new THREE.Vector3(Math.sin(h), 0, Math.cos(h))
     const desired = new THREE.Vector3(
-      target.x - back.x * 34,
+      target.x - dir.x * 34,
       22,
-      target.z - back.z * 34
+      target.z - dir.z * 34
     )
     this.camera.position.lerp(desired, 0.08)
-    this.camera.lookAt(target.x, 2, target.z)
+    this.camera.lookAt(target.x + dir.x * 14, 8, target.z + dir.z * 14)
   }
 
   render() {

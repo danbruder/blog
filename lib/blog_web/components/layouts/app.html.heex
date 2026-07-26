@@ -79,6 +79,12 @@ end %>
 
         <%!-- Secondary links --%>
         <div class="flex flex-col items-start gap-1.5 text-[12.5px] text-ink-2">
+          <button
+            id="sea-toggle"
+            phx-hook="SeaToggle"
+            type="button"
+            class="!shadow-none !text-ink-2 hover:!bg-lime hover:!text-on-lime"
+          ></button>
           <a href="/blog/about" class="!shadow-[inset_0_-1px_0_var(--color-rule)] !text-ink-2">
             About me
           </a>
@@ -91,25 +97,17 @@ end %>
           </a>
         </div>
 
-        <%!-- Footer: copyright + theme toggle + sea toggle --%>
+        <%!-- Footer: copyright + theme toggle --%>
         <div class="flex items-center justify-between gap-2 border-t border-rule pt-3.5">
           <span class="text-[10.5px] uppercase tracking-[0.12em] text-ink-3">
             &copy; {Date.utc_today().year}
           </span>
-          <div class="flex items-center gap-1.5">
-            <button
-              id="sea-toggle"
-              phx-hook="SeaToggle"
-              type="button"
-              class="border border-ink px-2 py-1 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-ink transition-colors hover:bg-lime hover:text-on-lime"
-            ></button>
-            <button
-              id="theme-toggle"
-              phx-hook="ThemeToggle"
-              type="button"
-              class="border border-ink px-2 py-1 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-ink transition-colors hover:bg-lime hover:text-on-lime"
-            ></button>
-          </div>
+          <button
+            id="theme-toggle"
+            phx-hook="ThemeToggle"
+            type="button"
+            class="border border-ink px-2 py-1 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-ink transition-colors hover:bg-lime hover:text-on-lime"
+          ></button>
         </div>
       </div>
     </div>
