@@ -48,6 +48,42 @@ defmodule BlogWeb.SeaWorldTest do
     refute post.id == nil
   end
 
+  test "color prefers category, then first tag, then section" do
+    {:ok, _} =
+      Blog.Content.create_post(%{
+        title: "Categorized",
+        slug: "categorized",
+        kind: "post",
+        published: true,
+        category: "Elixir"
+      })
+
+    {:ok, _} =
+      Blog.Content.create_post(%{
+        title: "Tagged",
+        slug: "tagged",
+        kind: "post",
+        published: true,
+        tags: "rust, systems"
+      })
+
+    {:ok, _} =
+      Blog.Content.create_post(%{
+        title: "Plain",
+        slug: "plain",
+        kind: "post",
+        published: true
+      })
+
+    by_path = SeaWorld.islands() |> Map.new(&{&1.path, &1})
+
+    assert by_path["/blog/categorized"].color == "Elixir"
+    assert by_path["/blog/tagged"].color == "rust"
+    assert by_path["/blog/plain"].color == "writing"
+    assert by_path["/writing"].color == "writing"
+    assert by_path["/"].color == "harbor"
+  end
+
   test "positions are stable across calls" do
     a = SeaWorld.islands() |> Map.new(&{&1.path, {&1.x, &1.z}})
     b = SeaWorld.islands() |> Map.new(&{&1.path, {&1.x, &1.z}})

@@ -10,6 +10,29 @@ const COL = {
   seaDark: 0x2f3ba8
 }
 
+// A small family of fills at the same brightness/saturation as the brand's
+// lime and signal-blue accents, so colorful islands and boats still read as
+// "one system" — everything keeps the same thick ink outline regardless of
+// fill, which is what ties it together visually.
+const PALETTE = [
+  0xc4e600, // lime (brand)
+  0x4fd6c4, // teal
+  0xff8a3d, // coral
+  0xff5c8a, // pink
+  0x8a6cff, // violet
+  0x4fa8ff, // sky blue (near signal)
+  0xffd23d, // gold
+  0x4fd67a // mint
+]
+
+// Deterministically maps any key (category/tag/section, or a sailor id) to
+// one of the palette colors, so the same thing always looks the same color to
+// everyone — e.g. a given sailor's boat is the same hull color on every
+// screen, not just tinted for "you" vs "everyone else".
+function themedColor(key) {
+  return PALETTE[hashStr(key || "") % PALETTE.length]
+}
+
 // A 3-step toon gradient so MeshToonMaterial reads as flat cel bands.
 function toonGradient() {
   const data = new Uint8Array([90, 160, 255])
@@ -87,7 +110,8 @@ export class SeaScene {
     island.height = height
 
     const geo = new THREE.ConeGeometry(radius, height, 5)
-    const mat = new THREE.MeshToonMaterial({color: COL.lime, gradientMap: this.gradient})
+    const fill = themedColor(island.color || island.section)
+    const mat = new THREE.MeshToonMaterial({color: fill, gradientMap: this.gradient})
     const cone = new THREE.Mesh(geo, mat)
     cone.position.y = height / 2
     group.add(outline(geo).translateY(height / 2))
@@ -116,14 +140,17 @@ export class SeaScene {
     }
   }
 
-  // Boat: ink-outlined hull + a lime sail carrying a flag canvas texture.
-  makeBoat(flagTexture, isSelf) {
+  // Boat: ink-outlined hull + a sail carrying a flag canvas texture. The hull
+  // color is keyed by sailor id, not by whether it's "you" — so a given
+  // sailor's boat looks the same to every viewer, on every screen. `isSelf`
+  // only adds the ring accent beneath your own boat.
+  makeBoat(flagTexture, isSelf, sailorId) {
     const group = new THREE.Group()
 
     const hullGeo = new THREE.BoxGeometry(2.4, 1.1, 4.2)
     const hull = new THREE.Mesh(
       hullGeo,
-      new THREE.MeshToonMaterial({color: isSelf ? COL.lime : COL.paper, gradientMap: this.gradient})
+      new THREE.MeshToonMaterial({color: themedColor(sailorId), gradientMap: this.gradient})
     )
     hull.position.y = 1
     group.add(outline(hullGeo, 1.12).translateY(1))

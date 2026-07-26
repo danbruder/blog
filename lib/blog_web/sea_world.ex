@@ -31,29 +31,54 @@ defmodule BlogWeb.SeaWorld do
           title: String.t(),
           section: String.t(),
           x: float(),
-          z: float()
+          z: float(),
+          color: String.t()
         }
 
   @spec islands() :: [island()]
   def islands do
     fixed =
-      Enum.map(@sections, fn {section, path, title} -> {section, path, title} end) ++ @extra
+      Enum.map(@sections, fn {section, path, title} -> {section, path, title, section} end) ++
+        Enum.map(@extra, fn {section, path, title} -> {section, path, title, section} end)
 
     posts =
       Enum.map(Content.list_published_posts(), fn p ->
-        {"writing", "/blog/#{p.slug}", p.title}
+        {"writing", "/blog/#{p.slug}", p.title, color_key(p, "writing")}
       end)
 
     notes =
       Enum.map(Content.list_published_notes(), fn p ->
-        {"notes", "/notes/#{p.slug}", p.title}
+        {"notes", "/notes/#{p.slug}", p.title, color_key(p, "notes")}
       end)
 
     (fixed ++ posts ++ notes)
-    |> Enum.map(fn {section, path, title} ->
+    |> Enum.map(fn {section, path, title, color} ->
       {x, z} = position(section, path)
-      %{path: path, title: title, section: section, x: x, z: z}
+      %{path: path, title: title, section: section, x: x, z: z, color: color}
     end)
+  end
+
+  # Colors are keyed off the post's category, falling back to its first tag,
+  # then the section name — the client hashes this key into a themed color, so
+  # posts about the same topic cluster visually.
+  defp color_key(post, fallback) do
+    cond do
+      present?(post.category) -> post.category
+      first_tag = present_tag(post.tags) -> first_tag
+      true -> fallback
+    end
+  end
+
+  defp present?(nil), do: false
+  defp present?(s), do: String.trim(s) != ""
+
+  defp present_tag(nil), do: nil
+
+  defp present_tag(tags) do
+    case tags |> String.split(",") |> Enum.map(&String.trim/1) |> Enum.reject(&(&1 == "")) do
+      [first | _] -> first
+      [] -> nil
+    end
   end
 
   # Harbor sits dead center; everything else is placed in its section's angular

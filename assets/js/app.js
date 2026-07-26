@@ -18,34 +18,23 @@ let Hooks = {
     mounted() { highlightIn(this.el) },
     updated() { highlightIn(this.el) }
   },
-  // Theme toggle cycles Light -> Dark -> Sea (a hidden 3D easter egg) -> Light.
-  // Theme is a client concern: set dataset.theme on <html>, persist, and
-  // broadcast a `theme:changed` event the SeaMode hook listens for. The label
-  // names the mode you'd switch TO next.
+  // Light/dark theme toggle. Theme is a pure client concern: flip
+  // dataset.theme on <html> and persist to localStorage. The label always
+  // names the theme you'd switch TO. Sea is a separate control (SeaToggle) —
+  // this toggle only ever moves between light and dark.
   ThemeToggle: {
-    order: ["light", "dark", "sea"],
-    labelFor(theme) {
-      const next = this.order[(this.order.indexOf(theme) + 1) % this.order.length]
-      return next === "sea" ? "Sea" : next === "dark" ? "Dark" : "Light"
-    },
-    apply(theme) {
-      const prev = document.documentElement.dataset.theme
-      if (prev && prev !== "sea") localStorage.themePrev = prev
-      document.documentElement.dataset.theme = theme
-      localStorage.theme = theme
-      this.el.textContent = this.labelFor(theme)
-      document.dispatchEvent(new CustomEvent("theme:changed", {detail: {theme}}))
-    },
     mounted() {
-      const current = this.order.includes(document.documentElement.dataset.theme)
-        ? document.documentElement.dataset.theme
-        : "light"
-      this.el.textContent = this.labelFor(current)
+      const sync = () => {
+        this.el.textContent =
+          document.documentElement.dataset.theme === "dark" ? "Light" : "Dark"
+      }
+      sync()
       this.el.addEventListener("click", () => {
-        const now = this.order.includes(document.documentElement.dataset.theme)
-          ? document.documentElement.dataset.theme
-          : "light"
-        this.apply(this.order[(this.order.indexOf(now) + 1) % this.order.length])
+        const next =
+          document.documentElement.dataset.theme === "dark" ? "light" : "dark"
+        document.documentElement.dataset.theme = next
+        localStorage.theme = next
+        sync()
       })
     }
   },
@@ -82,21 +71,22 @@ let Hooks = {
       this.exit()
     }
   },
-  // Floating "back to your boat" button, shown on any page reached by docking
-  // out of Sea mode (sessionStorage.seaActive), so you don't have to cycle
-  // the whole Light -> Dark -> Sea toggle to get back.
-  SeaReturn: {
+  // Dedicated control for the Sea easter egg, separate from Light/Dark.
+  // Doubles as "return to your boat": if a sea session is paused (docked at a
+  // post), the same button's label switches to say so and clicking it jumps
+  // straight back into Sea mode at the saved position.
+  SeaToggle: {
     sync() {
-      const active = sessionStorage.seaActive === "1"
-      const inSea = document.documentElement.dataset.theme === "sea"
-      this.el.classList.toggle("hidden", !active || inSea)
-      this.el.classList.toggle("flex", active && !inSea)
+      const paused = sessionStorage.seaActive === "1"
+      this.el.textContent = paused ? "⛵ Back" : "⛵ Sea"
     },
     mounted() {
       this.sync()
       this.onTheme = () => this.sync()
       document.addEventListener("theme:changed", this.onTheme)
       this.el.addEventListener("click", () => {
+        const current = document.documentElement.dataset.theme
+        if (current !== "sea") localStorage.themePrev = current
         const theme = "sea"
         document.documentElement.dataset.theme = theme
         localStorage.theme = theme

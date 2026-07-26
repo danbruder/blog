@@ -91,17 +91,25 @@ end %>
           </a>
         </div>
 
-        <%!-- Footer: copyright + theme toggle --%>
-        <div class="flex items-center justify-between border-t border-rule pt-3.5">
+        <%!-- Footer: copyright + theme toggle + sea toggle --%>
+        <div class="flex items-center justify-between gap-2 border-t border-rule pt-3.5">
           <span class="text-[10.5px] uppercase tracking-[0.12em] text-ink-3">
             &copy; {Date.utc_today().year}
           </span>
-          <button
-            id="theme-toggle"
-            phx-hook="ThemeToggle"
-            type="button"
-            class="border border-ink px-2 py-1 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-ink transition-colors hover:bg-lime hover:text-on-lime"
-          ></button>
+          <div class="flex items-center gap-1.5">
+            <button
+              id="sea-toggle"
+              phx-hook="SeaToggle"
+              type="button"
+              class="border border-ink px-2 py-1 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-ink transition-colors hover:bg-lime hover:text-on-lime"
+            ></button>
+            <button
+              id="theme-toggle"
+              phx-hook="ThemeToggle"
+              type="button"
+              class="border border-ink px-2 py-1 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-ink transition-colors hover:bg-lime hover:text-on-lime"
+            ></button>
+          </div>
         </div>
       </div>
     </div>
@@ -111,14 +119,6 @@ end %>
     {@inner_content}
   </main>
 </div>
-
-<button
-  id="sea-return"
-  phx-hook="SeaReturn"
-  type="button"
-  aria-label="Return to your boat"
-  class="fixed bottom-5 right-5 z-[9998] hidden h-12 w-12 items-center justify-center border-2 border-ink bg-lime text-2xl shadow-[3px_3px_0_var(--color-ink)]"
->⛵</button>
 
 <div
   id="sea-overlay"

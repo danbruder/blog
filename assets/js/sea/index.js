@@ -10,6 +10,8 @@ const TURN_RATE = 0.03
 const MIN_SPEED_TO_TURN = 0.05 // above this, turning is at full rate
 const STATIONARY_TURN_FACTOR = 0.35 // turning while dead in the water is slower, not blocked
 const CRASH_BOUNCE = -0.25 // reverses and dampens speed on collision
+const BOAT_RADIUS = 2.2 // other boats are obstacles too, not just islands
+const BOAT_COLLISION_MARGIN = 1
 
 let active = null
 
@@ -40,7 +42,7 @@ class Sea {
     const harbor = this.islandsByPath.get("/") || {x: 0, z: 0}
     this.pos = loadPos() || {x: harbor.x, z: harbor.z + 20, h: Math.PI}
     this.speed = 0
-    this.selfBoat = this.scene.makeBoat(flagTexture("🏴"), true)
+    this.selfBoat = this.scene.makeBoat(flagTexture("🏴"), true, sailorId)
 
     this.controls = createControls(el)
     this.net = new SeaNet(sailorId)
@@ -97,12 +99,13 @@ class Sea {
       Math.abs(this.speed) > MIN_SPEED_TO_TURN ? TURN_RATE : TURN_RATE * STATIONARY_TURN_FACTOR
     this.pos.h -= input.turn * turnRate
 
-    let nextX = this.pos.x + Math.sin(this.pos.h) * this.speed
-    let nextZ = this.pos.z + Math.cos(this.pos.h) * this.speed
-    const {x, z, hit} = resolveCollision(nextX, nextZ, this.islands)
-    if (hit) this.speed *= CRASH_BOUNCE
-    this.pos.x = x
-    this.pos.z = z
+    const nextX = this.pos.x + Math.sin(this.pos.h) * this.speed
+    const nextZ = this.pos.z + Math.cos(this.pos.h) * this.speed
+    const land = resolveCollision(nextX, nextZ, this.islands)
+    const boats = resolveCollision(land.x, land.z, this.boatObstacles(), BOAT_COLLISION_MARGIN)
+    if (land.hit || boats.hit) this.speed *= CRASH_BOUNCE
+    this.pos.x = boats.x
+    this.pos.z = boats.z
 
     this.selfBoat.position.set(this.pos.x, 0, this.pos.z)
     this.selfBoat.rotation.y = this.pos.h
@@ -141,7 +144,7 @@ class Sea {
       liveIds.add(id)
       let b = this.remoteBoats.get(id)
       if (!b) {
-        b = this.scene.makeBoat(flagTexture(this.flagFor(id)), false)
+        b = this.scene.makeBoat(flagTexture(this.flagFor(id)), false, id)
         this.remoteBoats.set(id, b)
       }
       b.position.set(p.x, 0, p.z)
@@ -165,7 +168,7 @@ class Sea {
       anchored.add(s.id)
       let b = this.readerBoats.get(s.id)
       if (!b) {
-        b = this.scene.makeBoat(flagTexture(s.flag), false)
+        b = this.scene.makeBoat(flagTexture(s.flag), false, s.id)
         this.readerBoats.set(s.id, b)
       }
       const bob = Math.sin(this.t * 1.5 + hash(s.id)) * 0.4
@@ -178,6 +181,25 @@ class Sea {
         this.readerBoats.delete(id)
       }
     }
+  }
+
+  // Other boats treated as obstacles for the local boat's own collision
+  // check — mirrors the live-vs-anchored split in syncOtherBoats so both
+  // moving sailors and boats bobbing at their island block the way.
+  boatObstacles() {
+    const list = []
+    const liveIds = new Set()
+    for (const [id, p] of this.net.remote) {
+      if (id === this.sailorId) continue
+      liveIds.add(id)
+      list.push({x: p.x, z: p.z, radius: BOAT_RADIUS})
+    }
+    for (const s of this.net.roster) {
+      if (s.id === this.sailorId || liveIds.has(s.id)) continue
+      const isl = this.islandsByPath.get(s.path)
+      if (isl) list.push({x: isl.x + 10, z: isl.z + 10, radius: BOAT_RADIUS})
+    }
+    return list
   }
 
   flagFor(id) {
