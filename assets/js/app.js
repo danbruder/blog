@@ -20,7 +20,8 @@ let Hooks = {
   },
   // Light/dark theme toggle. Theme is a pure client concern: flip
   // dataset.theme on <html> and persist to localStorage. The label always
-  // names the theme you'd switch TO.
+  // names the theme you'd switch TO. Sea is a separate control (SeaToggle) —
+  // this toggle only ever moves between light and dark.
   ThemeToggle: {
     mounted() {
       const sync = () => {
@@ -35,6 +36,65 @@ let Hooks = {
         localStorage.theme = next
         sync()
       })
+    }
+  },
+  // Mounts/unmounts the 3D sea when the theme is "sea". The heavy three.js
+  // bundle is only imported the first time it's needed.
+  SeaMode: {
+    async enter() {
+      if (this.running) return
+      this.running = true
+      sessionStorage.removeItem("seaActive")
+      this.el.classList.remove("hidden")
+      const [mod, res] = await Promise.all([
+        import("/assets/js/sea/index.js"),
+        fetch("/sea/islands.json")
+      ])
+      this.sea = mod
+      const {islands} = await res.json()
+      mod.startSea({el: this.el, sailorId: window.SAILOR_ID, islands})
+    },
+    exit() {
+      if (!this.running) return
+      this.running = false
+      if (this.sea) this.sea.stopSea()
+      this.el.classList.add("hidden")
+    },
+    mounted() {
+      this.onTheme = (e) => (e.detail.theme === "sea" ? this.enter() : this.exit())
+      document.addEventListener("theme:changed", this.onTheme)
+      // Honor a persisted "sea" theme on first load.
+      if (document.documentElement.dataset.theme === "sea") this.enter()
+    },
+    destroyed() {
+      document.removeEventListener("theme:changed", this.onTheme)
+      this.exit()
+    }
+  },
+  // Dedicated control for the Sea easter egg, separate from Light/Dark.
+  // Doubles as "return to your boat": if a sea session is paused (docked at a
+  // post), the same button's label switches to say so and clicking it jumps
+  // straight back into Sea mode at the saved position.
+  SeaToggle: {
+    sync() {
+      const paused = sessionStorage.seaActive === "1"
+      this.el.textContent = paused ? "⛵ Back" : "⛵ Sea"
+    },
+    mounted() {
+      this.sync()
+      this.onTheme = () => this.sync()
+      document.addEventListener("theme:changed", this.onTheme)
+      this.el.addEventListener("click", () => {
+        const current = document.documentElement.dataset.theme
+        if (current !== "sea") localStorage.themePrev = current
+        const theme = "sea"
+        document.documentElement.dataset.theme = theme
+        localStorage.theme = theme
+        document.dispatchEvent(new CustomEvent("theme:changed", {detail: {theme}}))
+      })
+    },
+    destroyed() {
+      document.removeEventListener("theme:changed", this.onTheme)
     }
   },
   // LiveView has no native phx-dblclick; bridge a dblclick into a server event.
@@ -128,7 +188,7 @@ let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   hooks: Hooks,
-  params: {_csrf_token: csrfToken}
+  params: {_csrf_token: csrfToken, sailor_id: window.SAILOR_ID}
 })
 
 liveSocket.connect()

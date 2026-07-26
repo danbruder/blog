@@ -54,10 +54,11 @@ defmodule Blog.MixProject do
         "tailwind.install --if-missing",
         "esbuild.install --if-missing"
       ],
-      "assets.build": ["tailwind blog", "esbuild blog"],
+      "assets.build": ["tailwind blog", "esbuild blog", "esbuild sea"],
       "assets.deploy": [
         "tailwind blog --minify",
         "esbuild blog --minify",
+        "esbuild sea --minify",
         "phx.digest"
       ]
     ]

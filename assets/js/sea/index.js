@@ -1,0 +1,285 @@
+import {SeaScene, flagTexture} from "./scene.js"
+import {createControls} from "./controls.js"
+import {SeaNet} from "./net.js"
+import {nearestDockable, nearestIsland, isCloseEnoughToDock, resolveCollision} from "./world.js"
+
+const MAX_SPEED = 0.6
+const ACCEL = 0.05
+const DECAY = 0.94 // per-frame friction applied when no throttle is held
+const TURN_RATE = 0.03
+const MIN_SPEED_TO_TURN = 0.05 // above this, turning is at full rate
+const STATIONARY_TURN_FACTOR = 0.35 // turning while dead in the water is slower, not blocked
+const CRASH_BOUNCE = -0.25 // reverses and dampens speed on collision
+const BOAT_RADIUS = 2.2 // other boats are obstacles too, not just islands
+const BOAT_COLLISION_MARGIN = 1
+
+let active = null
+
+export function startSea({el, sailorId, islands}) {
+  if (active) return
+  active = new Sea(el, sailorId, islands)
+}
+
+export function stopSea() {
+  if (active) {
+    active.destroy()
+    active = null
+  }
+}
+
+class Sea {
+  constructor(el, sailorId, islands) {
+    this.el = el
+    this.sailorId = sailorId
+    this.islands = islands
+    this.islandsByPath = new Map(islands.map((i) => [i.path, i]))
+
+    this.scene = new SeaScene(el)
+    for (const isl of islands) this.scene.addIsland(isl)
+
+    // Resume at the last saved spot (e.g. returning from a docked post);
+    // otherwise start at the harbor.
+    const harbor = this.islandsByPath.get("/") || {x: 0, z: 0}
+    this.pos = loadPos() || {x: harbor.x, z: harbor.z + 20, h: Math.PI}
+    this.speed = 0
+    this.selfBoat = this.scene.makeBoat(flagTexture("🏴"), true, sailorId)
+
+    this.controls = createControls(el)
+    this.net = new SeaNet(sailorId)
+    this.readerBoats = new Map() // id -> {group}
+    this.remoteBoats = new Map() // id -> {group}
+
+    this.banner = document.createElement("div")
+    this.banner.className = "sea-banner"
+    el.appendChild(this.banner)
+
+    this.hint = document.createElement("div")
+    this.hint.className = "sea-hint"
+    this.hint.textContent = "Arrows / WASD to sail · Space to dock · toggle theme to leave"
+    el.appendChild(this.hint)
+
+    this.leaveBtn = document.createElement("button")
+    this.leaveBtn.className = "sea-leave"
+    this.leaveBtn.textContent = "Leave the sea"
+    this.leaveBtn.addEventListener("click", () => {
+      const prev = localStorage.themePrev || "light"
+      sessionStorage.removeItem("seaActive")
+      savePos(this.pos)
+      localStorage.theme = prev
+      document.documentElement.dataset.theme = prev
+      document.dispatchEvent(new CustomEvent("theme:changed", {detail: {theme: prev}}))
+    })
+    el.appendChild(this.leaveBtn)
+
+    this.t = 0
+    this.running = true
+    this.loop = this.loop.bind(this)
+    requestAnimationFrame(this.loop)
+  }
+
+  loop() {
+    if (!this.running) return
+    this.t += 0.016
+
+    const input = this.controls.read()
+
+    // Ease speed toward the throttle target, decaying with friction when the
+    // throttle is released — so letting go coasts to a stop instead of
+    // snapping, and tapping briefly doesn't leave the boat drifting forever.
+    const target = input.throttle * MAX_SPEED
+    if (target !== 0) {
+      this.speed += (target - this.speed) * ACCEL
+    } else {
+      this.speed *= DECAY
+      if (Math.abs(this.speed) < 0.002) this.speed = 0
+    }
+
+    // Turning works even standing still, but is slower than while under way.
+    const turnRate =
+      Math.abs(this.speed) > MIN_SPEED_TO_TURN ? TURN_RATE : TURN_RATE * STATIONARY_TURN_FACTOR
+    this.pos.h -= input.turn * turnRate
+
+    const nextX = this.pos.x + Math.sin(this.pos.h) * this.speed
+    const nextZ = this.pos.z + Math.cos(this.pos.h) * this.speed
+    const land = resolveCollision(nextX, nextZ, this.islands)
+    const boats = resolveCollision(land.x, land.z, this.boatObstacles(), BOAT_COLLISION_MARGIN)
+    if (land.hit || boats.hit) this.speed *= CRASH_BOUNCE
+    this.pos.x = boats.x
+    this.pos.z = boats.z
+
+    this.selfBoat.position.set(this.pos.x, 0, this.pos.z)
+    this.selfBoat.rotation.y = this.pos.h
+
+    this.net.sendPos(
+      round(this.pos.x),
+      round(this.pos.z),
+      round(this.pos.h)
+    )
+    this.net.interpolate()
+
+    this.syncOtherBoats()
+    this.updateBanner()
+
+    if (input.dock) {
+      input.dock = false
+      const isl = nearestDockable(this.pos.x, this.pos.z, this.islands)
+      if (isl) this.dockTo(isl)
+    }
+
+    this.scene.animateWater(this.t)
+    this.scene.chase(this.pos, this.pos.h)
+    this.scene.render()
+    requestAnimationFrame(this.loop)
+  }
+
+  // Live sailors (from net.remote). A sailor id that is also in the roster is
+  // still drawn from its live position; the roster only anchors *readers*.
+  syncOtherBoats() {
+    const MAX_BOATS = 60
+    let drawn = 0
+    const liveIds = new Set()
+    for (const [id, p] of this.net.remote) {
+      if (id === this.sailorId) continue
+      if (drawn++ > MAX_BOATS) break
+      liveIds.add(id)
+      let b = this.remoteBoats.get(id)
+      if (!b) {
+        b = this.scene.makeBoat(flagTexture(this.flagFor(id)), false, id)
+        this.remoteBoats.set(id, b)
+      }
+      b.position.set(p.x, 0, p.z)
+      b.rotation.y = p.h
+    }
+    for (const [id, b] of this.remoteBoats) {
+      if (!liveIds.has(id)) {
+        this.scene.removeBoat(b)
+        this.remoteBoats.delete(id)
+      }
+    }
+
+    // Anchored reader boats: everyone in the roster who is NOT sailing live and
+    // is not us. Bob them gently at their island.
+    const anchored = new Set()
+    for (const s of this.net.roster) {
+      if (s.id === this.sailorId || liveIds.has(s.id)) continue
+      if (drawn++ > MAX_BOATS) break
+      const isl = this.islandsByPath.get(s.path)
+      if (!isl) continue
+      anchored.add(s.id)
+      let b = this.readerBoats.get(s.id)
+      if (!b) {
+        b = this.scene.makeBoat(flagTexture(s.flag), false, s.id)
+        this.readerBoats.set(s.id, b)
+      }
+      const bob = Math.sin(this.t * 1.5 + hash(s.id)) * 0.4
+      b.position.set(isl.x + 10, bob, isl.z + 10)
+      b.rotation.y = hash(s.id)
+    }
+    for (const [id, b] of this.readerBoats) {
+      if (!anchored.has(id)) {
+        this.scene.removeBoat(b)
+        this.readerBoats.delete(id)
+      }
+    }
+  }
+
+  // Other boats treated as obstacles for the local boat's own collision
+  // check — mirrors the live-vs-anchored split in syncOtherBoats so both
+  // moving sailors and boats bobbing at their island block the way.
+  boatObstacles() {
+    const list = []
+    const liveIds = new Set()
+    for (const [id, p] of this.net.remote) {
+      if (id === this.sailorId) continue
+      liveIds.add(id)
+      list.push({x: p.x, z: p.z, radius: BOAT_RADIUS})
+    }
+    for (const s of this.net.roster) {
+      if (s.id === this.sailorId || liveIds.has(s.id)) continue
+      const isl = this.islandsByPath.get(s.path)
+      if (isl) list.push({x: isl.x + 10, z: isl.z + 10, radius: BOAT_RADIUS})
+    }
+    return list
+  }
+
+  flagFor(id) {
+    const s = this.net.roster.find((r) => r.id === id)
+    return s ? s.flag : "🏳️"
+  }
+
+  // Floats the label above the actual island in the scene (not fixed to the
+  // top of the screen) by projecting its 3D position to screen pixels each
+  // frame, so it tracks the island as the chase cam moves.
+  updateBanner() {
+    const near = nearestIsland(this.pos.x, this.pos.z, this.islands)
+    if (!near || near.distance > 50) {
+      this.banner.style.opacity = "0"
+      return
+    }
+
+    const island = near.island
+    const topY = (island.height ?? 9) + 5
+    const p = this.scene.project(island.x, topY, island.z)
+    if (!p.visible) {
+      this.banner.style.opacity = "0"
+      return
+    }
+
+    this.banner.textContent = isCloseEnoughToDock(island, near.distance)
+      ? `${island.title} — press Space to dock`
+      : island.title
+    this.banner.style.left = `${p.x}px`
+    this.banner.style.top = `${p.y}px`
+    this.banner.style.opacity = "1"
+  }
+
+  dockTo(island) {
+    // Leaving Sea mode to read a post: restore the previous light/dark theme,
+    // then navigate. Mark that a sea session is paused (and save where the
+    // boat was) so the destination page can offer a one-click way back to
+    // the boat, at the same spot.
+    const prev = localStorage.themePrev || "light"
+    sessionStorage.seaActive = "1"
+    savePos(this.pos)
+    localStorage.theme = prev
+    document.documentElement.dataset.theme = prev
+    document.dispatchEvent(new CustomEvent("theme:changed", {detail: {theme: prev}}))
+    window.location.href = island.path
+  }
+
+  destroy() {
+    this.running = false
+    this.controls.destroy()
+    this.net.destroy()
+    this.scene.dispose()
+    if (this.banner.parentNode) this.banner.remove()
+    if (this.hint.parentNode) this.hint.remove()
+    if (this.leaveBtn.parentNode) this.leaveBtn.remove()
+  }
+}
+
+function round(n) {
+  return Math.round(n * 100) / 100
+}
+
+function hash(s) {
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 6283
+  return h / 1000
+}
+
+function savePos(pos) {
+  sessionStorage.seaPos = JSON.stringify(pos)
+}
+
+function loadPos() {
+  try {
+    const raw = sessionStorage.seaPos
+    if (!raw) return null
+    const p = JSON.parse(raw)
+    if (typeof p.x === "number" && typeof p.z === "number" && typeof p.h === "number") return p
+  } catch (_) {
+    // ignore malformed/stale data
+  }
+  return null
+}

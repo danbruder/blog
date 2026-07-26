@@ -14,6 +14,8 @@ defmodule BlogWeb.Endpoint do
     websocket: [connect_info: [:peer_data, :x_headers, session: @session_options]]
   )
 
+  socket("/socket", BlogWeb.UserSocket, websocket: true, longpoll: false)
+
   plug(Plug.Static,
     at: "/",
     from: :blog,
