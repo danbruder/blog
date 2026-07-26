@@ -18,23 +18,67 @@ let Hooks = {
     mounted() { highlightIn(this.el) },
     updated() { highlightIn(this.el) }
   },
-  // Light/dark theme toggle. Theme is a pure client concern: flip
-  // dataset.theme on <html> and persist to localStorage. The label always
-  // names the theme you'd switch TO.
+  // Theme toggle cycles Light -> Dark -> Sea (a hidden 3D easter egg) -> Light.
+  // Theme is a client concern: set dataset.theme on <html>, persist, and
+  // broadcast a `theme:changed` event the SeaMode hook listens for. The label
+  // names the mode you'd switch TO next.
   ThemeToggle: {
+    order: ["light", "dark", "sea"],
+    labelFor(theme) {
+      const next = this.order[(this.order.indexOf(theme) + 1) % this.order.length]
+      return next === "sea" ? "Sea" : next === "dark" ? "Dark" : "Light"
+    },
+    apply(theme) {
+      const prev = document.documentElement.dataset.theme
+      if (prev && prev !== "sea") localStorage.themePrev = prev
+      document.documentElement.dataset.theme = theme
+      localStorage.theme = theme
+      this.el.textContent = this.labelFor(theme)
+      document.dispatchEvent(new CustomEvent("theme:changed", {detail: {theme}}))
+    },
     mounted() {
-      const sync = () => {
-        this.el.textContent =
-          document.documentElement.dataset.theme === "dark" ? "Light" : "Dark"
-      }
-      sync()
+      const current = this.order.includes(document.documentElement.dataset.theme)
+        ? document.documentElement.dataset.theme
+        : "light"
+      this.el.textContent = this.labelFor(current)
       this.el.addEventListener("click", () => {
-        const next =
-          document.documentElement.dataset.theme === "dark" ? "light" : "dark"
-        document.documentElement.dataset.theme = next
-        localStorage.theme = next
-        sync()
+        const now = this.order.includes(document.documentElement.dataset.theme)
+          ? document.documentElement.dataset.theme
+          : "light"
+        this.apply(this.order[(this.order.indexOf(now) + 1) % this.order.length])
       })
+    }
+  },
+  // Mounts/unmounts the 3D sea when the theme is "sea". The heavy three.js
+  // bundle is only imported the first time it's needed.
+  SeaMode: {
+    async enter() {
+      if (this.running) return
+      this.running = true
+      this.el.classList.remove("hidden")
+      const mod = await import("/assets/js/sea/index.js")
+      this.sea = mod
+      mod.startSea({
+        el: this.el,
+        sailorId: window.SAILOR_ID,
+        islands: JSON.parse(this.el.dataset.islands || "[]")
+      })
+    },
+    exit() {
+      if (!this.running) return
+      this.running = false
+      if (this.sea) this.sea.stopSea()
+      this.el.classList.add("hidden")
+    },
+    mounted() {
+      this.onTheme = (e) => (e.detail.theme === "sea" ? this.enter() : this.exit())
+      document.addEventListener("theme:changed", this.onTheme)
+      // Honor a persisted "sea" theme on first load.
+      if (document.documentElement.dataset.theme === "sea") this.enter()
+    },
+    destroyed() {
+      document.removeEventListener("theme:changed", this.onTheme)
+      this.exit()
     }
   },
   // LiveView has no native phx-dblclick; bridge a dblclick into a server event.

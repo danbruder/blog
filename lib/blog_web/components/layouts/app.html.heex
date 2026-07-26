@@ -101,9 +101,7 @@ end %>
             phx-hook="ThemeToggle"
             type="button"
             class="border border-ink px-2 py-1 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-ink transition-colors hover:bg-lime hover:text-on-lime"
-          >
-            Dark
-          </button>
+          ></button>
         </div>
       </div>
     </div>
@@ -113,3 +111,11 @@ end %>
     {@inner_content}
   </main>
 </div>
+
+<div
+  id="sea-overlay"
+  phx-hook="SeaMode"
+  phx-update="ignore"
+  data-islands={Jason.encode!(BlogWeb.SeaWorld.islands())}
+  class="fixed inset-0 z-[9999] hidden"
+></div>
