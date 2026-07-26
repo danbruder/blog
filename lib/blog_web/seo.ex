@@ -7,7 +7,7 @@ defmodule BlogWeb.SEO do
   use BlogWeb, :verified_routes
 
   @site_title "Dan Bruder | Engineering Director"
-  @default_description "Dan Bruder — engineering director working on making " <>
+  @default_description "Dan Bruder, engineering director working on making " <>
                          "reality capture easy. Notes on software, engineering " <>
                          "management, and side projects."
 

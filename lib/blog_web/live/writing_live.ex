@@ -19,7 +19,7 @@ defmodule BlogWeb.WritingLive do
     <.page_hero
       eyebrow="Writing"
       title="Essays on software, management, and building things."
-      subtitle="Long-form, infrequent, written after the fact — mostly about running engineering teams without pretending the work is tidy."
+      subtitle="Long-form, infrequent, written after the fact, mostly about running engineering teams without pretending the work is tidy."
     />
 
     <.page_body class="pt-0">

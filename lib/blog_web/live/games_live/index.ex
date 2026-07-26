@@ -10,7 +10,7 @@ defmodule BlogWeb.GamesLive.Index do
       fill:
         "repeating-linear-gradient(90deg,var(--color-paper-2) 0 10px,var(--color-paper-3) 10px 20px)",
       desc:
-        "A single global board. Everyone who opens the page is a snake in the same game — no lobby, no rounds, just whatever is happening right now."
+        "A single global board. Everyone who opens the page is a snake in the same game. No lobby, no rounds, just whatever is happening right now."
     },
     %{
       name: "SAND",

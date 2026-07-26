@@ -19,7 +19,7 @@ defmodule BlogWeb.ProjectLive.Index do
       <div class="flex flex-col items-start gap-4 border border-dashed border-rule p-10 sm:p-11">
         <span class="mark text-[11px] font-semibold uppercase tracking-[0.14em]">In progress</span>
         <div class="max-w-[16em] font-display text-[clamp(22px,3vw,28px)] font-semibold leading-[1.05] tracking-[-0.035em] text-ink">
-          Nothing shipped here yet — the games page is where the finished ones live.
+          Nothing shipped here yet. The games page is where the finished ones live.
         </div>
         <div class="mt-1 flex flex-wrap gap-2.5">
           <.link

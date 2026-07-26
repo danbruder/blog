@@ -63,7 +63,7 @@ defmodule BlogWeb.PostLive.Show do
         onsubmit="window.open('https://buttondown.email/danbruder', 'popupwindow')"
         class="embeddable-buttondown-form mt-20 p-6"
       >
-        <label for="bd-email" class="label mb-3 block">Newsletter — one letter a month</label>
+        <label for="bd-email" class="label mb-3 block">Newsletter: one letter a month</label>
         <div class="flex flex-wrap gap-2">
           <input
             type="email"

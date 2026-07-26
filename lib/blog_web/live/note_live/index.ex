@@ -15,7 +15,7 @@ defmodule BlogWeb.NoteLive.Index do
     <.page_hero
       eyebrow="Notes"
       title="The lab notebook."
-      subtitle="Small learnings and TILs — quicker and rougher than the blog. The things I looked up once and refused to look up twice."
+      subtitle="Small learnings and TILs, quicker and rougher than the blog. The things I looked up once and refused to look up twice."
     />
 
     <.page_body class="pt-0">

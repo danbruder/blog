@@ -7,7 +7,7 @@ defmodule BlogWeb.PodcastLive.Index do
       year: "2024",
       title: "Elm + Rust at StructionSite",
       blurb:
-        "What it's actually like to run production construction-tech tooling on two typed functional languages — where it paid off, and where we'd have been faster with something boring.",
+        "What it's actually like to run production construction-tech tooling on two typed functional languages.",
       url: "https://open.spotify.com/episode/6cnAHvdCXedoHxG4w9pWOV"
     }
   ]
