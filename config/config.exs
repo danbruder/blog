@@ -22,7 +22,13 @@ config :esbuild,
   version: "0.21.5",
   blog: [
     args:
-      ~w(js/app.js js/paintWorklet.js --bundle --target=es2020 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/*),
+      ~w(js/app.js js/paintWorklet.js --bundle --target=es2020 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --external:/assets/*),
+    cd: Path.expand("../assets", __DIR__),
+    env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+  ],
+  sea: [
+    args:
+      ~w(js/sea/index.js --bundle --format=esm --target=es2020 --outdir=../priv/static/assets/js/sea),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]

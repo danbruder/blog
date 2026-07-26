@@ -13,6 +13,7 @@ config :blog, BlogWeb.Endpoint,
   secret_key_base: "dev-only-secret-key-base-not-for-production-use-0123456789abcdef",
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:blog, ~w(--sourcemap=inline --watch)]},
+    esbuild_sea: {Esbuild, :install_and_run, [:sea, ~w(--sourcemap=inline --watch)]},
     tailwind: {Tailwind, :install_and_run, [:blog, ~w(--watch)]}
   ]
 
