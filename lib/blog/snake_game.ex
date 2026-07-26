@@ -14,7 +14,7 @@ defmodule Blog.SnakeGame do
   @topic "snake"
   @cols 40
   @rows 28
-  @tick_ms 140
+  @tick_ms 200
   @start_len 3
   @food_count 5
 
