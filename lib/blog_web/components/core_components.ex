@@ -33,9 +33,9 @@ defmodule BlogWeb.CoreComponents do
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> JS.hide()}
       role="alert"
       class={[
-        "fixed top-2 right-2 z-50 w-80 rounded-lg p-3 text-sm shadow-lg border",
-        @kind == :info && "bg-zinc-800 text-sky-200 border-sky-900",
-        @kind == :error && "bg-zinc-800 text-orange-200 border-orange-900"
+        "fixed right-3 top-3 z-50 w-80 border p-3 text-sm",
+        @kind == :info && "border-ink bg-paper text-ink",
+        @kind == :error && "border-ink bg-lime text-on-lime"
       ]}
       {@rest}
     >
@@ -71,7 +71,7 @@ defmodule BlogWeb.CoreComponents do
     <button
       type={@type}
       class={[
-        "rounded-lg bg-sky-800 hover:bg-sky-700 px-3 py-2 text-sm font-semibold text-sky-100 border border-sky-700 transition-colors",
+        "border border-ink bg-ink px-[18px] py-[10px] text-[13px] font-semibold tracking-[0.04em] text-paper transition-colors hover:bg-lime hover:text-on-lime",
         @class
       ]}
       {@rest}
@@ -122,7 +122,7 @@ defmodule BlogWeb.CoreComponents do
 
     ~H"""
     <div class="mb-4">
-      <label class="flex items-center gap-2 text-sm text-zinc-300">
+      <label class="flex items-center gap-2 text-sm text-ink-2">
         <input type="hidden" name={@name} value="false" />
         <input
           type="checkbox"
@@ -130,7 +130,7 @@ defmodule BlogWeb.CoreComponents do
           name={@name}
           value="true"
           checked={@checked}
-          class="rounded border-zinc-600 bg-zinc-800 text-sky-600"
+          class="border-ink bg-paper text-ink focus:ring-lime"
           {@rest}
         />
         {@label}
@@ -147,7 +147,7 @@ defmodule BlogWeb.CoreComponents do
       <select
         id={@id}
         name={@name}
-        class="mt-1 block w-full rounded-lg bg-zinc-800 border-zinc-600 text-zinc-100 focus:border-sky-600 focus:ring-sky-600"
+        class="mt-1 block w-full border border-ink bg-paper text-ink focus:border-ink focus:ring-lime"
         {@rest}
       >
         {Phoenix.HTML.Form.options_for_select(@options, @value)}
@@ -165,7 +165,7 @@ defmodule BlogWeb.CoreComponents do
         id={@id}
         name={@name}
         rows={@rows}
-        class="mt-1 block w-full rounded-lg bg-zinc-800 border-zinc-600 text-zinc-100 font-mono text-sm focus:border-sky-600 focus:ring-sky-600"
+        class="mt-1 block w-full border border-ink bg-paper font-mono text-sm text-ink focus:border-ink focus:ring-lime"
         {@rest}
       >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       <.error :for={msg <- @errors}>{msg}</.error>
@@ -182,7 +182,7 @@ defmodule BlogWeb.CoreComponents do
         name={@name}
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-        class="mt-1 block w-full rounded-lg bg-zinc-800 border-zinc-600 text-zinc-100 focus:border-sky-600 focus:ring-sky-600"
+        class="mt-1 block w-full border border-ink bg-paper text-ink focus:border-ink focus:ring-lime"
         {@rest}
       />
       <.error :for={msg <- @errors}>{msg}</.error>
@@ -195,7 +195,7 @@ defmodule BlogWeb.CoreComponents do
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class="block text-sm font-semibold text-zinc-300 mb-1">
+    <label for={@for} class="label mb-1 block">
       {render_slot(@inner_block)}
     </label>
     """
@@ -205,8 +205,8 @@ defmodule BlogWeb.CoreComponents do
 
   def error(assigns) do
     ~H"""
-    <p class="mt-1 text-sm text-orange-300">
-      {render_slot(@inner_block)}
+    <p class="mt-1 text-sm">
+      <span class="mark">{render_slot(@inner_block)}</span>
     </p>
     """
   end
@@ -222,30 +222,39 @@ defmodule BlogWeb.CoreComponents do
   end
 
   @doc """
-  A hero band. The `.painted` class renders the dynamic paint-worklet shapes;
-  this is the only element on the page that carries them. Title (and optional
-  eyebrow / subtitle / extra slot) sit above the shapes.
+  A page header in the system v2 grammar: a small uppercase eyebrow (the
+  section name), an oversized Space Grotesk title, an optional subtitle, and
+  a hairline ink rule beneath. No painted shapes, no fill.
   """
+  attr :eyebrow, :string, required: true
   attr :title, :string, required: true
   attr :subtitle, :string, default: nil
-  attr :eyebrow, :string, default: nil
-  attr :title_class, :string, default: "text-3xl md:text-5xl"
   slot :inner_block
 
   def page_hero(assigns) do
     ~H"""
-    <section class="painted relative overflow-hidden bg-zinc-950 border-b border-zinc-800">
-      <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
-        <div class="mx-auto max-w-3xl relative z-10 py-14 md:py-20">
-          <p :if={@eyebrow} class="font-fancy text-sm uppercase tracking-wide text-zinc-400">
-            {@eyebrow}
-          </p>
-          <h1 class={["text-[color:var(--accent-heading)]", @title_class]}>{@title}</h1>
-          <p :if={@subtitle} class="mt-2 text-stone-200">{@subtitle}</p>
-          {render_slot(@inner_block)}
-        </div>
-      </div>
-    </section>
+    <header class="border-b border-ink px-6 pb-8 pt-14 sm:px-10 lg:px-14">
+      <p class="label mb-[18px]">{@eyebrow}</p>
+      <h1 class="max-w-[13em] font-display text-[clamp(40px,6vw,62px)] font-bold leading-[0.94] tracking-[-0.045em] text-ink">
+        {@title}
+      </h1>
+      <p :if={@subtitle} class="mt-5 max-w-[34em] text-[17px] leading-[1.55] text-ink-2">
+        {@subtitle}
+      </p>
+      {render_slot(@inner_block)}
+    </header>
+    """
+  end
+
+  @doc "Standard horizontal + top padding for the body of a page below its header."
+  attr :class, :string, default: nil
+  slot :inner_block, required: true
+
+  def page_body(assigns) do
+    ~H"""
+    <div class={["px-6 pt-10 sm:px-10 lg:px-14", @class]}>
+      {render_slot(@inner_block)}
+    </div>
     """
   end
 end

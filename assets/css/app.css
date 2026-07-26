@@ -2,247 +2,316 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Accent color system: one cool token for headings, one warm token for links.
-   Everything that used sky/teal for headings or blue/orange for links now
-   resolves through these. */
+/* ─────────────────────────────────────────────────────────────
+   Dan Bruder system v2 — tokens.
+   Every color in the system resolves through these custom
+   properties. Tailwind utilities (bg-paper, text-ink-2, …) point
+   at them via tailwind.config.js. Nothing else should hardcode a
+   color. Light is the default; dark inverts the paper and keeps
+   the lime.
+   ───────────────────────────────────────────────────────────── */
 :root {
-  --accent-heading: theme("colors.sky.200");
-  --accent-link: theme("colors.orange.200");
-  --accent-link-hover: theme("colors.orange.300");
+  --color-paper: oklch(0.978 0.003 250);
+  --color-paper-2: oklch(0.956 0.004 250);
+  --color-paper-3: oklch(0.925 0.005 250);
+  --color-ink: oklch(0.185 0.015 255);
+  --color-ink-2: oklch(0.415 0.013 255);
+  --color-ink-3: oklch(0.595 0.011 255);
+  --color-rule: oklch(0.855 0.006 250);
+  --color-lime: oklch(0.885 0.185 118);
+  --color-signal: oklch(0.520 0.190 258);
+  --on-lime: oklch(0.185 0.015 255);
 }
 
-.painted {
-  background-image: paint(myPaintedBackground);
+[data-theme="dark"] {
+  --color-paper: oklch(0.175 0.012 255);
+  --color-paper-2: oklch(0.215 0.013 255);
+  --color-paper-3: oklch(0.262 0.014 255);
+  --color-ink: oklch(0.955 0.005 250);
+  --color-ink-2: oklch(0.775 0.008 250);
+  --color-ink-3: oklch(0.600 0.010 250);
+  --color-rule: oklch(0.315 0.014 255);
+  --color-lime: oklch(0.855 0.190 118);
+  --color-signal: oklch(0.750 0.140 250);
 }
 
-/* Interactive elements keep the colored border + hover glow. */
-button,
-.snake {
-  @apply rounded-xl shadow-lg shadow-blue-100/25 border-2 border-blue-200;
-  @apply hover:shadow-indigo-500/90 transition-shadow ease-in-out duration-300;
+@layer base {
+  html {
+    background: var(--color-paper);
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: "Archivo", system-ui, sans-serif;
+    font-size: 15.5px;
+    line-height: 1.55;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    transition: background 200ms ease, color 200ms ease;
+  }
+
+  /* Links are ink with a hairline underline; lime marks them on hover.
+     Structural links (nav, buttons, cards) opt out with `!shadow-none`
+     and set their own hover. */
+  a {
+    color: var(--color-ink);
+    text-decoration: none;
+    box-shadow: inset 0 -1px 0 var(--color-ink-3);
+  }
+  a:hover {
+    background: var(--color-lime);
+    color: var(--on-lime);
+    box-shadow: inset 0 -1px 0 var(--color-ink);
+  }
+  ::selection {
+    background: var(--color-lime);
+    color: var(--on-lime);
+  }
+
+  /* Display type is always tight. */
+  h1,
+  h2,
+  h3 {
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    letter-spacing: -0.035em;
+    line-height: 1.02;
+    margin: 0;
+  }
 }
 
-/* Content images get a plain rounded border only — no glow. */
-img {
-  @apply rounded-xl border border-zinc-700;
+@layer components {
+  /* The label: uppercase Archivo, replaces any mono metadata layer. */
+  .label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-3);
+  }
+
+  /* The marker: lime sits behind the one thing that matters. */
+  .mark {
+    background: var(--color-lime);
+    color: var(--on-lime);
+    padding: 0 6px;
+  }
+
+  /* Bordered cell rows — always a grid, never growing flex items, so a
+     lone last cell can't stretch to full width. */
+  .cells {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    border-top: 1px solid var(--color-ink);
+    border-left: 1px solid var(--color-ink);
+  }
+  .cells > * {
+    border-right: 1px solid var(--color-ink);
+    border-bottom: 1px solid var(--color-ink);
+  }
 }
 
-.embeddable-buttondown-form,
-.browser {
-  @apply rounded-xl shadow shadow-blue-600/50 border border-zinc-600;
-  @apply hover:shadow-indigo-500/90 transition-shadow ease-in-out duration-300;
-}
-
-pre {
-  /* No inner padding: the highlighted `code.hljs` block supplies the padding
-     (see the highlight.js theme below). Doubling them looks off. */
-  padding: 0;
-  overflow: auto;
-  font-family: "Space Mono", monospace;
-  @apply text-sm my-8;
-  @apply rounded-xl shadow shadow-blue-600/50 border border-zinc-600;
-  @apply hover:shadow-indigo-500/90 transition-shadow ease-in-out duration-300;
-}
-
-/* Fill the <pre> box and provide the single, consistent code padding. */
-.markdown-content pre code.hljs {
-  padding: 1rem;
-}
-
-h1 {
-  @apply text-3xl mt-8 mb-2;
-}
-h2 {
-  @apply text-2xl mt-6 mb-2;
-}
-h3 {
-  @apply text-xl mt-5 mb-2;
-}
-h4 {
-  @apply text-base mt-3 mb-2;
-}
-h5 {
-  @apply my-2;
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: "Work Sans", sans-serif;
-}
-.font-fancy {
-  font-family: "Work Sans", sans-serif;
-}
-
-body {
-  font-family: "Poppins", sans-serif;
-}
-
-a {
-  color: var(--accent-link);
-  @apply transition-colors ease-in-out duration-300;
-}
-a:hover {
-  color: var(--accent-link-hover);
-}
-
-.markdown-content p code {
-  @apply text-sm px-1 py-px text-orange-200 bg-orange-500 bg-opacity-20;
-}
-
+/* ─────────────────────────────────────────────────────────────
+   Prose (rendered markdown post bodies).
+   ───────────────────────────────────────────────────────────── */
 .markdown-content {
-  @apply mt-8;
+  margin-top: 2.5rem;
+  color: var(--color-ink);
+}
+.markdown-content > *:first-child {
+  margin-top: 0;
+}
+.markdown-content p {
+  font-size: 17px;
+  line-height: 1.72;
+  color: var(--color-ink-2);
+  margin: 0 0 1.25rem;
 }
 .markdown-content h1,
 .markdown-content h2,
-.markdown-content h3 {
-  color: var(--accent-heading);
+.markdown-content h3,
+.markdown-content h4 {
+  color: var(--color-ink);
 }
-
-.markdown-content ol,
-.markdown-content ul {
-  @apply p-4;
+.markdown-content h2 {
+  font-size: clamp(26px, 3vw, 32px);
+  font-weight: 600;
+  margin: 2.5rem 0 1rem;
+}
+.markdown-content h3 {
+  font-size: clamp(21px, 2.4vw, 26px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  margin: 2rem 0 0.75rem;
+}
+.markdown-content h4 {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 1.5rem 0 0.5rem;
+}
+.markdown-content ul,
+.markdown-content ol {
+  margin: 0 0 1.25rem;
+  padding-left: 1.5rem;
+  color: var(--color-ink-2);
 }
 .markdown-content ul li {
-  @apply list-disc;
+  list-style: disc;
 }
 .markdown-content ol li {
-  @apply list-decimal;
+  list-style: decimal;
 }
 .markdown-content li {
-  @apply text-base;
-}
-.markdown-content p {
-  @apply text-base mb-4;
-}
-
-.link {
-  color: var(--accent-link);
-  @apply underline transition-colors ease-in-out duration-300;
-}
-.link:hover {
-  color: var(--accent-link-hover);
+  font-size: 17px;
+  line-height: 1.6;
+  margin-bottom: 0.4rem;
 }
 .markdown-content a {
-  color: var(--accent-link);
-  @apply underline transition-colors ease-in-out duration-300;
-}
-.markdown-content a:hover {
-  color: var(--accent-link-hover);
+  font-weight: 500;
 }
 
+/* Blockquote → the system's pull quote: hairline rules top and bottom,
+   display face, no fill. */
 .markdown-content blockquote {
-  @apply p-4 bg-zinc-800 border-l-4 border-orange-200 rounded mb-4 inline-block;
+  border-top: 1px solid var(--color-ink);
+  border-bottom: 1px solid var(--color-ink);
+  padding: 1.25rem 0;
+  margin: 1.75rem 0;
 }
-
 .markdown-content blockquote p {
-  @apply text-orange-200;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  color: var(--color-ink);
+  margin: 0;
+}
+.markdown-content blockquote p + p {
+  margin-top: 0.75rem;
 }
 
-.markdown-content blockquote p:last-child {
-  @apply mb-0;
+/* Inline code. */
+.markdown-content p code,
+.markdown-content li code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.85em;
+  padding: 1px 5px;
+  color: var(--color-ink);
+  background: var(--color-paper-2);
+  border: 1px solid var(--color-rule);
+}
+
+/* Content images: 1px ink border, no radius, no glow. */
+.markdown-content img {
+  border: 1px solid var(--color-ink);
+  max-width: 100%;
+}
+
+/* Code blocks: a paper-2 well with a hairline rule. No radius, no shadow. */
+pre {
+  overflow: auto;
+  margin: 2rem 0;
+  background: var(--color-paper-2);
+  border: 1px solid var(--color-rule);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.markdown-content pre code.hljs,
+pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1rem 1.25rem;
+  background: transparent;
+}
+
+/* Newsletter form + embedded browser chrome from legacy markdown. */
+.embeddable-buttondown-form,
+.browser {
+  border: 1px solid var(--color-ink);
+  background: var(--color-paper-2);
 }
 
 /* Expanded from the legacy {{ youtube(id="...") }} shortcode. */
 .youtube-embed {
-  @apply mb-4 overflow-hidden rounded;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--color-ink);
   aspect-ratio: 16 / 9;
 }
 .youtube-embed iframe {
-  @apply h-full w-full border-0;
+  height: 100%;
+  width: 100%;
+  border: 0;
 }
 
-/* highlight.js atom-one-dark theme (vendored from node_modules) */
-pre code.hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 1em
-}
-code.hljs {
-  padding: 3px 5px
-}
-/*
-
-Atom One Dark by Daniel Gamage
-Original One Dark Syntax theme from https://github.com/atom/one-dark-syntax
-
-base:    #282c34
-mono-1:  #abb2bf
-mono-2:  #818896
-mono-3:  #5c6370
-hue-1:   #56b6c2
-hue-2:   #61aeee
-hue-3:   #c678dd
-hue-4:   #98c379
-hue-5:   #e06c75
-hue-5-2: #be5046
-hue-6:   #d19a66
-hue-6-2: #e6c07b
-
-*/
+/* ─────────────────────────────────────────────────────────────
+   highlight.js — a light theme on paper-2. Keywords carry the
+   cobalt signal; everything else is ink at varying strengths, so
+   code reads as data, not decoration.
+   ───────────────────────────────────────────────────────────── */
 .hljs {
-  color: #abb2bf;
-  background: #282c34
+  color: var(--color-ink-2);
+  background: transparent;
 }
 .hljs-comment,
 .hljs-quote {
-  color: #5c6370;
-  font-style: italic
+  color: var(--color-ink-3);
+  font-style: italic;
 }
-.hljs-doctag,
 .hljs-keyword,
-.hljs-formula {
-  color: #c678dd
-}
-.hljs-section,
-.hljs-name,
 .hljs-selector-tag,
-.hljs-deletion,
+.hljs-literal,
+.hljs-doctag,
+.hljs-formula,
 .hljs-subst {
-  color: #e06c75
-}
-.hljs-literal {
-  color: #56b6c2
+  color: var(--color-signal);
+  font-weight: 600;
 }
 .hljs-string,
 .hljs-regexp,
 .hljs-addition,
 .hljs-attribute,
 .hljs-meta .hljs-string {
-  color: #98c379
+  color: oklch(0.52 0.13 150);
 }
-.hljs-attr,
-.hljs-variable,
-.hljs-template-variable,
-.hljs-type,
-.hljs-selector-class,
-.hljs-selector-attr,
-.hljs-selector-pseudo,
-.hljs-number {
-  color: #d19a66
-}
+.hljs-number,
 .hljs-symbol,
 .hljs-bullet,
-.hljs-link,
-.hljs-meta,
-.hljs-selector-id,
-.hljs-title {
-  color: #61aeee
+.hljs-variable,
+.hljs-template-variable,
+.hljs-attr,
+.hljs-type,
+.hljs-selector-attr,
+.hljs-selector-pseudo,
+.hljs-selector-class {
+  color: oklch(0.52 0.14 45);
+}
+.hljs-title,
+.hljs-section,
+.hljs-name,
+.hljs-selector-id {
+  color: var(--color-ink);
+  font-weight: 600;
 }
 .hljs-built_in,
 .hljs-title.class_,
 .hljs-class .hljs-title {
-  color: #e6c07b
+  color: oklch(0.5 0.13 300);
+}
+.hljs-deletion {
+  color: oklch(0.5 0.19 25);
+}
+.hljs-meta {
+  color: var(--color-ink-3);
 }
 .hljs-emphasis {
-  font-style: italic
+  font-style: italic;
 }
 .hljs-strong {
-  font-weight: bold
+  font-weight: 700;
 }
 .hljs-link {
-  text-decoration: underline
+  text-decoration: underline;
 }

@@ -83,7 +83,9 @@ defmodule Blog.SnakeGame do
       case state.players do
         %{^id => p} ->
           # Ignore a 180° reversal against the direction actually being travelled.
-          if opposite?(dir, p.dir), do: state.players, else: %{state.players | id => %{p | pending: dir}}
+          if opposite?(dir, p.dir),
+            do: state.players,
+            else: %{state.players | id => %{p | pending: dir}}
 
         _ ->
           state.players
@@ -187,14 +189,16 @@ defmodule Blog.SnakeGame do
 
   # Snake / food placement ---------------------------------------------------
 
-  defp respawn(p, occupied), do: %{p | body: spawn_body(occupied, :right), score: 0, dir: :right, pending: :right}
+  defp respawn(p, occupied),
+    do: %{p | body: spawn_body(occupied, :right), score: 0, dir: :right, pending: :right}
 
   # Spawn a horizontal snake of @start_len somewhere with room, avoiding
   # occupied cells. Falls back to a best-effort spot if the board is crowded.
   defp spawn_body(occupied, _dir) do
     candidate =
       Enum.find(random_cells(), fn {x, y} ->
-        x >= @start_len and Enum.all?(0..(@start_len - 1), &(not MapSet.member?(occupied, {x - &1, y})))
+        x >= @start_len and
+          Enum.all?(0..(@start_len - 1), &(not MapSet.member?(occupied, {x - &1, y})))
       end)
 
     {hx, hy} = candidate || {@start_len, div(@rows, 2)}
@@ -255,8 +259,18 @@ defmodule Blog.SnakeGame do
   # "f_u_c_k", "sh1t" or "@ss" are still caught. Deliberately errs toward
   # blocking; these are public, broadcast names.
   @leet %{
-    "0" => "o", "1" => "i", "3" => "e", "4" => "a", "5" => "s", "7" => "t",
-    "8" => "b", "@" => "a", "$" => "s", "!" => "i", "|" => "i", "+" => "t"
+    "0" => "o",
+    "1" => "i",
+    "3" => "e",
+    "4" => "a",
+    "5" => "s",
+    "7" => "t",
+    "8" => "b",
+    "@" => "a",
+    "$" => "s",
+    "!" => "i",
+    "|" => "i",
+    "+" => "t"
   }
   # Roots are matched as substrings of the normalized name, so each root also
   # catches its variants (e.g. "fuck" → motherfucker, fuckface). Deliberately

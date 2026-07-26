@@ -32,9 +32,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,700;1,400;1,700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Work+Sans:wght@700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Archivo:ital,wght@0,400;0,500;0,600;1,400&display=swap"
       rel="stylesheet"
     />
+
+    <%!-- Set the theme before first paint so there's no flash. Light is the
+          default; honor a saved choice, else the OS preference. --%>
+    <script>
+      (function () {
+        var t = localStorage.theme ||
+          (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.dataset.theme = t;
+      })();
+    </script>
 
     <.live_title default="Dan Bruder | Engineering Director">
       {assigns[:page_title]}
@@ -44,7 +54,7 @@
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
     </script>
   </head>
-  <body class="bg-zinc-900 text-zinc-50 flex flex-col min-h-screen">
+  <body class="min-h-screen">
     {@inner_content}
   </body>
 </html>

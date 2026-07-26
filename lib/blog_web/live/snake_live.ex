@@ -97,97 +97,99 @@ defmodule BlogWeb.SnakeLive do
     ~H"""
     <div class="h-full flex flex-col p-4" phx-window-keydown="key">
       <div class="flex-1 min-h-0 flex flex-col md:flex-row gap-4">
-          <div class="flex-1 min-w-0 min-h-0 flex items-center justify-center">
-            <svg
-              viewBox={"0 0 #{@game.cols * @cell} #{@game.rows * @cell}"}
-              class="snake bg-zinc-800 max-w-full max-h-full h-auto w-auto"
-              preserveAspectRatio="xMidYMid meet"
+        <div class="flex-1 min-w-0 min-h-0 flex items-center justify-center">
+          <svg
+            viewBox={"0 0 #{@game.cols * @cell} #{@game.rows * @cell}"}
+            class="snake bg-zinc-800 max-w-full max-h-full h-auto w-auto"
+            preserveAspectRatio="xMidYMid meet"
+          >
+            <text
+              :for={{x, y} <- @game.foods}
+              x={x * @cell + @cell / 2}
+              y={y * @cell + @cell / 2}
+              font-size={@cell}
+              text-anchor="middle"
+              dominant-baseline="central"
             >
-              <text
-                :for={{x, y} <- @game.foods}
-                x={x * @cell + @cell / 2}
-                y={y * @cell + @cell / 2}
-                font-size={@cell}
-                text-anchor="middle"
-                dominant-baseline="central"
-              >{fruit(x, y)}</text>
+              {fruit(x, y)}
+            </text>
 
-              <%= for player <- @game.players do %>
-                <rect
-                  :for={{{x, y}, idx} <- Enum.with_index(player.body)}
-                  x={x * @cell + 1}
-                  y={y * @cell + 1}
-                  width={@cell - 2}
-                  height={@cell - 2}
-                  rx="3"
-                  fill={player.color}
-                  fill-opacity={if idx == 0, do: "1", else: "0.75"}
-                  stroke={if player.id == @player_id, do: "#fafafa", else: "none"}
-                  stroke-width={if player.id == @player_id and idx == 0, do: "2", else: "0"}
-                />
-              <% end %>
-            </svg>
+            <%= for player <- @game.players do %>
+              <rect
+                :for={{{x, y}, idx} <- Enum.with_index(player.body)}
+                x={x * @cell + 1}
+                y={y * @cell + 1}
+                width={@cell - 2}
+                height={@cell - 2}
+                rx="3"
+                fill={player.color}
+                fill-opacity={if idx == 0, do: "1", else: "0.75"}
+                stroke={if player.id == @player_id, do: "#fafafa", else: "none"}
+                stroke-width={if player.id == @player_id and idx == 0, do: "2", else: "0"}
+              />
+            <% end %>
+          </svg>
 
-            <p class="text-center text-xs text-gray-500 mt-2">
-              Arrow keys or WASD to steer · crash and you respawn
-            </p>
+          <p class="text-center text-xs text-gray-500 mt-2">
+            Arrow keys or WASD to steer · crash and you respawn
+          </p>
 
-            <div class="flex justify-center items-center space-x-4 mt-6 md:hidden">
-              <button phx-click="dir" phx-value-dir="left" class="bg-gray-700 uppercase px-3 py-2">←</button>
-              <button phx-click="dir" phx-value-dir="up" class="bg-gray-700 uppercase px-3 py-2">↑</button>
-              <button phx-click="dir" phx-value-dir="down" class="bg-gray-700 uppercase px-3 py-2">↓</button>
-              <button phx-click="dir" phx-value-dir="right" class="bg-gray-700 uppercase px-3 py-2">→</button>
-            </div>
-          </div>
-
-          <div class="w-full md:w-56 shrink-0 md:max-h-full md:overflow-y-auto">
-            <h4 class="text-lg text-gray-400 mb-3">
-              Players ({length(@game.players)})
-            </h4>
-            <ul class="space-y-2">
-              <li
-                :for={player <- @game.players}
-                class={"flex items-center justify-between px-3 py-2 rounded-lg " <> if(player.id == @player_id, do: "bg-zinc-700", else: "bg-zinc-800")}
-              >
-                <span class="flex items-center space-x-2 min-w-0">
-                  <span class="w-3 h-3 rounded-full shrink-0" style={"background: #{player.color}"}></span>
-                  <%= cond do %>
-                    <% player.id == @player_id and @editing_name -> %>
-                      <form phx-submit="rename" class="min-w-0">
-                        <input
-                          type="text"
-                          name="name"
-                          value={player.name}
-                          maxlength="20"
-                          autofocus
-                          phx-blur="cancel_edit"
-                          phx-mounted={JS.focus()}
-                          class="bg-zinc-900 text-zinc-100 rounded px-2 py-0.5 text-sm w-32"
-                        />
-                      </form>
-                    <% player.id == @player_id -> %>
-                      <span
-                        id="my-name"
-                        phx-hook="DblClickEdit"
-                        title="Double-click to rename"
-                        class="truncate text-zinc-200 cursor-pointer border-b border-dashed border-zinc-600"
-                      >
-                        {player.name}<span class="text-gray-500"> (you)</span>
-                      </span>
-                    <% true -> %>
-                      <span class="truncate text-zinc-200">{player.name}</span>
-                  <% end %>
-                </span>
-                <span class="text-zinc-400 font-fancy">{player.score}</span>
-              </li>
-              <li :if={@game.players == []} class="text-gray-500 px-3">
-                <span :if={@connected}>Waiting for players…</span>
-                <span :if={!@connected}>Connecting…</span>
-              </li>
-            </ul>
+          <div class="flex justify-center items-center space-x-4 mt-6 md:hidden">
+            <button phx-click="dir" phx-value-dir="left" class="bg-gray-700 uppercase px-3 py-2">←</button>
+            <button phx-click="dir" phx-value-dir="up" class="bg-gray-700 uppercase px-3 py-2">↑</button>
+            <button phx-click="dir" phx-value-dir="down" class="bg-gray-700 uppercase px-3 py-2">↓</button>
+            <button phx-click="dir" phx-value-dir="right" class="bg-gray-700 uppercase px-3 py-2">→</button>
           </div>
         </div>
+
+        <div class="w-full md:w-56 shrink-0 md:max-h-full md:overflow-y-auto">
+          <h4 class="text-lg text-gray-400 mb-3">
+            Players ({length(@game.players)})
+          </h4>
+          <ul class="space-y-2">
+            <li
+              :for={player <- @game.players}
+              class={"flex items-center justify-between px-3 py-2 rounded-lg " <> if(player.id == @player_id, do: "bg-zinc-700", else: "bg-zinc-800")}
+            >
+              <span class="flex items-center space-x-2 min-w-0">
+                <span class="w-3 h-3 rounded-full shrink-0" style={"background: #{player.color}"}></span>
+                <%= cond do %>
+                  <% player.id == @player_id and @editing_name -> %>
+                    <form phx-submit="rename" class="min-w-0">
+                      <input
+                        type="text"
+                        name="name"
+                        value={player.name}
+                        maxlength="20"
+                        autofocus
+                        phx-blur="cancel_edit"
+                        phx-mounted={JS.focus()}
+                        class="bg-zinc-900 text-zinc-100 rounded px-2 py-0.5 text-sm w-32"
+                      />
+                    </form>
+                  <% player.id == @player_id -> %>
+                    <span
+                      id="my-name"
+                      phx-hook="DblClickEdit"
+                      title="Double-click to rename"
+                      class="truncate text-zinc-200 cursor-pointer border-b border-dashed border-zinc-600"
+                    >
+                      {player.name}<span class="text-gray-500"> (you)</span>
+                    </span>
+                  <% true -> %>
+                    <span class="truncate text-zinc-200">{player.name}</span>
+                <% end %>
+              </span>
+              <span class="text-zinc-400 font-fancy">{player.score}</span>
+            </li>
+            <li :if={@game.players == []} class="text-gray-500 px-3">
+              <span :if={@connected}>Waiting for players…</span>
+              <span :if={!@connected}>Connecting…</span>
+            </li>
+          </ul>
+        </div>
       </div>
+    </div>
     """
   end
 end

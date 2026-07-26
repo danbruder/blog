@@ -6,6 +6,6 @@ defmodule BlogWeb.ProjectLive.IndexTest do
     {:ok, _view, html} = live(conn, ~p"/projects")
 
     assert html =~ "Projects"
-    assert html =~ "Coming soon"
+    assert html =~ "Nothing shipped here yet"
   end
 end

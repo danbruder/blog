@@ -9,13 +9,34 @@ defmodule BlogWeb.ProjectLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <.page_hero title="Projects" subtitle="Things I'm building." />
+    <.page_hero
+      eyebrow="Projects"
+      title="Things I'm building."
+      subtitle="Mostly small, mostly Elixir, mostly unfinished. Each one gets a line here when it does something useful for someone other than me."
+    />
 
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-      <div class="mx-auto max-w-3xl">
-        <p class="text-zinc-400">Coming soon.</p>
+    <.page_body>
+      <div class="flex flex-col items-start gap-4 border border-dashed border-rule p-10 sm:p-11">
+        <span class="mark text-[11px] font-semibold uppercase tracking-[0.14em]">In progress</span>
+        <div class="max-w-[16em] font-display text-[clamp(22px,3vw,28px)] font-semibold leading-[1.05] tracking-[-0.035em] text-ink">
+          Nothing shipped here yet — the games page is where the finished ones live.
+        </div>
+        <div class="mt-1 flex flex-wrap gap-2.5">
+          <.link
+            navigate={~p"/games"}
+            class="border border-ink px-[18px] py-[10px] text-[13px] font-semibold uppercase tracking-[0.04em] text-ink !shadow-none transition-colors hover:!bg-lime hover:!text-on-lime"
+          >
+            See the games
+          </.link>
+          <a
+            href="https://github.com/danbruder"
+            class="border border-rule px-[18px] py-[10px] text-[13px] font-semibold uppercase tracking-[0.04em] !text-ink-2 !shadow-none transition-colors hover:!bg-lime hover:!text-on-lime"
+          >
+            GitHub
+          </a>
+        </div>
       </div>
-    </div>
+    </.page_body>
     """
   end
 end
