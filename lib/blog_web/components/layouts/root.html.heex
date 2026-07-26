@@ -36,13 +36,20 @@
       rel="stylesheet"
     />
 
-    <%!-- Set the theme before first paint so there's no flash. Light is the
-          default; honor a saved choice, else the OS preference. --%>
+    <%!-- Set the theme before first paint so there's no flash, and mint a
+          stable per-tab id used by the Sea easter egg's presence + channel. --%>
     <script>
       (function () {
         var t = localStorage.theme ||
           (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
         document.documentElement.dataset.theme = t;
+        var id = sessionStorage.sailorId;
+        if (!id) {
+          id = (crypto.randomUUID && crypto.randomUUID()) ||
+            String(Date.now()) + Math.random().toString(16).slice(2);
+          sessionStorage.sailorId = id;
+        }
+        window.SAILOR_ID = id;
       })();
     </script>
 
