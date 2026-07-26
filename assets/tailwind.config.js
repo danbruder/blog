@@ -9,6 +9,28 @@ module.exports = {
   ],
   theme: {
     extend: {
+      // Dan Bruder system v2 tokens. Values live as CSS custom properties in
+      // app.css (:root / [data-theme="dark"]); these expose them to Tailwind
+      // utilities like `bg-paper`, `text-ink-2`, `border-rule`.
+      fontFamily: {
+        display: ['"Space Grotesk"', "system-ui", "sans-serif"],
+        sans: ["Archivo", "system-ui", "sans-serif"]
+      },
+      colors: {
+        paper: "var(--color-paper)",
+        "paper-2": "var(--color-paper-2)",
+        "paper-3": "var(--color-paper-3)",
+        ink: "var(--color-ink)",
+        "ink-2": "var(--color-ink-2)",
+        "ink-3": "var(--color-ink-3)",
+        rule: "var(--color-rule)",
+        lime: "var(--color-lime)",
+        signal: "var(--color-signal)",
+        "on-lime": "oklch(0.185 0.015 255)"
+      },
+      borderRadius: {
+        DEFAULT: "0px"
+      },
       animation: {
         wave: "wave 0.5s ease-in-out 0.1s 2"
       },

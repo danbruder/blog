@@ -4,9 +4,10 @@ defmodule BlogWeb.PodcastLive.Index do
   @appearances [
     %{
       show: "Software Unscripted",
+      year: "2024",
       title: "Elm + Rust at StructionSite",
       blurb:
-        "I shared our experience using Elm and Rust to build construction-tech tooling at StructionSite.",
+        "What it's actually like to run production construction-tech tooling on two typed functional languages — where it paid off, and where we'd have been faster with something boring.",
       url: "https://open.spotify.com/episode/6cnAHvdCXedoHxG4w9pWOV"
     }
   ]
@@ -19,19 +20,38 @@ defmodule BlogWeb.PodcastLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <.page_hero title="Podcasts" subtitle="Shows I've been a guest on." />
+    <.page_hero eyebrow="Podcasts" title="Shows I've been a guest on." />
 
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-      <div class="mx-auto max-w-3xl">
-        <h4 class="text-lg text-gray-500 mb-4">Appearances</h4>
-        <div :for={ep <- @appearances} class="browser bg-zinc-800 p-6 mb-6">
-          <p class="font-fancy text-sm uppercase tracking-wide text-zinc-400">{ep.show}</p>
-          <h2 class="text-xl text-[color:var(--accent-heading)] mt-1">{ep.title}</h2>
-          <p class="text-sm text-zinc-400 mt-2">{ep.blurb}</p>
-          <a class="link inline-block mt-3" href={ep.url}>Listen →</a>
+    <.page_body>
+      <div
+        :for={ep <- @appearances}
+        class="grid grid-cols-1 border border-ink sm:grid-cols-[200px_minmax(0,1fr)]"
+      >
+        <div class="flex items-end border-b border-ink bg-[repeating-linear-gradient(135deg,var(--color-paper-2)_0_8px,var(--color-paper-3)_8px_16px)] p-3.5 sm:border-b-0 sm:border-r">
+          <span class="bg-paper px-1.5 py-0.5 font-mono text-[10.5px] text-ink-3">show artwork</span>
+        </div>
+        <div class="p-8">
+          <p class="label mb-3.5">{ep.show} · {ep.year}</p>
+          <h2 class="font-display text-[clamp(24px,3vw,32px)] font-semibold leading-[1.02] tracking-[-0.035em] text-ink">
+            {ep.title}
+          </h2>
+          <p class="mt-3.5 max-w-[34em] text-[16px] leading-[1.6] text-ink-2">{ep.blurb}</p>
+          <a
+            href={ep.url}
+            class="mt-6 inline-block border border-ink bg-ink px-[18px] py-[10px] text-[13px] font-semibold uppercase tracking-[0.04em] text-paper !shadow-none transition-colors hover:!bg-lime hover:!text-on-lime"
+          >
+            Listen →
+          </a>
         </div>
       </div>
-    </div>
+
+      <p class="mt-6 max-w-[34em] text-[14px] text-ink-3">
+        Happy to talk about engineering management, remote teams, or shipping Elixir and Rust in anger. <a
+          href="https://github.com/danbruder"
+          class="!text-ink-2"
+        >Get in touch</a>.
+      </p>
+    </.page_body>
     """
   end
 end

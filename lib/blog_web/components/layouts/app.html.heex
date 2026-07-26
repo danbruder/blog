@@ -1,11 +1,11 @@
 <.flash_group flash={@flash} />
 
 <% nav_items = [
-  {"Writing", ~p"/writing", "✍️"},
-  {"Notes", ~p"/notes", "🗒️"},
-  {"Podcasts", ~p"/podcasts", "🎙️"},
-  {"Projects", ~p"/projects", "🚧"},
-  {"Games", ~p"/games", "🎮"}
+  {"Writing", ~p"/writing", pad(length(Blog.Content.list_published_posts()))},
+  {"Notes", ~p"/notes", pad(length(Blog.Content.list_published_notes()))},
+  {"Podcasts", ~p"/podcasts", "01"},
+  {"Projects", ~p"/projects", "—"},
+  {"Games", ~p"/games", "02"}
 ] %>
 <% current = assigns[:current_path] || "/" %>
 <% active? = fn href ->
@@ -15,73 +15,101 @@
   end
 end %>
 
-<div class="flex min-h-screen flex-col md:flex-row">
-  <aside class="md:w-60 md:flex-shrink-0 md:border-r border-b md:border-b-0 border-zinc-800 bg-zinc-900">
-    <div class="md:sticky md:top-0 flex flex-col md:h-screen">
-      <%!-- Brand block: matches the hero band height and carries its own
-            bottom border, so the divider lines up with the hero's border. --%>
-      <div class="flex items-center justify-between gap-3 px-8 py-6 md:h-64 md:py-0 md:flex-col md:items-stretch md:justify-center md:border-b border-zinc-800">
-        <.link navigate={~p"/"} class="flex items-center gap-3 md:block no-underline">
+<div class="mx-auto grid min-h-screen max-w-[1180px] grid-cols-1 md:grid-cols-[244px_minmax(0,1fr)]">
+  <aside class="border-b border-ink md:border-b-0 md:border-r bg-paper md:sticky md:top-0 md:h-screen md:self-start">
+    <div class="flex h-full flex-col gap-8 px-7 py-6 md:py-8">
+      <%!-- Brand --%>
+      <div class="flex items-center justify-between gap-4 md:flex-col md:items-stretch">
+        <.link
+          navigate={~p"/"}
+          class="flex items-center gap-3 !shadow-none hover:!bg-transparent md:block"
+        >
           <img
-            class="w-10 h-10 md:w-24 md:h-24 block rounded-full object-cover md:mx-auto md:mb-3"
             src={~p"/images/my-face-new.jpg"}
             alt="Dan Bruder"
+            class="h-11 w-11 border border-ink object-cover object-[50%_20%] grayscale contrast-[1.1] md:mb-3 md:h-14 md:w-14"
           />
-          <span class="font-fancy text-lg md:text-2xl text-zinc-50 md:block md:text-center">Dan Bruder</span>
+          <div>
+            <div class="font-display text-[17px] font-bold tracking-[-0.025em] text-ink">
+              DAN BRUDER
+            </div>
+            <div class="mt-1 hidden text-[12.5px] leading-[1.45] text-ink-3 md:block">
+              Engineering director,<br />DroneDeploy. Greenville, SC.
+            </div>
+          </div>
         </.link>
-
-        <p class="mt-2 text-sm text-zinc-400 hidden md:block md:text-center">
-          Engineering director at
-          <a class="link" href="https://www.dronedeploy.com/">DroneDeploy</a>.
-        </p>
 
         <button
           id="mobile-nav-toggle"
           phx-hook="MobileNav"
           type="button"
-          class="md:hidden !border-0 !shadow-none text-2xl leading-none px-2"
+          class="text-2xl leading-none md:hidden"
           aria-label="Toggle navigation"
         >🍔</button>
       </div>
 
-      <%!-- Nav block: begins at the brand border, so link hover zones line
-            up with where the main content starts below the hero. --%>
-      <div id="mobile-nav" class="hidden md:flex md:flex-1 flex-col px-6 pt-6">
-        <nav class="flex flex-col gap-1">
+      <%!-- Everything below the brand collapses behind the 🍔 on mobile;
+            on desktop it's the full-height nav + footer column. --%>
+      <div id="mobile-nav" class="hidden flex-col gap-8 md:flex md:flex-1">
+        <nav class="flex flex-col">
           <.link
-            :for={{label, href, emoji} <- nav_items}
+            :for={{label, href, count} <- nav_items}
             navigate={href}
             class={[
-              "font-fancy px-3 py-2 rounded-lg no-underline",
-              active?.(href) && "bg-zinc-800 text-[color:var(--accent-heading)]",
-              !active?.(href) && "text-zinc-300 hover:bg-zinc-800/60"
+              "-mx-2 flex items-baseline justify-between px-2 py-2 text-[13px] uppercase tracking-[0.08em] !shadow-none transition-colors",
+              active?.(href) && "bg-paper-3 font-semibold !text-ink hover:!bg-paper-3",
+              !active?.(href) && "font-medium !text-ink-2 hover:!bg-transparent hover:!text-ink"
             ]}
           >
-            <span class="mr-2">{emoji}</span>{label}
+            <span>{label}</span>
+            <span class="text-[10.5px] text-ink-3">{count}</span>
           </.link>
         </nav>
 
-        <div class="mt-6 md:mt-auto pt-6 text-xs text-zinc-500 flex flex-col gap-1">
-          <div
-            :if={assigns[:viewer_count]}
-            class="mb-2 flex items-center gap-2 text-zinc-300"
+        <div class="hidden flex-1 md:block"></div>
+
+        <%!-- Viewers --%>
+        <div
+          :if={assigns[:viewer_count]}
+          class="flex items-center gap-2 text-[11.5px] text-ink-2"
+        >
+          <span class="inline-block h-2 w-2 bg-lime"></span>
+          {@viewer_count} reading now
+        </div>
+
+        <%!-- Secondary links --%>
+        <div class="flex flex-col items-start gap-1.5 text-[12.5px] text-ink-2">
+          <a href="/blog/about" class="!shadow-[inset_0_-1px_0_var(--color-rule)] !text-ink-2">
+            About me
+          </a>
+          <a href={~p"/rss.xml"} class="!shadow-none !text-ink-2 hover:!text-on-lime">RSS</a>
+          <a
+            href="https://github.com/danbruder"
+            class="!shadow-none !text-ink-2 hover:!text-on-lime"
           >
-            <span class="relative flex h-2 w-2">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-              <span class="relative inline-flex h-2 w-2 rounded-full bg-sky-400"></span>
-            </span>
-            {@viewer_count} {if @viewer_count == 1, do: "viewer", else: "viewers"}
-          </div>
-          <a class="text-zinc-400 no-underline hover:text-zinc-200" href="/blog/about">👋 about me</a>
-          <a class="text-zinc-400 no-underline hover:text-zinc-200" href={~p"/rss.xml"}>RSS</a>
-          <a class="text-zinc-400 no-underline hover:text-zinc-200" href="https://github.com/danbruder">GitHub</a>
-          <span class="mt-2">&copy; {Date.utc_today().year} Dan Bruder</span>
+            GitHub
+          </a>
+        </div>
+
+        <%!-- Footer: copyright + theme toggle --%>
+        <div class="flex items-center justify-between border-t border-rule pt-3.5">
+          <span class="text-[10.5px] uppercase tracking-[0.12em] text-ink-3">
+            &copy; {Date.utc_today().year}
+          </span>
+          <button
+            id="theme-toggle"
+            phx-hook="ThemeToggle"
+            type="button"
+            class="border border-ink px-2 py-1 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-ink transition-colors hover:bg-lime hover:text-on-lime"
+          >
+            Dark
+          </button>
         </div>
       </div>
     </div>
   </aside>
 
-  <main class="flex-1 min-w-0">
+  <main class="min-w-0 pb-28">
     {@inner_content}
   </main>
 </div>

@@ -18,6 +18,25 @@ let Hooks = {
     mounted() { highlightIn(this.el) },
     updated() { highlightIn(this.el) }
   },
+  // Light/dark theme toggle. Theme is a pure client concern: flip
+  // dataset.theme on <html> and persist to localStorage. The label always
+  // names the theme you'd switch TO.
+  ThemeToggle: {
+    mounted() {
+      const sync = () => {
+        this.el.textContent =
+          document.documentElement.dataset.theme === "dark" ? "Light" : "Dark"
+      }
+      sync()
+      this.el.addEventListener("click", () => {
+        const next =
+          document.documentElement.dataset.theme === "dark" ? "light" : "dark"
+        document.documentElement.dataset.theme = next
+        localStorage.theme = next
+        sync()
+      })
+    }
+  },
   // LiveView has no native phx-dblclick; bridge a dblclick into a server event.
   DblClickEdit: {
     mounted() {

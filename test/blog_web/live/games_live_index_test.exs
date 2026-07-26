@@ -6,7 +6,7 @@ defmodule BlogWeb.GamesLive.IndexTest do
     {:ok, _view, html} = live(conn, ~p"/games")
 
     assert html =~ "Games"
-    assert html =~ "Snake"
+    assert html =~ "SNAKE"
     assert html =~ ~s|href="/games/snake"|
   end
 end

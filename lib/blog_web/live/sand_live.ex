@@ -4,7 +4,12 @@ defmodule BlogWeb.SandLive do
   alias Blog.SandGame
 
   @elements [
-    {"Sand", 1}, {"Water", 2}, {"Stone", 3}, {"Wood", 4}, {"Fire", 5}, {"Erase", 0}
+    {"Sand", 1},
+    {"Water", 2},
+    {"Stone", 3},
+    {"Wood", 4},
+    {"Fire", 5},
+    {"Erase", 0}
   ]
 
   @impl true
@@ -89,8 +94,7 @@ defmodule BlogWeb.SandLive do
           data-selected={@selected}
           class="border border-zinc-700 rounded max-h-full max-w-full"
           style="image-rendering: pixelated; aspect-ratio: 120 / 80; width: auto; height: 100%;"
-        >
-        </canvas>
+        ></canvas>
       </div>
     </div>
     """
