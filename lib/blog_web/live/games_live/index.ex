@@ -34,7 +34,7 @@ defmodule BlogWeb.GamesLive.Index do
     ~H"""
     <.page_hero
       eyebrow="Games"
-      title="Little things to play with."
+      title="Welcome to the arcade."
       subtitle="Shared, always-on, no account. Everyone who opens the page lands in the same world."
     />
 
