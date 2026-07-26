@@ -338,3 +338,6 @@ pre code.hljs {
 .sea-hint { position: absolute; top: 16px; left: 0; right: 0; text-align: center;
   font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
   color: var(--color-ink-2); pointer-events: none; }
+.sea-leave { position: absolute; top: 16px; right: 16px; border: 2px solid var(--color-ink);
+  background: var(--color-paper); color: var(--color-ink); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em; font-size: 12px; padding: 8px 12px; }

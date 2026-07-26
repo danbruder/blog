@@ -46,6 +46,17 @@ class Sea {
     this.hint.textContent = "Arrows / WASD to sail · Space to dock · toggle theme to leave"
     el.appendChild(this.hint)
 
+    this.leaveBtn = document.createElement("button")
+    this.leaveBtn.className = "sea-leave"
+    this.leaveBtn.textContent = "Leave the sea"
+    this.leaveBtn.addEventListener("click", () => {
+      const prev = localStorage.themePrev || "light"
+      localStorage.theme = prev
+      document.documentElement.dataset.theme = prev
+      document.dispatchEvent(new CustomEvent("theme:changed", {detail: {theme: prev}}))
+    })
+    el.appendChild(this.leaveBtn)
+
     this.t = 0
     this.running = true
     this.loop = this.loop.bind(this)
@@ -91,9 +102,12 @@ class Sea {
   // Live sailors (from net.remote). A sailor id that is also in the roster is
   // still drawn from its live position; the roster only anchors *readers*.
   syncOtherBoats() {
+    const MAX_BOATS = 60
+    let drawn = 0
     const liveIds = new Set()
     for (const [id, p] of this.net.remote) {
       if (id === this.sailorId) continue
+      if (drawn++ > MAX_BOATS) break
       liveIds.add(id)
       let b = this.remoteBoats.get(id)
       if (!b) {
@@ -115,6 +129,7 @@ class Sea {
     const anchored = new Set()
     for (const s of this.net.roster) {
       if (s.id === this.sailorId || liveIds.has(s.id)) continue
+      if (drawn++ > MAX_BOATS) break
       const isl = this.islandsByPath.get(s.path)
       if (!isl) continue
       anchored.add(s.id)
@@ -167,6 +182,7 @@ class Sea {
     this.scene.dispose()
     if (this.banner.parentNode) this.banner.remove()
     if (this.hint.parentNode) this.hint.remove()
+    if (this.leaveBtn.parentNode) this.leaveBtn.remove()
   }
 }
 

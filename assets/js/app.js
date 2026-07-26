@@ -56,13 +56,13 @@ let Hooks = {
       if (this.running) return
       this.running = true
       this.el.classList.remove("hidden")
-      const mod = await import("/assets/js/sea/index.js")
+      const [mod, res] = await Promise.all([
+        import("/assets/js/sea/index.js"),
+        fetch("/sea/islands.json")
+      ])
       this.sea = mod
-      mod.startSea({
-        el: this.el,
-        sailorId: window.SAILOR_ID,
-        islands: JSON.parse(this.el.dataset.islands || "[]")
-      })
+      const {islands} = await res.json()
+      mod.startSea({el: this.el, sailorId: window.SAILOR_ID, islands})
     },
     exit() {
       if (!this.running) return

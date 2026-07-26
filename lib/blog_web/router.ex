@@ -38,6 +38,7 @@ defmodule BlogWeb.Router do
 
     get("/snake", RedirectController, :snake)
     get("/rpsb", FunController, :rpsb)
+    get("/sea/islands.json", SeaController, :islands)
 
     get("/admin/login", AdminSessionController, :new)
     post("/admin/login", AdminSessionController, :create)
