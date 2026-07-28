@@ -92,21 +92,31 @@ defmodule BlogWeb.Admin.PostFormLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <.page_body>
       <div class="mx-auto max-w-5xl">
-        <h1 class="text-3xl text-sky-200 mb-6">{@page_title}</h1>
+        <div class="mb-8 flex items-center justify-between gap-4">
+          <h1 class="font-display text-[28px] font-bold tracking-[-0.03em] text-ink">
+            {@page_title}
+          </h1>
+          <.link
+            navigate={~p"/admin"}
+            class="text-[13px] text-ink-2 !shadow-[inset_0_-1px_0_var(--color-rule)] hover:!text-ink"
+          >
+            &larr; Back to posts
+          </.link>
+        </div>
 
         <.simple_form for={@form} id="post-form" phx-change="validate" phx-submit="save">
           <.input field={@form[:title]} label="Title" />
 
           <div class="flex items-end gap-3">
-            <div class="flex-grow">
+            <div class="flex-1">
               <.input field={@form[:slug]} label="Slug" />
             </div>
-            <.button type="button" phx-click="slugify" class="mb-4">From title</.button>
+            <.button type="button" phx-click="slugify" class="mb-4 shrink-0">From title</.button>
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid gap-4 sm:grid-cols-2">
             <.input
               field={@form[:kind]}
               type="select"
@@ -116,20 +126,20 @@ defmodule BlogWeb.Admin.PostFormLive do
             <.input field={@form[:published_at]} type="date" label="Published date" />
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid gap-4 sm:grid-cols-2">
             <.input field={@form[:category]} label="Category" />
             <.input field={@form[:tags]} label="Tags (comma separated)" />
           </div>
 
           <.input field={@form[:published]} type="checkbox" label="Published (visible on site)" />
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid gap-6 lg:grid-cols-2">
             <.input field={@form[:body]} type="textarea" label="Body (Markdown)" rows="24" />
             <div>
               <.label for="preview">Preview</.label>
               <div
                 id="preview"
-                class="markdown-content mt-1 h-[calc(24*1.5rem+2rem)] overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-800 px-4"
+                class="markdown-content !mt-1 h-[calc(24*1.5rem+2rem)] overflow-y-auto border border-rule bg-paper-2 px-5 py-4"
               >
                 {Phoenix.HTML.raw(@preview_html)}
               </div>
@@ -138,11 +148,16 @@ defmodule BlogWeb.Admin.PostFormLive do
 
           <:actions>
             <.button type="submit">Save</.button>
-            <.link navigate={~p"/admin"} class="text-sm text-zinc-400 underline">Cancel</.link>
+            <.link
+              navigate={~p"/admin"}
+              class="text-[13px] text-ink-2 !shadow-[inset_0_-1px_0_var(--color-rule)] hover:!text-ink"
+            >
+              Cancel
+            </.link>
           </:actions>
         </.simple_form>
       </div>
-    </div>
+    </.page_body>
     """
   end
 end
