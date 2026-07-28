@@ -38,10 +38,13 @@ defmodule BlogWeb.Admin.PostFormLive do
   end
 
   def handle_event("slugify", _params, socket) do
+    current_params = socket.assigns.form.params
     title = Ecto.Changeset.get_field(socket.assigns.form.source, :title) || ""
     slug = slugify(title)
 
-    changeset = Content.change_post(socket.assigns.post, %{"slug" => slug})
+    changeset =
+      Content.change_post(socket.assigns.post, Map.put(current_params, "slug", slug))
+
     {:noreply, assign_form(socket, changeset)}
   end
 
