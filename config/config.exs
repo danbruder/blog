@@ -6,7 +6,9 @@ config :blog,
 
 config :blog, Blog.Repo,
   adapter: Ecto.Adapters.SQLite3,
-  pool_size: 5
+  pool_size: 5,
+  journal_mode: :wal,
+  busy_timeout: 5_000
 
 config :blog, BlogWeb.Endpoint,
   url: [host: "localhost"],

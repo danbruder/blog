@@ -3,7 +3,12 @@ import Config
 config :blog, Blog.Repo,
   database: Path.expand("../blog_test.db", __DIR__),
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 5
+  # Async tests each hold their own sandboxed connection for the test's
+  # duration, so the pool needs enough room for ExUnit's max_cases (one
+  # per scheduler pair) or extra tests queue for a checkout and time out
+  # while others are still (correctly) blocking on busy_timeout below.
+  pool_size: 20,
+  busy_timeout: 5_000
 
 config :blog, BlogWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
