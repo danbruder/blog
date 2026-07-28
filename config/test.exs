@@ -3,7 +3,8 @@ import Config
 config :blog, Blog.Repo,
   database: Path.expand("../blog_test.db", __DIR__),
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 5
+  pool_size: 5,
+  busy_timeout: 10_000
 
 config :blog, BlogWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
