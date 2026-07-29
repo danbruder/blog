@@ -114,12 +114,18 @@ let Hooks = {
         z: b.minZ + (py / this.h) * (b.maxZ - b.minZ)
       }
     },
+    // Read live theme tokens rather than hardcoding hex — the minimap must
+    // stay legible whichever of light/dark is active, and canvas fillStyle
+    // accepts the same oklch() values the CSS custom properties use.
+    themeColor(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+    },
     draw() {
       const {ctx, w, h, state} = this
       ctx.clearRect(0, 0, w, h)
       const b = this.bounds()
 
-      ctx.fillStyle = "rgba(26, 28, 32, 0.35)"
+      ctx.fillStyle = this.themeColor("--color-ink-3")
       for (const isl of state.islands) {
         const {px, py} = this.toScreen(isl.x, isl.z, b)
         ctx.beginPath()
@@ -127,7 +133,7 @@ let Hooks = {
         ctx.fill()
       }
 
-      ctx.fillStyle = "#1a1c20"
+      ctx.fillStyle = this.themeColor("--color-signal")
       for (const boat of state.boats) {
         const {px, py} = this.toScreen(boat.x, boat.z, b)
         ctx.beginPath()
@@ -136,8 +142,8 @@ let Hooks = {
       }
 
       const self = this.toScreen(state.self.x, state.self.z, b)
-      ctx.fillStyle = "#c4e600"
-      ctx.strokeStyle = "#1a1c20"
+      ctx.fillStyle = this.themeColor("--color-lime")
+      ctx.strokeStyle = this.themeColor("--color-ink")
       ctx.lineWidth = 1.5
       ctx.beginPath()
       ctx.arc(self.px, self.py, 4.5, 0, Math.PI * 2)
