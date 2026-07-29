@@ -3,6 +3,7 @@ import "phoenix_html"
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import hljs from "highlight.js/lib/common"
+import {seaBus} from "./sea/bus.js"
 
 // Syntax-highlight code blocks in rendered markdown. Earmark emits
 // <pre><code class="elixir">…</code></pre>; highlight.js reads that class.
@@ -20,8 +21,8 @@ let Hooks = {
   },
   // Light/dark theme toggle. Theme is a pure client concern: flip
   // dataset.theme on <html> and persist to localStorage. The label always
-  // names the theme you'd switch TO. Sea is a separate control (SeaToggle) —
-  // this toggle only ever moves between light and dark.
+  // names the theme you'd switch TO. The 3D sea lives at its own route
+  // (/sea), not a theme.
   ThemeToggle: {
     mounted() {
       const sync = () => {
@@ -38,63 +39,137 @@ let Hooks = {
       })
     }
   },
-  // Mounts/unmounts the 3D sea when the theme is "sea". The heavy three.js
-  // bundle is only imported the first time it's needed.
+  // Boots the 3D sea. Lives on the /sea route's own root element, so it
+  // mounts/unmounts on LiveView's normal navigation lifecycle instead of a
+  // separate toggle button racing a theme-change event. The heavy three.js
+  // bundle is only imported once this page actually mounts.
   SeaMode: {
-    async enter() {
-      if (this.running) return
-      this.running = true
-      sessionStorage.removeItem("seaActive")
-      this.el.classList.remove("hidden")
-      const [mod, res] = await Promise.all([
-        import("/assets/js/sea/index.js"),
-        fetch("/sea/islands.json")
-      ])
-      this.sea = mod
-      const {islands} = await res.json()
-      mod.startSea({el: this.el, sailorId: window.SAILOR_ID, islands})
-    },
-    exit() {
-      if (!this.running) return
-      this.running = false
-      if (this.sea) this.sea.stopSea()
-      this.el.classList.add("hidden")
-    },
     mounted() {
-      this.onTheme = (e) => (e.detail.theme === "sea" ? this.enter() : this.exit())
-      document.addEventListener("theme:changed", this.onTheme)
-      // Honor a persisted "sea" theme on first load.
-      if (document.documentElement.dataset.theme === "sea") this.enter()
+      this.running = true
+      Promise.all([import("/assets/js/sea/index.js"), fetch("/sea/islands.json")]).then(
+        async ([mod, res]) => {
+          if (!this.running) return // navigated away before the bundle loaded
+          this.sea = mod
+          const {islands} = await res.json()
+          mod.startSea({el: this.el, sailorId: window.SAILOR_ID, islands})
+        }
+      )
     },
     destroyed() {
-      document.removeEventListener("theme:changed", this.onTheme)
-      this.exit()
+      this.running = false
+      if (this.sea) this.sea.stopSea()
+      sessionStorage.removeItem("seaActive")
     }
   },
-  // Dedicated control for the Sea easter egg, separate from Light/Dark.
-  // Doubles as "return to your boat": if a sea session is paused (docked at a
-  // post), the same button's label switches to say so and clicking it jumps
-  // straight back into Sea mode at the saved position.
-  SeaToggle: {
+  // Sidebar minimap on the /sea page: draws islands + other sailors from
+  // "tick" events published by the sea scene, and lets a click steer the
+  // boat there via a "navigate" event. Statically bundled (no three.js), so
+  // it renders immediately even while the 3D scene is still loading.
+  SeaMinimap: {
+    mounted() {
+      this.ctx = this.el.getContext("2d")
+      this.w = this.el.width
+      this.h = this.el.height
+      this.state = null
+
+      this.onTick = (e) => {
+        this.state = e.detail
+        this.draw()
+      }
+      seaBus.addEventListener("sea:tick", this.onTick)
+
+      this.el.addEventListener("click", (e) => {
+        if (!this.state) return
+        const rect = this.el.getBoundingClientRect()
+        const px = ((e.clientX - rect.left) / rect.width) * this.w
+        const py = ((e.clientY - rect.top) / rect.height) * this.h
+        const {x, z} = this.toWorld(px, py)
+        seaBus.dispatchEvent(new CustomEvent("sea:navigate", {detail: {x, z}}))
+      })
+    },
+    // World bounds padded a bit beyond the islands so boats near the edge
+    // aren't drawn right on the frame.
+    bounds() {
+      const pts = [{x: 0, z: 0}, ...this.state.islands, ...this.state.boats, this.state.self]
+      const xs = pts.map((p) => p.x)
+      const zs = pts.map((p) => p.z)
+      const pad = 20
+      return {
+        minX: Math.min(...xs) - pad,
+        maxX: Math.max(...xs) + pad,
+        minZ: Math.min(...zs) - pad,
+        maxZ: Math.max(...zs) + pad
+      }
+    },
+    toScreen(x, z, b) {
+      return {
+        px: ((x - b.minX) / (b.maxX - b.minX)) * this.w,
+        py: ((z - b.minZ) / (b.maxZ - b.minZ)) * this.h
+      }
+    },
+    toWorld(px, py) {
+      const b = this.bounds()
+      return {
+        x: b.minX + (px / this.w) * (b.maxX - b.minX),
+        z: b.minZ + (py / this.h) * (b.maxZ - b.minZ)
+      }
+    },
+    // Read live theme tokens rather than hardcoding hex — the minimap must
+    // stay legible whichever of light/dark is active, and canvas fillStyle
+    // accepts the same oklch() values the CSS custom properties use.
+    themeColor(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+    },
+    draw() {
+      const {ctx, w, h, state} = this
+      ctx.clearRect(0, 0, w, h)
+      const b = this.bounds()
+
+      ctx.fillStyle = this.themeColor("--color-ink-3")
+      for (const isl of state.islands) {
+        const {px, py} = this.toScreen(isl.x, isl.z, b)
+        ctx.beginPath()
+        ctx.arc(px, py, 2.5, 0, Math.PI * 2)
+        ctx.fill()
+      }
+
+      ctx.fillStyle = this.themeColor("--color-signal")
+      for (const boat of state.boats) {
+        const {px, py} = this.toScreen(boat.x, boat.z, b)
+        ctx.beginPath()
+        ctx.arc(px, py, 3.5, 0, Math.PI * 2)
+        ctx.fill()
+      }
+
+      const self = this.toScreen(state.self.x, state.self.z, b)
+      ctx.fillStyle = this.themeColor("--color-lime")
+      ctx.strokeStyle = this.themeColor("--color-ink")
+      ctx.lineWidth = 1.5
+      ctx.beginPath()
+      ctx.arc(self.px, self.py, 4.5, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.stroke()
+    },
+    destroyed() {
+      seaBus.removeEventListener("sea:tick", this.onTick)
+    }
+  },
+  // Top-of-page banner offering a way back into the sea, shown on every page
+  // except /sea itself once a sea session has been paused (docked at a
+  // post). Dismissing it hides it for the rest of this paused session; it
+  // re-appears the next time the sailor docks somewhere new.
+  SeaBanner: {
     sync() {
-      const paused = sessionStorage.seaActive === "1"
-      this.el.textContent = paused ? "⛵ Back to boat" : "⛵ Explore in 3D"
+      const show =
+        sessionStorage.seaActive === "1" && sessionStorage.seaBannerDismissed !== "1"
+      this.el.style.display = show ? "flex" : "none"
     },
     mounted() {
       this.sync()
-      this.onTheme = () => this.sync()
-      document.addEventListener("theme:changed", this.onTheme)
-      this.el.addEventListener("click", () => {
-        const current = document.documentElement.dataset.theme
-        if (current !== "sea") localStorage.themePrev = current
-        const theme = "sea"
-        document.documentElement.dataset.theme = theme
-        localStorage.theme = theme
-        document.dispatchEvent(new CustomEvent("theme:changed", {detail: {theme}}))
+      this.el.querySelector("[data-dismiss]").addEventListener("click", () => {
+        sessionStorage.seaBannerDismissed = "1"
+        this.sync()
       })
-    },
-    destroyed() {
-      document.removeEventListener("theme:changed", this.onTheme)
     }
   },
   // LiveView has no native phx-dblclick; bridge a dblclick into a server event.

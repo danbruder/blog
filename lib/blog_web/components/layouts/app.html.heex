@@ -1,5 +1,22 @@
 <.flash_group flash={@flash} />
 
+<div
+  id="sea-banner"
+  phx-hook="SeaBanner"
+  style="display: none"
+  class="items-center justify-center gap-3 bg-lime px-4 py-2 text-center text-[12.5px] font-semibold text-on-lime"
+>
+  <a href={~p"/sea"} class="!shadow-none !text-on-lime hover:!underline">
+    ⛵ Continue exploring in 3D →
+  </a>
+  <button
+    type="button"
+    data-dismiss
+    aria-label="Dismiss"
+    class="!shadow-none !text-on-lime text-base leading-none"
+  >×</button>
+</div>
+
 <% nav_items = [
   {"Writing", ~p"/writing", pad(length(Blog.Content.list_published_posts()))},
   {"Notes", ~p"/notes", pad(length(Blog.Content.list_published_notes()))},
@@ -79,12 +96,9 @@ end %>
 
         <%!-- Secondary links --%>
         <div class="flex flex-col items-start gap-1.5 text-[12.5px] text-ink-2">
-          <button
-            id="sea-toggle"
-            phx-hook="SeaToggle"
-            type="button"
-            class="!shadow-none !text-ink-2 hover:!bg-lime hover:!text-on-lime"
-          ></button>
+          <.link navigate={~p"/sea"} class="!shadow-none !text-ink-2 hover:!bg-lime hover:!text-on-lime">
+            ⛵ Explore in 3D
+          </.link>
           <a href="/blog/about" class="!shadow-[inset_0_-1px_0_var(--color-rule)] !text-ink-2">
             About me
           </a>
@@ -117,10 +131,3 @@ end %>
     {@inner_content}
   </main>
 </div>
-
-<div
-  id="sea-overlay"
-  phx-hook="SeaMode"
-  phx-update="ignore"
-  class="fixed inset-0 z-[9999] hidden"
-></div>
