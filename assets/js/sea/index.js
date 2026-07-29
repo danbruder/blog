@@ -64,7 +64,7 @@ class Sea {
       this.pos.z = e.detail.z
       this.speed = 0
     }
-    seaBus.addEventListener("navigate", this.onNavigate)
+    seaBus.addEventListener("sea:navigate", this.onNavigate)
 
     this.t = 0
     this.tickEvery = 6 // throttle minimap updates to ~10Hz at 60fps
@@ -216,7 +216,7 @@ class Sea {
       if (isl) boats.push({id: s.id, x: isl.x + 10, z: isl.z + 10})
     }
     seaBus.dispatchEvent(
-      new CustomEvent("tick", {
+      new CustomEvent("sea:tick", {
         detail: {self: {x: this.pos.x, z: this.pos.z, h: this.pos.h}, boats, islands: this.islands}
       })
     )
@@ -269,7 +269,7 @@ class Sea {
     this.controls.destroy()
     this.net.destroy()
     this.scene.dispose()
-    seaBus.removeEventListener("navigate", this.onNavigate)
+    seaBus.removeEventListener("sea:navigate", this.onNavigate)
     if (this.banner.parentNode) this.banner.remove()
     if (this.hint.parentNode) this.hint.remove()
   }

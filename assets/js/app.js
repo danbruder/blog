@@ -76,7 +76,7 @@ let Hooks = {
         this.state = e.detail
         this.draw()
       }
-      seaBus.addEventListener("tick", this.onTick)
+      seaBus.addEventListener("sea:tick", this.onTick)
 
       this.el.addEventListener("click", (e) => {
         if (!this.state) return
@@ -84,7 +84,7 @@ let Hooks = {
         const px = ((e.clientX - rect.left) / rect.width) * this.w
         const py = ((e.clientY - rect.top) / rect.height) * this.h
         const {x, z} = this.toWorld(px, py)
-        seaBus.dispatchEvent(new CustomEvent("navigate", {detail: {x, z}}))
+        seaBus.dispatchEvent(new CustomEvent("sea:navigate", {detail: {x, z}}))
       })
     },
     // World bounds padded a bit beyond the islands so boats near the edge
@@ -145,7 +145,7 @@ let Hooks = {
       ctx.stroke()
     },
     destroyed() {
-      seaBus.removeEventListener("tick", this.onTick)
+      seaBus.removeEventListener("sea:tick", this.onTick)
     }
   },
   // Top-of-page banner offering a way back into the sea, shown on every page
