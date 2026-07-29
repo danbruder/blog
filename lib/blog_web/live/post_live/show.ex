@@ -88,6 +88,12 @@ defmodule BlogWeb.PostLive.Show do
         >
           Have a go at the game of snake →
         </.link>
+        <.link
+          navigate={~p"/sea"}
+          class="mt-1 block font-display text-[22px] font-medium leading-[1.2] tracking-[-0.028em] !shadow-none hover:!bg-lime hover:!text-on-lime"
+        >
+          Or explore this site in 3D →
+        </.link>
       </div>
     </article>
     """

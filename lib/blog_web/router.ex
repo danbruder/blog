@@ -34,6 +34,7 @@ defmodule BlogWeb.Router do
       live("/games/sand", SandLive, :index)
       live("/podcasts", PodcastLive.Index, :index)
       live("/projects", ProjectLive.Index, :index)
+      live("/sea", SeaLive, :index)
     end
 
     get("/snake", RedirectController, :snake)

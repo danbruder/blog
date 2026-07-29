@@ -1,0 +1,49 @@
+<div class="flex h-[100dvh] flex-col overflow-hidden bg-paper text-ink md:flex-row">
+  <aside class="z-10 flex shrink-0 items-center justify-between gap-3 border-b border-ink bg-paper px-4 py-3 md:h-screen md:w-60 md:flex-col md:items-stretch md:justify-start md:border-b-0 md:border-r md:px-5 md:py-6">
+    <.link
+      navigate={~p"/"}
+      class="flex items-center gap-2 !shadow-none hover:!bg-transparent"
+    >
+      <img
+        src={~p"/images/my-face-new.jpg"}
+        alt="Dan Bruder"
+        class="h-9 w-9 border border-ink object-cover object-[50%_20%] grayscale contrast-[1.1]"
+      />
+      <span class="font-display text-[13px] font-bold tracking-[-0.02em] text-ink">
+        ← Leave the sea
+      </span>
+    </.link>
+
+    <div class="hidden flex-1 flex-col gap-6 md:mt-8 md:flex">
+      <div :if={assigns[:viewer_count]} class="flex items-center gap-2 text-[11.5px] text-ink-2">
+        <span class="inline-block h-2 w-2 bg-lime"></span>
+        {@viewer_count} on the site now
+      </div>
+
+      <div>
+        <p class="label mb-2">Minimap</p>
+        <div class="relative border border-ink bg-paper-3">
+          <canvas id="sea-minimap" phx-hook="SeaMinimap" phx-update="ignore" width="208" height="208" class="block w-full cursor-pointer"></canvas>
+        </div>
+        <p class="mt-2 text-[11px] leading-[1.45] text-ink-3">
+          Dots are other sailors. Click the map to steer your boat toward one.
+        </p>
+      </div>
+
+      <div class="mt-auto text-[11px] leading-[1.45] text-ink-3">
+        Arrows / WASD to sail · Space to dock
+      </div>
+    </div>
+
+    <div :if={assigns[:viewer_count]} class="flex items-center gap-2 text-[11.5px] text-ink-2 md:hidden">
+      <span class="inline-block h-2 w-2 bg-lime"></span>
+      {@viewer_count}
+    </div>
+  </aside>
+
+  <main class="relative min-h-0 flex-1">
+    {@inner_content}
+  </main>
+</div>
+
+<.flash_group flash={@flash} />

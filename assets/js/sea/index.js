@@ -2,6 +2,7 @@ import {SeaScene, flagTexture} from "./scene.js"
 import {createControls} from "./controls.js"
 import {SeaNet} from "./net.js"
 import {nearestDockable, nearestIsland, isCloseEnoughToDock, resolveCollision} from "./world.js"
+import {seaBus} from "./bus.js"
 
 const MAX_SPEED = 0.6
 const ACCEL = 0.05
@@ -55,44 +56,18 @@ class Sea {
 
     this.hint = document.createElement("div")
     this.hint.className = "sea-hint"
-    this.hint.textContent = "Arrows / WASD to sail · Space to dock · toggle theme to leave"
+    this.hint.textContent = "Arrows / WASD to sail · Space to dock"
     el.appendChild(this.hint)
 
-    // Anchoring bar: a collapsed echo of the site sidebar (face + exit),
-    // kept on screen so sailing never feels fully detached from the site.
-    // Left rail at desktop widths, top strip on mobile — see .sea-anchor.
-    this.anchor = document.createElement("div")
-    this.anchor.className = "sea-anchor"
-
-    const face = document.createElement("a")
-    face.className = "sea-anchor-face"
-    face.href = "/"
-    face.setAttribute("aria-label", "Dan Bruder — home")
-    const faceImg = document.createElement("img")
-    faceImg.src = "/images/my-face-new.jpg"
-    faceImg.alt = "Dan Bruder"
-    face.appendChild(faceImg)
-
-    this.leaveBtn = document.createElement("button")
-    this.leaveBtn.className = "sea-anchor-leave"
-    this.leaveBtn.type = "button"
-    this.leaveBtn.setAttribute("aria-label", "Leave the sea")
-    this.leaveBtn.title = "Leave the sea"
-    this.leaveBtn.textContent = "×"
-    this.leaveBtn.addEventListener("click", () => {
-      const prev = localStorage.themePrev || "light"
-      sessionStorage.removeItem("seaActive")
-      savePos(this.pos)
-      localStorage.theme = prev
-      document.documentElement.dataset.theme = prev
-      document.dispatchEvent(new CustomEvent("theme:changed", {detail: {theme: prev}}))
-    })
-
-    this.anchor.appendChild(face)
-    this.anchor.appendChild(this.leaveBtn)
-    el.appendChild(this.anchor)
+    this.onNavigate = (e) => {
+      this.pos.x = e.detail.x
+      this.pos.z = e.detail.z
+      this.speed = 0
+    }
+    seaBus.addEventListener("navigate", this.onNavigate)
 
     this.t = 0
+    this.tickEvery = 6 // throttle minimap updates to ~10Hz at 60fps
     this.running = true
     this.loop = this.loop.bind(this)
     requestAnimationFrame(this.loop)
@@ -140,6 +115,7 @@ class Sea {
 
     this.syncOtherBoats()
     this.updateBanner()
+    if (Math.round(this.t * 60) % this.tickEvery === 0) this.publishTick()
 
     if (input.dock) {
       input.dock = false
@@ -223,6 +199,29 @@ class Sea {
     return list
   }
 
+  // Snapshot of everyone's position for the sidebar minimap: live sailors
+  // from net.remote plus anchored readers bobbing at their island — the same
+  // two groups syncOtherBoats() draws in the 3D scene.
+  publishTick() {
+    const boats = []
+    const liveIds = new Set()
+    for (const [id, p] of this.net.remote) {
+      if (id === this.sailorId) continue
+      liveIds.add(id)
+      boats.push({id, x: p.x, z: p.z})
+    }
+    for (const s of this.net.roster) {
+      if (s.id === this.sailorId || liveIds.has(s.id)) continue
+      const isl = this.islandsByPath.get(s.path)
+      if (isl) boats.push({id: s.id, x: isl.x + 10, z: isl.z + 10})
+    }
+    seaBus.dispatchEvent(
+      new CustomEvent("tick", {
+        detail: {self: {x: this.pos.x, z: this.pos.z, h: this.pos.h}, boats, islands: this.islands}
+      })
+    )
+  }
+
   flagFor(id) {
     const s = this.net.roster.find((r) => r.id === id)
     return s ? s.flag : "🏳️"
@@ -255,27 +254,24 @@ class Sea {
   }
 
   dockTo(island) {
-    // Leaving Sea mode to read a post: restore the previous light/dark theme,
-    // then navigate. Mark that a sea session is paused (and save where the
-    // boat was) so the destination page can offer a one-click way back to
-    // the boat, at the same spot.
-    const prev = localStorage.themePrev || "light"
+    // Leaving the sea to read a post. Mark that a sea session is paused (and
+    // save where the boat was) so the destination page can offer a banner
+    // back to the boat, at the same spot.
     sessionStorage.seaActive = "1"
+    sessionStorage.removeItem("seaBannerDismissed")
     savePos(this.pos)
-    localStorage.theme = prev
-    document.documentElement.dataset.theme = prev
-    document.dispatchEvent(new CustomEvent("theme:changed", {detail: {theme: prev}}))
     window.location.href = island.path
   }
 
   destroy() {
     this.running = false
+    savePos(this.pos)
     this.controls.destroy()
     this.net.destroy()
     this.scene.dispose()
+    seaBus.removeEventListener("navigate", this.onNavigate)
     if (this.banner.parentNode) this.banner.remove()
     if (this.hint.parentNode) this.hint.remove()
-    if (this.anchor.parentNode) this.anchor.remove()
   }
 }
 
