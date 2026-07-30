@@ -2,7 +2,7 @@ name: CI & Deploy
 
 on:
   push:
-    branches-ignore: []
+    branches: [main, master]
   pull_request:
 
 jobs:
