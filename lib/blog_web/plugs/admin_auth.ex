@@ -4,7 +4,6 @@ defmodule BlogWeb.AdminAuth do
   """
 
   import Plug.Conn
-  import Phoenix.Component, only: [assign: 3]
 
   def init(opts), do: opts
 
@@ -20,7 +19,7 @@ defmodule BlogWeb.AdminAuth do
 
   def on_mount(:ensure_admin, _params, session, socket) do
     if session["admin_authenticated"] do
-      {:cont, assign(socket, :admin_authenticated, true)}
+      {:cont, Phoenix.Component.assign(socket, :admin_authenticated, true)}
     else
       {:halt, Phoenix.LiveView.redirect(socket, to: "/admin/login")}
     end
@@ -28,7 +27,8 @@ defmodule BlogWeb.AdminAuth do
 
   @doc "Assigns `:admin_authenticated` for public pages so the sidebar can link to admin."
   def on_mount(:assign_admin_flag, _params, session, socket) do
-    {:cont, assign(socket, :admin_authenticated, !!session["admin_authenticated"])}
+    authenticated? = !!session["admin_authenticated"]
+    {:cont, Phoenix.Component.assign(socket, :admin_authenticated, authenticated?)}
   end
 
   @doc "Constant-time check against the configured admin password."
