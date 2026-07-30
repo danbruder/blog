@@ -10,22 +10,36 @@ defmodule BlogWeb.Admin.PresenceLive do
       Phoenix.PubSub.subscribe(Blog.PubSub, PresenceTracker.topic())
     end
 
-    {:ok, assign(socket, page_title: "Viewers", countries: countries_by_count())}
+    {:ok, assign(socket, page_title: "Viewers", pages: pages_by_count())}
   end
 
   @impl true
   def handle_info(%{event: "presence_diff"}, socket) do
-    {:noreply, assign(socket, countries: countries_by_count())}
+    {:noreply, assign(socket, pages: pages_by_count())}
   end
 
-  defp countries_by_count do
+  defp pages_by_count do
     PresenceTracker.topic() |> Presence.list() |> summarize()
   end
 
-  @doc false
+  @doc """
+  Groups live presences by the page they're on, then by country within each
+  page. Pages and countries are both sorted by headcount, descending.
+  """
   def summarize(presences) do
     presences
-    |> Enum.map(fn {_key, %{metas: [meta | _]}} -> meta.country || "Unknown" end)
+    |> Enum.map(fn {_key, %{metas: [meta | _]}} ->
+      {meta.path || "Unknown", meta.country || "Unknown"}
+    end)
+    |> Enum.group_by(fn {path, _country} -> path end, fn {_path, country} -> country end)
+    |> Enum.map(fn {path, countries} ->
+      %{path: path, count: length(countries), countries: by_count(countries)}
+    end)
+    |> Enum.sort_by(& &1.count, :desc)
+  end
+
+  defp by_count(countries) do
+    countries
     |> Enum.frequencies()
     |> Enum.sort_by(fn {_country, count} -> -count end)
   end
@@ -37,41 +51,66 @@ defmodule BlogWeb.Admin.PresenceLive do
 
   def flag(_), do: "🏳️"
 
+  defp total(pages), do: Enum.reduce(pages, 0, &(&1.count + &2))
+
+  defp pluralize(1, word), do: word
+  defp pluralize(_count, word), do: word <> "s"
+
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <.page_body>
       <div class="mx-auto max-w-3xl">
-        <div class="flex items-center justify-between mb-8">
-          <h1 class="text-3xl text-sky-200">Viewers</h1>
-          <div class="flex items-center gap-3">
-            <.link navigate={~p"/admin"} class="text-sm text-zinc-400 underline">Posts</.link>
-            <.link href={~p"/admin/logout"} method="delete" class="text-sm text-zinc-400 underline">
+        <div class="mb-8 flex items-center justify-between gap-4">
+          <h1 class="font-display text-[28px] font-bold tracking-[-0.03em] text-ink">Viewers</h1>
+          <div class="flex items-center gap-4">
+            <.link
+              navigate={~p"/admin"}
+              class="text-[13px] text-ink-2 !shadow-[inset_0_-1px_0_var(--color-rule)] hover:!text-ink"
+            >
+              Posts
+            </.link>
+            <.link
+              href={~p"/admin/logout"}
+              method="delete"
+              class="text-[13px] text-ink-2 !shadow-[inset_0_-1px_0_var(--color-rule)] hover:!text-ink"
+            >
               Log out
             </.link>
           </div>
         </div>
 
-        <p class="text-zinc-500 mb-6">
-          {Enum.reduce(@countries, 0, fn {_country, count}, total -> total + count end)} live right now
-        </p>
+        <div class="mb-8 flex items-center gap-2 text-[13px] text-ink-2">
+          <span class="inline-block h-2 w-2 bg-lime"></span>
+          <span class="mark font-semibold">{total(@pages)}</span>
+          reading right now across {length(@pages)} {pluralize(length(@pages), "page")}
+        </div>
 
-        <div :if={@countries == []} class="text-zinc-500">Nobody's here right now.</div>
+        <div :if={@pages == []} class="text-[15px] text-ink-3">Nobody's here right now.</div>
 
-        <div class="divide-y divide-zinc-800">
-          <div
-            :for={{country, count} <- @countries}
-            class="py-3 flex items-center justify-between gap-4"
-          >
-            <div class="flex items-center gap-3">
-              <span class="text-2xl">{flag(country)}</span>
-              <span class="text-sky-100">{country}</span>
+        <div class="divide-y divide-rule border-t border-ink">
+          <div :for={page <- @pages} class="py-4">
+            <div class="flex items-baseline justify-between gap-4">
+              <span class="text-[15px] text-ink">{page.path}</span>
+              <span class="label shrink-0">
+                {page.count} {pluralize(page.count, "viewer")}
+              </span>
             </div>
-            <span class="text-zinc-500">{count}</span>
+
+            <div class="mt-2.5 flex flex-wrap gap-x-4 gap-y-1.5">
+              <span
+                :for={{country, count} <- page.countries}
+                class="flex items-center gap-1.5 text-[13px] text-ink-2"
+              >
+                <span class="text-base leading-none">{flag(country)}</span>
+                {country}
+                <span class="text-ink-3">{count}</span>
+              </span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </.page_body>
     """
   end
 end

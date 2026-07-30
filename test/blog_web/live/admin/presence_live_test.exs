@@ -19,20 +19,26 @@ defmodule BlogWeb.Admin.PresenceLiveTest do
     assert html =~ "Viewers"
   end
 
-  test "summarize/1 groups presences by country and sorts by count descending" do
+  test "summarize/1 groups presences by page, then by country within each page" do
     presences = [
-      {"s1", %{metas: [%{country: "US"}]}},
-      {"s2", %{metas: [%{country: "US"}]}},
-      {"s3", %{metas: [%{country: "CA"}]}}
+      {"s1", %{metas: [%{path: "/writing", country: "US"}]}},
+      {"s2", %{metas: [%{path: "/writing", country: "US"}]}},
+      {"s3", %{metas: [%{path: "/writing", country: "CA"}]}},
+      {"s4", %{metas: [%{path: "/notes", country: "CA"}]}}
     ]
 
-    assert PresenceLive.summarize(presences) == [{"US", 2}, {"CA", 1}]
+    assert PresenceLive.summarize(presences) == [
+             %{path: "/writing", count: 3, countries: [{"US", 2}, {"CA", 1}]},
+             %{path: "/notes", count: 1, countries: [{"CA", 1}]}
+           ]
   end
 
-  test "summarize/1 buckets missing country as Unknown" do
-    presences = [{"s1", %{metas: [%{country: nil}]}}]
+  test "summarize/1 buckets missing path and country as Unknown" do
+    presences = [{"s1", %{metas: [%{path: nil, country: nil}]}}]
 
-    assert PresenceLive.summarize(presences) == [{"Unknown", 1}]
+    assert PresenceLive.summarize(presences) == [
+             %{path: "Unknown", count: 1, countries: [{"Unknown", 1}]}
+           ]
   end
 
   test "flag/1 renders a regional indicator emoji for a two-letter code" do
