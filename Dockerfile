@@ -32,11 +32,14 @@ RUN mix deps.compile
 
 COPY priv priv
 COPY lib lib
-COPY assets assets
 
 # JS deps for the esbuild bundle (highlight.js, etc.). node_modules is
-# .dockerignore'd, so install fresh from the committed lockfile.
+# .dockerignore'd, so install fresh from the committed lockfile. Copied
+# ahead of the rest of assets/ so editing CSS/JS doesn't bust this layer.
+COPY assets/package.json assets/package-lock.json assets/
 RUN cd assets && npm ci
+
+COPY assets assets
 
 # The Tailwind standalone binary is fetched from GitHub by Erlang's :ssl,
 # which fails on some OTP versions against GitHub's cert chain. Fetch it
