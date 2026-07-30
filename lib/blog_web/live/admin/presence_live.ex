@@ -6,17 +6,35 @@ defmodule BlogWeb.Admin.PresenceLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    if connected?(socket) do
-      Phoenix.PubSub.subscribe(Blog.PubSub, PresenceTracker.topic())
+    {:ok, assign(socket, page_title: "Viewers")}
+  end
+
+  @doc """
+  Attached ahead of `PresenceTracker`'s own hook in the admin `on_mount` chain
+  (see the router) so `:pages` gets recomputed on every presence_diff before
+  that hook halts the `:handle_info` pipeline to do its own viewer_count
+  bookkeeping.
+  """
+  def on_mount(:track_pages, _params, _session, socket) do
+    if socket.view == __MODULE__ do
+      socket =
+        if connected?(socket) do
+          attach_hook(socket, :presence_live_pages, :handle_info, &handle_presence_diff/2)
+        else
+          socket
+        end
+
+      {:cont, assign(socket, :pages, pages_by_count())}
+    else
+      {:cont, socket}
     end
-
-    {:ok, assign(socket, page_title: "Viewers", pages: pages_by_count())}
   end
 
-  @impl true
-  def handle_info(%{event: "presence_diff"}, socket) do
-    {:noreply, assign(socket, pages: pages_by_count())}
+  defp handle_presence_diff(%{event: "presence_diff"}, socket) do
+    {:cont, assign(socket, :pages, pages_by_count())}
   end
+
+  defp handle_presence_diff(_message, socket), do: {:cont, socket}
 
   defp pages_by_count do
     PresenceTracker.topic() |> Presence.list() |> summarize()

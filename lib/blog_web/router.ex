@@ -65,6 +65,7 @@ defmodule BlogWeb.Router do
     live_session :admin,
       on_mount: [
         {BlogWeb.AdminAuth, :ensure_admin},
+        {BlogWeb.Admin.PresenceLive, :track_pages},
         {BlogWeb.PresenceTracker, :track},
         {BlogWeb.CurrentPath, :default}
       ] do
