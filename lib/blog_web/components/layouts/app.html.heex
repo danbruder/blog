@@ -109,6 +109,13 @@ end %>
           >
             GitHub
           </a>
+          <.link
+            :if={assigns[:admin_authenticated]}
+            navigate={~p"/admin"}
+            class="!shadow-[inset_0_-1px_0_var(--color-rule)] !text-ink-2 hover:!text-ink"
+          >
+            Admin
+          </.link>
         </div>
 
         <%!-- Footer: copyright + theme toggle --%>
