@@ -23,7 +23,11 @@ defmodule BlogWeb.Router do
     pipe_through(:browser)
 
     live_session :public,
-      on_mount: [{BlogWeb.PresenceTracker, :track}, {BlogWeb.CurrentPath, :default}] do
+      on_mount: [
+        {BlogWeb.PresenceTracker, :track},
+        {BlogWeb.CurrentPath, :default},
+        {BlogWeb.AdminAuth, :assign_admin_flag}
+      ] do
       live("/", WritingLive, :index)
       live("/writing", WritingLive, :index)
       live("/blog/:slug", PostLive.Show, :show)
@@ -59,7 +63,11 @@ defmodule BlogWeb.Router do
     pipe_through([:browser, :require_admin])
 
     live_session :admin,
-      on_mount: {BlogWeb.AdminAuth, :ensure_admin} do
+      on_mount: [
+        {BlogWeb.AdminAuth, :ensure_admin},
+        {BlogWeb.PresenceTracker, :track},
+        {BlogWeb.CurrentPath, :default}
+      ] do
       live("/", PostIndexLive, :index)
       live("/posts/new", PostFormLive, :new)
       live("/posts/:id/edit", PostFormLive, :edit)
