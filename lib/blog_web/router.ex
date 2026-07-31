@@ -20,6 +20,10 @@ defmodule BlogWeb.Router do
   end
 
   scope "/", BlogWeb do
+    get("/healthz", HealthController, :show)
+  end
+
+  scope "/", BlogWeb do
     pipe_through(:browser)
 
     live_session :public,
