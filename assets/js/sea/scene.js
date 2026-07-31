@@ -10,7 +10,8 @@ const COL = {
   seaDark: 0x2f3ba8,
   sand: 0xe8d9a0,
   rock: 0x7d8088,
-  palm: 0x2f8f4f
+  palm: 0x2f8f4f,
+  shark: 0x5b6470
 }
 
 // A small family of fills at the same brightness/saturation as the brand's
@@ -288,6 +289,60 @@ export class SeaScene {
 
   removeBoat(group) {
     this.scene.remove(group)
+  }
+
+  // A single raked fin blade: a thin triangle (root-to-root along the base,
+  // swept tip above) extruded for thickness. Local origin is the *front*
+  // root, extending backward (-z) and up (+y) from there, so callers place
+  // it by setting `position` to where the front of the fin meets the body.
+  _finBlade(len, height, thickness, color = COL.ink) {
+    const shape = new THREE.Shape()
+    shape.moveTo(0, 0)
+    shape.lineTo(len, 0)
+    shape.lineTo(len * 0.45, height)
+    shape.closePath()
+
+    const geo = new THREE.ExtrudeGeometry(shape, {depth: thickness, bevelEnabled: false})
+    geo.rotateY(Math.PI / 2) // shape drawn as a side profile; swing it to face forward
+    geo.translate(-thickness / 2, 0, 0) // center the blade's thickness
+    return new THREE.Mesh(geo, new THREE.MeshBasicMaterial({color}))
+  }
+
+  // Shark: a stretched low-poly body (mostly submerged) plus a dorsal and
+  // tail fin. Ambient and purely local — see world.js's shark helpers for
+  // the patrol/breach simulation this just renders each frame.
+  addShark() {
+    const group = new THREE.Group()
+
+    const bodyGeo = new THREE.IcosahedronGeometry(1, 1)
+    const body = new THREE.Mesh(
+      bodyGeo,
+      new THREE.MeshToonMaterial({color: COL.shark, gradientMap: this.gradient})
+    )
+    body.scale.set(0.85, 0.6, 2.4)
+    body.position.y = -0.55 // mostly underwater; only the topmost sliver breaks the surface
+    body.add(outline(bodyGeo, 1.08))
+    group.add(body)
+
+    const dorsal = this._finBlade(1.3, 1.3, 0.14)
+    dorsal.position.set(0, 0, 0.4)
+    group.add(dorsal)
+
+    const tail = this._finBlade(0.8, 1.0, 0.12)
+    tail.position.set(0, 0, -2.1)
+    group.add(tail)
+
+    this.scene.add(group)
+    return group
+  }
+
+  // Applies one frame of a shark's simulated state (see world.js) to its
+  // rendered group: patrol position/heading, plus lifting clear of the
+  // water and pitching its nose up while `breach` (0..1) is non-zero.
+  updateShark(group, shark, breach) {
+    group.position.set(shark.x, breach * 3.2, shark.z)
+    group.rotation.y = shark.h
+    group.rotation.x = -breach * 0.4
   }
 
   // Cheap animated swell.

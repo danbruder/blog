@@ -1,7 +1,16 @@
 import {SeaScene, flagTexture} from "./scene.js"
 import {createControls} from "./controls.js"
 import {SeaNet} from "./net.js"
-import {nearestDockable, nearestIsland, isCloseEnoughToDock, resolveCollision} from "./world.js"
+import {
+  nearestDockable,
+  nearestIsland,
+  isCloseEnoughToDock,
+  resolveCollision,
+  makeSharks,
+  stepShark,
+  sharkBreach,
+  nearestBitingShark
+} from "./world.js"
 import {seaBus} from "./bus.js"
 
 const MAX_SPEED = 0.6
@@ -13,6 +22,10 @@ const STATIONARY_TURN_FACTOR = 0.35 // turning while dead in the water is slower
 const CRASH_BOUNCE = -0.25 // reverses and dampens speed on collision
 const BOAT_RADIUS = 2.2 // other boats are obstacles too, not just islands
 const BOAT_COLLISION_MARGIN = 1
+const SHARK_COUNT = 5
+const SHARK_BOUNDS = 140 // sharks patrol within this radius of the harbor
+const BITE_BOUNCE = -0.6 // harder knockback than a plain crash
+const BITE_COOLDOWN = 2 // seconds of invulnerability after a bite
 
 let active = null
 
@@ -50,6 +63,12 @@ class Sea {
     this.readerBoats = new Map() // id -> {group}
     this.remoteBoats = new Map() // id -> {group}
 
+    // Sharks are ambient and purely local (see world.js) — not networked, so
+    // every visitor patrols their own and a bite only affects their own boat.
+    this.sharks = makeSharks(SHARK_COUNT, SHARK_BOUNDS)
+    this.sharkMeshes = this.sharks.map(() => this.scene.addShark())
+    this.biteCooldown = 0
+
     this.banner = document.createElement("div")
     this.banner.className = "sea-banner"
     el.appendChild(this.banner)
@@ -58,6 +77,11 @@ class Sea {
     this.hint.className = "sea-hint"
     this.hint.textContent = "Arrows / WASD to sail · Space to dock"
     el.appendChild(this.hint)
+
+    this.biteMsg = document.createElement("div")
+    this.biteMsg.className = "sea-bite"
+    this.biteMsg.textContent = "🦈 Bitten! Watch the fins."
+    el.appendChild(this.biteMsg)
 
     this.onNavigate = (e) => {
       this.pos.x = e.detail.x
@@ -106,6 +130,8 @@ class Sea {
     this.selfBoat.position.set(this.pos.x, 0, this.pos.z)
     this.selfBoat.rotation.y = this.pos.h
 
+    this.stepSharks()
+
     this.net.sendPos(
       round(this.pos.x),
       round(this.pos.z),
@@ -127,6 +153,38 @@ class Sea {
     this.scene.chase(this.pos, this.pos.h)
     this.scene.render()
     requestAnimationFrame(this.loop)
+  }
+
+  // Advances every shark's patrol/breach state and its rendered mesh, then
+  // — once any post-bite invulnerability has worn off — knocks the boat back
+  // and flashes a warning if it strayed within range of one.
+  stepSharks() {
+    for (let i = 0; i < this.sharks.length; i++) {
+      const shark = this.sharks[i]
+      stepShark(shark, 0.016, SHARK_BOUNDS)
+      this.scene.updateShark(this.sharkMeshes[i], shark, sharkBreach(shark))
+    }
+
+    if (this.biteCooldown > 0) {
+      this.biteCooldown -= 0.016
+      return
+    }
+    const shark = nearestBitingShark(this.pos.x, this.pos.z, this.sharks)
+    if (!shark) return
+
+    this.biteCooldown = BITE_COOLDOWN
+    this.speed *= BITE_BOUNCE
+    const dx = this.pos.x - shark.x
+    const dz = this.pos.z - shark.z
+    const d = Math.hypot(dx, dz) || 0.001
+    this.pos.x += (dx / d) * 4
+    this.pos.z += (dz / d) * 4
+
+    this.biteMsg.style.opacity = "1"
+    clearTimeout(this._biteMsgTimer)
+    this._biteMsgTimer = setTimeout(() => {
+      this.biteMsg.style.opacity = "0"
+    }, 1200)
   }
 
   // Live sailors (from net.remote). A sailor id that is also in the roster is
@@ -270,8 +328,10 @@ class Sea {
     this.net.destroy()
     this.scene.dispose()
     seaBus.removeEventListener("sea:navigate", this.onNavigate)
+    clearTimeout(this._biteMsgTimer)
     if (this.banner.parentNode) this.banner.remove()
     if (this.hint.parentNode) this.hint.remove()
+    if (this.biteMsg.parentNode) this.biteMsg.remove()
   }
 }
 
