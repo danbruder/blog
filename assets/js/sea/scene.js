@@ -157,12 +157,12 @@ export class SeaScene {
     const peakFill = height > 12 ? COL.rock : fill
 
     let y = 0
-    const beach = this._band(radius * 1.1, radius * 0.72, sandH, COL.sand)
+    const beach = this._band(radius * 0.72, radius * 1.1, sandH, COL.sand)
     beach.position.y = y + sandH / 2
     group.add(beach)
     y += sandH
 
-    const slope = this._band(radius * 0.72, radius * 0.3, slopeH, fill)
+    const slope = this._band(radius * 0.3, radius * 0.72, slopeH, fill)
     slope.position.y = y + slopeH / 2
     group.add(slope)
     y += slopeH
