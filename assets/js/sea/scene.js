@@ -168,7 +168,7 @@ export class SeaScene {
     group.add(slope)
     y += slopeH
 
-    const peak = this._band(0, radius * 0.3, peakH, peakFill)
+    const peak = this._band(radius * 0.12, radius * 0.3, peakH, peakFill)
     peak.position.y = y + peakH / 2
     group.add(peak)
     y += peakH
