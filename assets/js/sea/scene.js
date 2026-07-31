@@ -193,28 +193,77 @@ export class SeaScene {
     }
   }
 
-  // Boat: ink-outlined hull + a sail carrying a flag canvas texture. The hull
-  // color is keyed by sailor id, not by whether it's "you" — so a given
-  // sailor's boat looks the same to every viewer, on every screen. `isSelf`
-  // only adds the ring accent beneath your own boat.
+  // A pointed-bow hull cut from a canoe-shaped outline and tapered inward
+  // toward the deck, instead of a box — the local +Z axis is the bow, to
+  // match how callers set `group.rotation.y` as heading. Built once and
+  // shared (read-only) across every boat instance.
+  _hullGeometry() {
+    if (this._hullGeo) return this._hullGeo
+    const w = 2.4
+    const l = 4.2
+    const hgt = 1.3
+
+    const shape = new THREE.Shape()
+    shape.moveTo(0, -l / 2 - 0.3) // bow tip, raked out ahead of the hull body
+    shape.lineTo(w / 2, -0.5) // starboard shoulder
+    shape.lineTo(w / 2 - 0.3, l / 2) // starboard stern corner
+    shape.lineTo(-(w / 2 - 0.3), l / 2) // port stern corner
+    shape.lineTo(-w / 2, -0.5) // port shoulder
+    shape.closePath()
+
+    const geo = new THREE.ExtrudeGeometry(shape, {depth: hgt, bevelEnabled: false})
+    geo.rotateX(-Math.PI / 2) // shape was drawn top-down; stand the extrusion up
+    geo.translate(0, -hgt / 2, 0) // center vertically, like a BoxGeometry
+
+    // Taper the sides inward toward the deck for a hull-like cross section.
+    const pos = geo.attributes.position
+    for (let i = 0; i < pos.count; i++) {
+      const t = (pos.getY(i) + hgt / 2) / hgt // 0 at keel, 1 at deck
+      pos.setX(i, pos.getX(i) * (1 - 0.35 * t))
+    }
+    pos.needsUpdate = true
+    geo.computeVertexNormals()
+
+    this._hullGeo = geo
+    return geo
+  }
+
+  // Boat: ink-outlined pointed hull + a curved sail carrying a flag canvas
+  // texture. The hull color is keyed by sailor id, not by whether it's
+  // "you" — so a given sailor's boat looks the same to every viewer, on
+  // every screen. `isSelf` only adds the ring accent beneath your own boat.
   makeBoat(flagTexture, isSelf, sailorId) {
     const group = new THREE.Group()
 
-    const hullGeo = new THREE.BoxGeometry(2.4, 1.1, 4.2)
+    const hullGeo = this._hullGeometry()
     const hull = new THREE.Mesh(
       hullGeo,
       new THREE.MeshToonMaterial({color: themedColor(sailorId), gradientMap: this.gradient})
     )
     hull.position.y = 1
-    group.add(outline(hullGeo, 1.12).translateY(1))
+    group.add(outline(hullGeo, 1.1).translateY(1))
     group.add(hull)
+
+    const keelGeo = new THREE.BoxGeometry(0.15, 0.8, 1.8)
+    const keel = new THREE.Mesh(keelGeo, new THREE.MeshBasicMaterial({color: COL.ink}))
+    keel.position.set(0, 0.2, -0.3)
+    group.add(keel)
 
     const mastGeo = new THREE.CylinderGeometry(0.12, 0.12, 4)
     const mast = new THREE.Mesh(mastGeo, new THREE.MeshBasicMaterial({color: COL.ink}))
     mast.position.set(0, 3.2, 0.2)
     group.add(mast)
 
-    const sailGeo = new THREE.PlaneGeometry(2.6, 2.6)
+    // A few extra width segments so the sail can belly out, as if filled
+    // with wind, instead of sitting perfectly flat.
+    const sailGeo = new THREE.PlaneGeometry(2.6, 2.6, 6, 1)
+    const sailPos = sailGeo.attributes.position
+    for (let i = 0; i < sailPos.count; i++) {
+      const t = sailPos.getX(i) / 1.3 // -1..1 across the sail's width
+      sailPos.setZ(i, (1 - t * t) * 0.35)
+    }
+    sailPos.needsUpdate = true
+    sailGeo.computeVertexNormals()
     const sailMat = new THREE.MeshBasicMaterial({
       map: flagTexture,
       side: THREE.DoubleSide
