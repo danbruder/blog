@@ -339,3 +339,9 @@ pre code.hljs {
 .sea-hint { position: absolute; top: 16px; left: 0; right: 0; text-align: center;
   font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
   color: var(--color-ink-2); pointer-events: none; }
+.sea-bite { position: absolute; top: 42%; left: 50%; transform: translateX(-50%);
+  font-family: "Space Grotesk", system-ui, sans-serif; font-weight: 700;
+  font-size: clamp(14px, 2vw, 20px); text-transform: uppercase; letter-spacing: 0.03em;
+  white-space: nowrap; color: oklch(0.6 0.19 25); background: var(--color-paper);
+  border: 2px solid oklch(0.6 0.19 25); padding: 8px 16px;
+  pointer-events: none; opacity: 0; transition: opacity 150ms ease; }
