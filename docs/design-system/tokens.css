@@ -1,0 +1,365 @@
+/* ─────────────────────────────────────────────────────────────
+   Ink & Lime — portable design tokens.
+   Extracted from danbruder/blog ("system v2"). See README.md in
+   this directory for the principles behind these values before
+   changing them. Drop this file in as-is, or port the custom
+   properties into an existing token file / Tailwind config.
+
+   Usage: add <html data-theme="light|dark">, set it from
+   localStorage/prefers-color-scheme before first paint (snippet
+   in README.md), and reference these variables — never hardcode
+   a color in a component.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  /* Neutral surface scale */
+  --color-paper: oklch(0.978 0.003 250);
+  --color-paper-2: oklch(0.956 0.004 250);
+  --color-paper-3: oklch(0.925 0.005 250);
+
+  /* Neutral text/border scale */
+  --color-ink: oklch(0.185 0.015 255);
+  --color-ink-2: oklch(0.415 0.013 255);
+  --color-ink-3: oklch(0.595 0.011 255);
+  --color-rule: oklch(0.855 0.006 250);
+
+  /* The one accent. Swap this hue to rebrand; keep it a single color. */
+  --color-lime: oklch(0.885 0.185 118);
+  --on-lime: oklch(0.185 0.015 255);
+
+  /* Secondary signal — code syntax only, never UI chrome. */
+  --color-signal: oklch(0.520 0.190 258);
+}
+
+[data-theme="dark"] {
+  --color-paper: oklch(0.175 0.012 255);
+  --color-paper-2: oklch(0.215 0.013 255);
+  --color-paper-3: oklch(0.262 0.014 255);
+  --color-ink: oklch(0.955 0.005 250);
+  --color-ink-2: oklch(0.775 0.008 250);
+  --color-ink-3: oklch(0.600 0.010 250);
+  --color-rule: oklch(0.315 0.014 255);
+  --color-lime: oklch(0.855 0.190 118);
+  --color-signal: oklch(0.750 0.140 250);
+  /* --on-lime stays constant across themes on purpose. */
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Base element styles
+   ───────────────────────────────────────────────────────────── */
+
+* {
+  border-radius: 0 !important; /* the system has no rounded corners, anywhere */
+}
+
+html {
+  background: var(--color-paper);
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: "Archivo", system-ui, sans-serif;
+  font-size: 15.5px;
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  transition: background 200ms ease, color 200ms ease;
+}
+
+h1, h2, h3 {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+  margin: 0;
+}
+
+/* Prose links: hairline underline, lime-fill on hover. Structural
+   links (nav/buttons/cards) should override box-shadow to none and
+   define their own hover — see README "The link & hover model". */
+a {
+  color: var(--color-ink);
+  text-decoration: none;
+  box-shadow: inset 0 -1px 0 var(--color-ink-3);
+}
+a:hover {
+  background: var(--color-lime);
+  color: var(--on-lime);
+  box-shadow: inset 0 -1px 0 var(--color-ink);
+}
+
+::selection {
+  background: var(--color-lime);
+  color: var(--on-lime);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Reusable component classes
+   ───────────────────────────────────────────────────────────── */
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+
+.mark {
+  background: var(--color-lime);
+  color: var(--on-lime);
+  padding: 0 6px;
+}
+
+.btn {
+  display: inline-block;
+  border: 1px solid var(--color-ink);
+  background: var(--color-ink);
+  color: var(--color-paper);
+  padding: 10px 18px;
+  font-family: "Archivo", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.btn:hover {
+  background: var(--color-lime);
+  color: var(--on-lime);
+  box-shadow: none;
+}
+.btn-outline {
+  background: transparent;
+  color: var(--color-ink);
+}
+.btn-outline:hover {
+  background: var(--color-lime);
+  color: var(--on-lime);
+}
+
+/* Shared-hairline grid: border-top/left on the container, border-
+   right/bottom on children, so adjacent cells never double up. */
+.cells {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  border-top: 1px solid var(--color-ink);
+  border-left: 1px solid var(--color-ink);
+}
+.cells > * {
+  border-right: 1px solid var(--color-ink);
+  border-bottom: 1px solid var(--color-ink);
+  padding: 24px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-ink);
+}
+.card-media {
+  aspect-ratio: 4 / 3;
+  border-bottom: 1px solid var(--color-ink);
+  background: var(--color-paper-2);
+}
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px;
+  flex: 1;
+}
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.page-hero {
+  border-bottom: 1px solid var(--color-ink);
+  padding: 56px 24px 32px;
+}
+.page-hero .label {
+  margin-bottom: 18px;
+}
+.page-hero h1 {
+  font-size: clamp(40px, 6vw, 62px);
+  font-weight: 700;
+  line-height: 0.94;
+  letter-spacing: -0.045em;
+  max-width: 13em;
+  color: var(--color-ink);
+}
+.page-hero .subtitle {
+  margin-top: 20px;
+  max-width: 34em;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--color-ink-2);
+  font-family: "Archivo", system-ui, sans-serif;
+  font-weight: 400;
+  letter-spacing: normal;
+}
+
+.empty-state {
+  border: 1px dashed var(--color-rule);
+  padding: 40px;
+}
+
+/* Prose (rendered markdown / long-form article bodies) */
+.prose {
+  color: var(--color-ink);
+}
+.prose > *:first-child { margin-top: 0; }
+.prose p {
+  font-size: 17px;
+  line-height: 1.72;
+  color: var(--color-ink-2);
+  margin: 0 0 1.25rem;
+}
+.prose h2 {
+  font-size: clamp(26px, 3vw, 32px);
+  font-weight: 600;
+  margin: 2.5rem 0 1rem;
+  color: var(--color-ink);
+}
+.prose h3 {
+  font-size: clamp(21px, 2.4vw, 26px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  margin: 2rem 0 0.75rem;
+  color: var(--color-ink);
+}
+.prose h4 {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 1.5rem 0 0.5rem;
+  color: var(--color-ink);
+}
+.prose ul, .prose ol {
+  margin: 0 0 1.25rem;
+  padding-left: 1.5rem;
+  color: var(--color-ink-2);
+}
+.prose li {
+  font-size: 17px;
+  line-height: 1.6;
+  margin-bottom: 0.4rem;
+}
+.prose a {
+  font-weight: 500;
+}
+.prose blockquote {
+  border-top: 1px solid var(--color-ink);
+  border-bottom: 1px solid var(--color-ink);
+  padding: 1.25rem 0;
+  margin: 1.75rem 0;
+}
+.prose blockquote p {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  color: var(--color-ink);
+  margin: 0;
+}
+.prose blockquote p + p {
+  margin-top: 0.75rem;
+}
+.prose p code,
+.prose li code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.85em;
+  padding: 1px 5px;
+  color: var(--color-ink);
+  background: var(--color-paper-2);
+  border: 1px solid var(--color-rule);
+}
+.prose img {
+  border: 1px solid var(--color-ink);
+  max-width: 100%;
+}
+.prose pre {
+  overflow: auto;
+  margin: 2rem 0;
+  background: var(--color-paper-2);
+  border: 1px solid var(--color-rule);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.prose pre code {
+  display: block;
+  overflow-x: auto;
+  padding: 1rem 1.25rem;
+  background: transparent;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   highlight.js theme — keywords carry the signal color, everything
+   else is ink at varying strengths, so code reads as data, not
+   decoration. Pair with a `paper-2` background well (see .prose pre).
+   ───────────────────────────────────────────────────────────── */
+.hljs {
+  color: var(--color-ink-2);
+  background: transparent;
+}
+.hljs-comment,
+.hljs-quote {
+  color: var(--color-ink-3);
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-doctag,
+.hljs-formula,
+.hljs-subst {
+  color: var(--color-signal);
+  font-weight: 600;
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-attribute,
+.hljs-meta .hljs-string {
+  color: oklch(0.52 0.13 150);
+}
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-attr,
+.hljs-type,
+.hljs-selector-attr,
+.hljs-selector-pseudo,
+.hljs-selector-class {
+  color: oklch(0.52 0.14 45);
+}
+.hljs-title,
+.hljs-section,
+.hljs-name,
+.hljs-selector-id {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+.hljs-built_in,
+.hljs-title.class_,
+.hljs-class .hljs-title {
+  color: oklch(0.5 0.13 300);
+}
+.hljs-deletion {
+  color: oklch(0.5 0.19 25);
+}
+.hljs-meta {
+  color: var(--color-ink-3);
+}
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: 700; }
+.hljs-link { text-decoration: underline; }
