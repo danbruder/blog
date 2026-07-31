@@ -7,7 +7,10 @@ const COL = {
   lime: 0xc4e600,
   limeDark: 0xa9c700,
   sea: 0x3d4fd4,
-  seaDark: 0x2f3ba8
+  seaDark: 0x2f3ba8,
+  sand: 0xe8d9a0,
+  rock: 0x7d8088,
+  palm: 0x2f8f4f
 }
 
 // A small family of fills at the same brightness/saturation as the brand's
@@ -99,29 +102,79 @@ export class SeaScene {
     this.scene.add(this.water)
   }
 
-  // Radius/height vary per island, deterministically from its path, so every
-  // sailor sees the same shape and the archipelago doesn't look uniform.
+  // One tapered hexagonal band (beach/slope/peak) with a matching ink
+  // outline nested as a child, so the outline inherits the band's transform.
+  _band(topR, botR, h, color) {
+    const geo = new THREE.CylinderGeometry(topR, botR, h, 6)
+    const mat = new THREE.MeshToonMaterial({color, gradientMap: this.gradient})
+    const mesh = new THREE.Mesh(geo, mat)
+    mesh.add(outline(geo, 1.05))
+    return mesh
+  }
+
+  // A cheap procedural palm: an ink trunk plus a squashed low-poly canopy.
+  // Positions are derived from the island's hash so every sailor sees the
+  // same trees in the same spots.
+  _palms(group, h, radius, baseY) {
+    if (!this._palmTrunkGeo) {
+      this._palmTrunkGeo = new THREE.CylinderGeometry(0.12, 0.18, 2.4)
+      this._palmLeafGeo = new THREE.IcosahedronGeometry(0.9, 0)
+    }
+    const leafMat = new THREE.MeshToonMaterial({color: COL.palm, gradientMap: this.gradient})
+    const count = 2 + (h % 3) // 2..4
+    for (let i = 0; i < count; i++) {
+      const a = ((h >> (i * 5 + 1)) % 360) * (Math.PI / 180)
+      const r = radius * (0.15 + ((h >> (i * 3 + 2)) % 40) / 100) // scattered near the shoreline
+
+      const trunk = new THREE.Mesh(this._palmTrunkGeo, new THREE.MeshBasicMaterial({color: COL.ink}))
+      trunk.position.set(Math.cos(a) * r, baseY + 1.2, Math.sin(a) * r)
+      trunk.rotation.z = Math.sin(a + i) * 0.2
+      group.add(trunk)
+
+      const leaf = new THREE.Mesh(this._palmLeafGeo, leafMat)
+      leaf.scale.set(1, 0.55, 1)
+      leaf.position.set(Math.cos(a) * r, baseY + 2.5, Math.sin(a) * r)
+      group.add(leaf)
+    }
+  }
+
+  // Islands are stacked hexagonal bands — a sand beach, a landmass slope,
+  // and a peak (rocky if the island is tall) — plus a few palms, rather than
+  // a single cone, so the silhouette reads as terrain rather than a triangle.
+  // Radius/height/tree placement are all deterministic from the island's
+  // path, so every sailor sees the same shape.
   addIsland(island) {
     const group = new THREE.Group()
     const h = hashStr(island.path)
     const radius = 5 + ((h % 100) / 100) * 5 // 5..10
     const height = 7 + (((h >> 8) % 100) / 100) * 9 // 7..16
     island.radius = radius
-    island.height = height
 
-    const geo = new THREE.ConeGeometry(radius, height, 5)
     const fill = themedColor(island.color || island.section)
-    const mat = new THREE.MeshToonMaterial({color: fill, gradientMap: this.gradient})
-    const cone = new THREE.Mesh(geo, mat)
-    cone.position.y = height / 2
-    group.add(outline(geo).translateY(height / 2))
-    group.add(cone)
+    const sandH = height * 0.16
+    const slopeH = height * 0.5
+    const peakH = height - sandH - slopeH
+    const peakFill = height > 12 ? COL.rock : fill
 
-    // A little ink post so the island reads as a marker.
-    const postGeo = new THREE.CylinderGeometry(0.25, 0.25, 6)
-    const post = new THREE.Mesh(postGeo, new THREE.MeshBasicMaterial({color: COL.ink}))
-    post.position.y = height + 3
-    group.add(post)
+    let y = 0
+    const beach = this._band(radius * 1.1, radius * 0.72, sandH, COL.sand)
+    beach.position.y = y + sandH / 2
+    group.add(beach)
+    y += sandH
+
+    const slope = this._band(radius * 0.72, radius * 0.3, slopeH, fill)
+    slope.position.y = y + slopeH / 2
+    group.add(slope)
+    y += slopeH
+
+    const peak = this._band(0, radius * 0.3, peakH, peakFill)
+    peak.position.y = y + peakH / 2
+    group.add(peak)
+    y += peakH
+
+    island.height = y // actual peak height, used to float the label above it
+
+    this._palms(group, h, radius, sandH)
 
     group.position.set(island.x, 0, island.z)
     group.userData.island = island
