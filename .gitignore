@@ -20,9 +20,10 @@ node_modules/
 *.db-shm
 *.db-wal
 
-# DuckDB dev analytics database
+# DuckDB dev analytics database, and its downloaded extensions cache
 *.duckdb
 *.duckdb.wal
+/duckdb_extensions/
 
 # Env files
 .env
