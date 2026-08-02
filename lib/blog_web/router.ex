@@ -29,6 +29,7 @@ defmodule BlogWeb.Router do
     live_session :public,
       on_mount: [
         {BlogWeb.PresenceTracker, :track},
+        {BlogWeb.AnalyticsTracker, :track},
         {BlogWeb.CurrentPath, :default},
         {BlogWeb.AdminAuth, :assign_admin_flag}
       ] do
@@ -77,6 +78,7 @@ defmodule BlogWeb.Router do
       live("/posts/new", PostFormLive, :new)
       live("/posts/:id/edit", PostFormLive, :edit)
       live("/viewers", PresenceLive, :index)
+      live("/analytics", AnalyticsLive, :index)
     end
   end
 end

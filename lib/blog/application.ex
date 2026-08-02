@@ -11,6 +11,7 @@ defmodule Blog.Application do
       {Phoenix.PubSub, name: Blog.PubSub},
       BlogWeb.Presence,
       Blog.GeoIP,
+      {Blog.Analytics, Application.fetch_env!(:blog, Blog.Analytics)},
       Blog.SnakeGame,
       Blog.SandGame,
       BlogWeb.Endpoint

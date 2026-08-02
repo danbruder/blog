@@ -5,6 +5,8 @@ config :blog, Blog.Repo,
   stacktrace: true,
   show_sensitive_data_on_connection_error: true
 
+config :blog, Blog.Analytics, path: Path.expand("../analytics_dev.duckdb", __DIR__)
+
 config :blog, BlogWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4000],
   check_origin: false,

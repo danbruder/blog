@@ -96,7 +96,10 @@ end %>
 
         <%!-- Secondary links --%>
         <div class="flex flex-col items-start gap-1.5 text-[12.5px] text-ink-2">
-          <.link navigate={~p"/sea"} class="!shadow-none !text-ink-2 hover:!bg-lime hover:!text-on-lime">
+          <.link
+            navigate={~p"/sea"}
+            class="!shadow-none !text-ink-2 hover:!bg-lime hover:!text-on-lime"
+          >
             ⛵ Explore in 3D
           </.link>
           <a href="/blog/about" class="!shadow-[inset_0_-1px_0_var(--color-rule)] !text-ink-2">

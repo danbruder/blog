@@ -11,8 +11,7 @@ defmodule BlogWeb.SeaLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok,
-     assign(socket, page_title: "Explore in 3D | Dan Bruder"),
+    {:ok, assign(socket, page_title: "Explore in 3D | Dan Bruder"),
      layout: {BlogWeb.Layouts, :sea}}
   end
 

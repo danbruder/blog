@@ -27,7 +27,14 @@
       <div class="mt-auto">
         <p class="label mb-2">Minimap</p>
         <div class="relative border border-ink bg-paper-3">
-          <canvas id="sea-minimap" phx-hook="SeaMinimap" phx-update="ignore" width="208" height="208" class="block w-full cursor-pointer"></canvas>
+          <canvas
+            id="sea-minimap"
+            phx-hook="SeaMinimap"
+            phx-update="ignore"
+            width="208"
+            height="208"
+            class="block w-full cursor-pointer"
+          ></canvas>
         </div>
         <p class="mt-2 text-[11px] leading-[1.45] text-ink-3">
           Dots are other sailors. Click the map to steer your boat toward one.
@@ -35,7 +42,10 @@
       </div>
     </div>
 
-    <div :if={assigns[:viewer_count]} class="flex items-center gap-2 text-[11.5px] text-ink-2 md:hidden">
+    <div
+      :if={assigns[:viewer_count]}
+      class="flex items-center gap-2 text-[11.5px] text-ink-2 md:hidden"
+    >
       <span class="inline-block h-2 w-2 bg-lime"></span>
       {@viewer_count}
     </div>

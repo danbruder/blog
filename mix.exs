@@ -37,6 +37,7 @@ defmodule Blog.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.24"},
       {:jason, "~> 1.4"},
+      {:duckdbex, "~> 0.4"},
       {:earmark, "~> 1.4"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},

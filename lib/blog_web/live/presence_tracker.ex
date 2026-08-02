@@ -63,18 +63,5 @@ defmodule BlogWeb.PresenceTracker do
 
   defp viewer_count, do: @topic |> Presence.list() |> map_size()
 
-  defp client_ip(socket) do
-    x_headers = get_connect_info(socket, :x_headers) || []
-
-    case List.keyfind(x_headers, "x-forwarded-for", 0) do
-      {_, value} ->
-        value |> String.split(",") |> List.first() |> String.trim()
-
-      nil ->
-        case get_connect_info(socket, :peer_data) do
-          %{address: address} -> address |> :inet.ntoa() |> to_string()
-          _ -> nil
-        end
-    end
-  end
+  defp client_ip(socket), do: BlogWeb.ClientInfo.ip(socket)
 end

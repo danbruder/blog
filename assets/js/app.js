@@ -263,7 +263,7 @@ let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   hooks: Hooks,
-  params: {_csrf_token: csrfToken, sailor_id: window.SAILOR_ID}
+  params: {_csrf_token: csrfToken, sailor_id: window.SAILOR_ID, referrer: document.referrer}
 })
 
 liveSocket.connect()
