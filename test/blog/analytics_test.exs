@@ -62,6 +62,43 @@ defmodule Blog.AnalyticsTest do
     assert [[nil, nil, nil]] = rows
   end
 
+  describe "buffering" do
+    test "track/2 buffers the event in memory until flush/0 forces a bulk write" do
+      event_name = "test_event_#{System.unique_integer([:positive])}"
+
+      Analytics.track(event_name)
+
+      {:ok, _columns, rows} =
+        Analytics.query("SELECT path FROM events WHERE event_name = $1", [event_name])
+
+      assert rows == []
+
+      :ok = Analytics.flush()
+
+      {:ok, _columns, rows} =
+        Analytics.query("SELECT path FROM events WHERE event_name = $1", [event_name])
+
+      assert length(rows) == 1
+    end
+
+    test "the buffer flushes itself once it reaches its size threshold" do
+      event_name = "test_event_#{System.unique_integer([:positive])}"
+
+      # Matches Blog.Analytics's private @flush_max_buffer. GenServer.call/2
+      # below only runs after every prior cast from this same process has
+      # been handled, so if this count is reached without ever calling
+      # flush/0, the rows being visible proves the size trigger fired on
+      # its own rather than the query happening to run after some later
+      # timer-based flush.
+      for _ <- 1..200, do: Analytics.track(event_name)
+
+      {:ok, _columns, rows} =
+        Analytics.query("SELECT COUNT(*) FROM events WHERE event_name = $1", [event_name])
+
+      assert [[200]] = rows
+    end
+  end
+
   describe "stats/3" do
     test "aggregates views, sessions, and per-path/country/referrer breakdowns" do
       session_a = "sess_#{System.unique_integer([:positive])}"

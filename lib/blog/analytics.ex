@@ -8,6 +8,13 @@ defmodule Blog.Analytics do
   for one writer at a time) and fire-and-forget from the caller's
   perspective, so tracking a page view never blocks or crashes a request.
 
+  `track/2` doesn't hit DuckDB at all -- it buffers the event in memory and
+  returns immediately. The buffer is flushed to disk in one bulk write via
+  DuckDB's Appender (see `write_rows/2`) every few seconds, once it reaches
+  a couple hundred events, or on a `flush/0` call (which `stats/3` does
+  automatically, so reads are always current even though writes lag by a
+  few seconds).
+
   Timestamps are stored as `occurred_at_us`, a plain `BIGINT` of
   microseconds since the Unix epoch (UTC), rather than a `TIMESTAMP`: the
   precompiled DuckDB build this app uses doesn't bundle the
@@ -30,6 +37,8 @@ defmodule Blog.Analytics do
   # "time on page" so much as an abandoned/backgrounded tab; treat it as
   # unknown rather than skewing the average.
   @max_duration_us 30 * 60 * 1_000_000
+  @flush_interval_ms 5_000
+  @flush_max_buffer 200
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
@@ -77,7 +86,7 @@ defmodule Blog.Analytics do
     GenServer.call(__MODULE__, {:query, sql, params})
   end
 
-  @doc "Blocks until all previously-cast track/2 calls have been written. Test-only."
+  @doc "Forces an immediate bulk write of any buffered events. Also handy in tests."
   def flush, do: GenServer.call(__MODULE__, :flush)
 
   @impl true
@@ -100,7 +109,15 @@ defmodule Blog.Analytics do
       )
       """)
 
-    {:ok, %{conn: conn, db: db, avg_supported?: ensure_core_functions(conn)}}
+    schedule_flush()
+
+    {:ok, %{conn: conn, db: db, avg_supported?: ensure_core_functions(conn), buffer: []}}
+  end
+
+  @impl true
+  def terminate(_reason, state) do
+    flush_buffer(state)
+    :ok
   end
 
   # `SUM`/`AVG` live in DuckDB's `core_functions` extension, which this
@@ -125,39 +142,27 @@ defmodule Blog.Analytics do
 
   @impl true
   def handle_cast({:track, event_name, attrs}, state) do
-    referrer = Map.get(attrs, :referrer)
-    props = Map.get(attrs, :props)
+    buffer = [build_row(event_name, attrs) | state.buffer]
 
-    params = [
-      DateTime.to_unix(DateTime.utc_now(), :microsecond),
-      event_name,
-      Map.get(attrs, :path),
-      referrer,
-      referrer_host(referrer),
-      Map.get(attrs, :session_id),
-      Map.get(attrs, :country),
-      props && Jason.encode!(props)
-    ]
-
-    sql = """
-    INSERT INTO #{@table}
-      (occurred_at_us, event_name, path, referrer, referrer_host, session_id, country, props)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    """
-
-    case Duckdbex.query(state.conn, sql, params) do
-      {:ok, _result} ->
-        :ok
-
-      {:error, reason} ->
-        Logger.warning("Blog.Analytics: failed to record #{event_name}: #{inspect(reason)}")
-    end
+    state =
+      if length(buffer) >= @flush_max_buffer do
+        flush_buffer(%{state | buffer: buffer})
+      else
+        %{state | buffer: buffer}
+      end
 
     {:noreply, state}
   end
 
   @impl true
+  def handle_info(:scheduled_flush, state) do
+    schedule_flush()
+    {:noreply, flush_buffer(state)}
+  end
+
+  @impl true
   def handle_call({:stats, from, to, opts}, _from, state) do
+    state = flush_buffer(state)
     limit = Keyword.get(opts, :limit, 20)
     where_sql = ctes(where_clause(opts[:referrer_contains]))
     params = where_params(from, to, opts[:referrer_contains])
@@ -194,10 +199,10 @@ defmodule Blog.Analytics do
     {:reply, reply, state}
   end
 
-  # Lets tests wait for previously-cast events to be written before querying,
-  # since GenServer.cast/2 doesn't wait for the message to be processed.
   @impl true
-  def handle_call(:flush, _from, state), do: {:reply, :ok, state}
+  def handle_call(:flush, _from, state) do
+    {:reply, :ok, flush_buffer(state)}
+  end
 
   defp where_clause(nil), do: ""
   defp where_clause(""), do: ""
@@ -317,5 +322,55 @@ defmodule Blog.Analytics do
       nil -> nil
       host -> host |> String.downcase() |> String.replace_prefix("www.", "")
     end
+  end
+
+  defp schedule_flush, do: Process.send_after(self(), :scheduled_flush, @flush_interval_ms)
+
+  defp build_row(event_name, attrs) do
+    referrer = Map.get(attrs, :referrer)
+    props = Map.get(attrs, :props)
+
+    [
+      DateTime.to_unix(DateTime.utc_now(), :microsecond),
+      event_name,
+      Map.get(attrs, :path),
+      referrer,
+      referrer_host(referrer),
+      Map.get(attrs, :session_id),
+      Map.get(attrs, :country),
+      props && Jason.encode!(props)
+    ]
+  end
+
+  defp flush_buffer(%{buffer: []} = state), do: state
+
+  defp flush_buffer(state) do
+    rows = Enum.reverse(state.buffer)
+
+    case write_rows(state.conn, rows) do
+      :ok ->
+        :ok
+
+      {:error, reason} ->
+        Logger.warning(
+          "Blog.Analytics: failed to flush #{length(rows)} buffered event(s): #{inspect(reason)}"
+        )
+    end
+
+    %{state | buffer: []}
+  end
+
+  # DuckDB's Appender is the fast path for writing many rows at once (vs. an
+  # INSERT per event, each of which pays its own parse/plan/transaction
+  # overhead) -- exactly what buffering here is for.
+  defp write_rows(conn, rows) do
+    with {:ok, appender} <- Duckdbex.appender(conn, @table),
+         :ok <- Duckdbex.appender_add_rows(appender, rows),
+         :ok <- Duckdbex.appender_flush(appender),
+         :ok <- Duckdbex.appender_close(appender) do
+      :ok
+    end
+  rescue
+    error -> {:error, error}
   end
 end
