@@ -111,7 +111,7 @@ defmodule Blog.Analytics do
 
     schedule_flush()
 
-    {:ok, %{conn: conn, db: db, avg_supported?: ensure_core_functions(conn), buffer: []}}
+    {:ok, %{conn: conn, db: db, avg_supported?: ensure_core_functions(conn, path), buffer: []}}
   end
 
   @impl true
@@ -122,11 +122,25 @@ defmodule Blog.Analytics do
 
   # `SUM`/`AVG` live in DuckDB's `core_functions` extension, which this
   # precompiled build doesn't bundle. Installing it needs network access
-  # (once cached to disk, later boots reuse the cached copy); if that fails
-  # -- offline, read-only filesystem, whatever -- reporting just falls back
-  # to reporting the average as unavailable instead of crashing the app.
-  defp ensure_core_functions(conn) do
-    with {:ok, _} <- Duckdbex.query(conn, "INSTALL core_functions"),
+  # (once cached to disk, later boots reuse the cached copy) *and* a
+  # writable directory to cache it in -- DuckDB defaults to one under
+  # $HOME, which in the deployed container is the `nobody` user's
+  # `/nonexistent`, so that's pointed explicitly at a directory next to the
+  # analytics file itself (on the same persistent volume, so the download
+  # survives restarts). If any of this fails -- offline, read-only
+  # filesystem, whatever -- reporting just falls back to reporting the
+  # average as unavailable instead of crashing the app.
+  defp ensure_core_functions(conn, path) do
+    extension_dir = extension_directory(path)
+    File.mkdir_p!(extension_dir)
+    escaped_dir = String.replace(extension_dir, "'", "''")
+
+    # SET doesn't go through the regular prepared-statement parameter path
+    # (binding $1 here fails with "value not provided"), so this has to be
+    # interpolated -- safe since extension_dir only ever comes from our own
+    # config (ANALYTICS_PATH / the default), never user input.
+    with {:ok, _} <- Duckdbex.query(conn, "SET extension_directory = '#{escaped_dir}'"),
+         {:ok, _} <- Duckdbex.query(conn, "INSTALL core_functions"),
          {:ok, _} <- Duckdbex.query(conn, "LOAD core_functions") do
       true
     else
@@ -139,6 +153,12 @@ defmodule Blog.Analytics do
         false
     end
   end
+
+  defp extension_directory(:memory) do
+    Path.join(System.tmp_dir!(), "blog_analytics_duckdb_extensions")
+  end
+
+  defp extension_directory(path), do: Path.join(Path.dirname(path), "duckdb_extensions")
 
   @impl true
   def handle_cast({:track, event_name, attrs}, state) do
