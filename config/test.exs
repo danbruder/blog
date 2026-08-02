@@ -20,6 +20,8 @@ config :blog, :admin_password, "test-admin-password"
 # Avoid real network calls to the geo-IP lookup service during tests.
 config :blog, :geoip_enabled, false
 
+config :blog, Blog.Analytics, path: :memory
+
 config :logger, level: :warning
 
 config :phoenix, :plug_init_mode, :runtime

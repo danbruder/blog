@@ -31,6 +31,11 @@ environment, and expects its SQLite file on a persistent volume at
 so `lh create blog --repo <owner>/blog` + `git push` is the intended way to
 ship it.
 
+First-party analytics (page views and other visitor events, see
+`Blog.Analytics`) are stored in a DuckDB file that defaults to
+`analytics.duckdb` next to the SQLite file on that same backed-up volume;
+override the location with `ANALYTICS_PATH` if needed.
+
 ## Ideas / not-yet-done
 
 - Split the old "blog" posts (mostly small learnings/notes) into a lighter,

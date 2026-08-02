@@ -89,6 +89,12 @@ defmodule BlogWeb.Admin.PresenceLive do
               Posts
             </.link>
             <.link
+              navigate={~p"/admin/analytics"}
+              class="text-[13px] text-ink-2 !shadow-[inset_0_-1px_0_var(--color-rule)] hover:!text-ink"
+            >
+              Analytics
+            </.link>
+            <.link
               href={~p"/admin/logout"}
               method="delete"
               class="text-[13px] text-ink-2 !shadow-[inset_0_-1px_0_var(--color-rule)] hover:!text-ink"

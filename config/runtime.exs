@@ -16,6 +16,13 @@ if config_env() == :prod do
     database: database_path,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "5")
 
+  # Lives on the same persistent, backed-up volume as the SQLite file
+  # (e.g. /data/analytics.duckdb next to /data/app.db), unless overridden.
+  config :blog, Blog.Analytics,
+    path:
+      System.get_env("ANALYTICS_PATH") ||
+        Path.join(Path.dirname(database_path), "analytics.duckdb")
+
   secret_key_base =
     System.get_env("SECRET_KEY_BASE") ||
       raise """
