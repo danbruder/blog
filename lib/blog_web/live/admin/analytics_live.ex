@@ -114,7 +114,7 @@ defmodule BlogWeb.Admin.AnalyticsLive do
           </div>
         </div>
 
-        <form phx-change="filter" class="mb-8 flex flex-wrap items-end gap-4">
+        <form id="analytics-filter" phx-change="filter" class="mb-8 flex flex-wrap items-end gap-4">
           <.input
             type="select"
             name="range"
