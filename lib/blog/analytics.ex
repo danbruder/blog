@@ -68,6 +68,11 @@ defmodule Blog.Analytics do
 
     * `:referrer_contains` - only count views whose referrer host contains
       this substring (case-insensitive), e.g. `"google"`
+    * `:direct` - if truthy, only count views with no referrer at all
+      (takes precedence over `:referrer_contains`)
+    * `:path` - only count views of this exact path
+    * `:country` - only count views from this exact country code, or
+      `"Unknown"` for views with no resolved country
     * `:limit` - max rows per breakdown list (default 20)
 
   `source` in `top_referrers` is a bare host (`"google.com"`, `"Direct"`
@@ -184,8 +189,8 @@ defmodule Blog.Analytics do
   def handle_call({:stats, from, to, opts}, _from, state) do
     state = flush_buffer(state)
     limit = Keyword.get(opts, :limit, 20)
-    where_sql = ctes(where_clause(opts[:referrer_contains]))
-    params = where_params(from, to, opts[:referrer_contains])
+    {filter_sql, params} = where_clause_and_params(from, to, opts)
+    where_sql = ctes(filter_sql)
     avg_expr = if state.avg_supported?, do: "AVG(duration_us)", else: "NULL"
 
     reply =
@@ -224,20 +229,53 @@ defmodule Blog.Analytics do
     {:reply, :ok, flush_buffer(state)}
   end
 
-  defp where_clause(nil), do: ""
-  defp where_clause(""), do: ""
-  defp where_clause(_referrer_contains), do: " AND referrer_host LIKE $4"
+  # Builds the `AND ...` fragment (with `$4`, `$5`, ... placeholders) and its
+  # matching params list together, so the SQL and the bindings can never
+  # drift out of sync the way keeping them in two separate functions risked.
+  defp where_clause_and_params(from, to, opts) do
+    base_params = [
+      @page_view_event,
+      DateTime.to_unix(from, :microsecond),
+      DateTime.to_unix(to, :microsecond)
+    ]
 
-  defp where_params(from, to, nil), do: base_where_params(from, to)
-  defp where_params(from, to, ""), do: base_where_params(from, to)
+    [referrer_filter(opts), path_filter(opts[:path]), country_filter(opts[:country])]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.reduce({"", base_params}, fn
+      {template, :no_param}, {sql, params} ->
+        {sql <> " AND " <> template, params}
 
-  defp where_params(from, to, referrer_contains) do
-    base_where_params(from, to) ++ ["%" <> String.downcase(referrer_contains) <> "%"]
+      {template, value}, {sql, params} ->
+        placeholder = "$#{length(params) + 1}"
+        {sql <> " AND " <> String.replace(template, "?", placeholder), params ++ [value]}
+    end)
   end
 
-  defp base_where_params(from, to) do
-    [@page_view_event, DateTime.to_unix(from, :microsecond), DateTime.to_unix(to, :microsecond)]
+  defp referrer_filter(opts) do
+    cond do
+      opts[:direct] ->
+        {"referrer_host IS NULL", :no_param}
+
+      present?(opts[:referrer_contains]) ->
+        {"referrer_host LIKE ?", "%" <> String.downcase(opts[:referrer_contains]) <> "%"}
+
+      true ->
+        nil
+    end
   end
+
+  defp path_filter(nil), do: nil
+  defp path_filter(""), do: nil
+  defp path_filter(path), do: {"path = ?", path}
+
+  defp country_filter(nil), do: nil
+  defp country_filter(""), do: nil
+  defp country_filter("Unknown"), do: {"country IS NULL", :no_param}
+  defp country_filter(country), do: {"country = ?", country}
+
+  defp present?(nil), do: false
+  defp present?(""), do: false
+  defp present?(_value), do: true
 
   defp ctes(referrer_filter_sql) do
     """

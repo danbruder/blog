@@ -48,6 +48,88 @@ defmodule BlogWeb.Admin.AnalyticsLiveTest do
     |> form("form", %{"range" => "30d", "referrer" => ""})
     |> render_change()
 
-    assert_patch(view, ~p"/admin/analytics?#{%{range: "30d", referrer: ""}}")
+    assert_patch(
+      view,
+      ~p"/admin/analytics?#{%{range: "30d", referrer: "", path: "", country: ""}}"
+    )
+  end
+
+  describe "click-to-filter" do
+    test "clicking a top path filters the whole report to it, and reset clears it", %{
+      conn: conn
+    } do
+      Analytics.track("page_view", %{path: "/foo", session_id: "sess-foo", country: "US"})
+      Analytics.track("page_view", %{path: "/bar", session_id: "sess-bar", country: "CA"})
+      :ok = Analytics.flush()
+
+      {:ok, view, html} = live(admin_conn(conn), ~p"/admin/analytics?range=all")
+      assert html =~ "/foo"
+      assert html =~ "/bar"
+
+      html =
+        view
+        |> element("button[phx-value-value='/foo']")
+        |> render_click()
+
+      assert_patch(
+        view,
+        ~p"/admin/analytics?#{%{range: "all", referrer: "", path: "/foo", country: ""}}"
+      )
+
+      assert html =~ "/foo"
+      refute html =~ "/bar"
+      assert html =~ "Filtered by"
+
+      html =
+        view
+        |> element("button", "Reset")
+        |> render_click()
+
+      assert_patch(
+        view,
+        ~p"/admin/analytics?#{%{range: "all", referrer: "", path: "", country: ""}}"
+      )
+
+      assert html =~ "/foo"
+      assert html =~ "/bar"
+      refute html =~ "Filtered by"
+    end
+
+    test "clicking a top country filters the report to it", %{conn: conn} do
+      Analytics.track("page_view", %{path: "/us-page", session_id: "sess-us", country: "US"})
+      Analytics.track("page_view", %{path: "/ca-page", session_id: "sess-ca", country: "CA"})
+      :ok = Analytics.flush()
+
+      {:ok, view, _html} = live(admin_conn(conn), ~p"/admin/analytics?range=all")
+
+      html =
+        view
+        |> element("button[phx-value-value='CA']")
+        |> render_click()
+
+      assert html =~ "/ca-page"
+      refute html =~ "/us-page"
+    end
+
+    test "clicking Direct in top referrers filters to sessions with no referrer", %{conn: conn} do
+      Analytics.track("page_view", %{
+        path: "/via-google",
+        session_id: "sess-google",
+        referrer: "https://google.com/search"
+      })
+
+      Analytics.track("page_view", %{path: "/direct-page", session_id: "sess-direct"})
+      :ok = Analytics.flush()
+
+      {:ok, view, _html} = live(admin_conn(conn), ~p"/admin/analytics?range=all")
+
+      html =
+        view
+        |> element("button[phx-value-value='direct']")
+        |> render_click()
+
+      assert html =~ "/direct-page"
+      refute html =~ "/via-google"
+    end
   end
 end
