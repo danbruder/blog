@@ -48,7 +48,10 @@ defmodule BlogWeb.Admin.AnalyticsLiveTest do
     |> form("form", %{"range" => "30d", "referrer" => ""})
     |> render_change()
 
-    assert_patch(view, ~p"/admin/analytics?#{%{range: "30d", referrer: ""}}")
+    assert_patch(
+      view,
+      ~p"/admin/analytics?#{%{range: "30d", referrer: "", path: "", country: ""}}"
+    )
   end
 
   describe "click-to-filter" do
@@ -68,7 +71,11 @@ defmodule BlogWeb.Admin.AnalyticsLiveTest do
         |> element("button[phx-value-value='/foo']")
         |> render_click()
 
-      assert_patch(view, ~p"/admin/analytics?#{%{range: "all", referrer: "", path: "/foo", country: ""}}")
+      assert_patch(
+        view,
+        ~p"/admin/analytics?#{%{range: "all", referrer: "", path: "/foo", country: ""}}"
+      )
+
       assert html =~ "/foo"
       refute html =~ "/bar"
       assert html =~ "Filtered by"
@@ -78,7 +85,11 @@ defmodule BlogWeb.Admin.AnalyticsLiveTest do
         |> element("button", "Reset")
         |> render_click()
 
-      assert_patch(view, ~p"/admin/analytics?#{%{range: "all", referrer: "", path: "", country: ""}}")
+      assert_patch(
+        view,
+        ~p"/admin/analytics?#{%{range: "all", referrer: "", path: "", country: ""}}"
+      )
+
       assert html =~ "/foo"
       assert html =~ "/bar"
       refute html =~ "Filtered by"

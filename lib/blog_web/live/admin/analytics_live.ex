@@ -86,6 +86,10 @@ defmodule BlogWeb.Admin.AnalyticsLive do
 
     opts =
       [
+        # Higher than Blog.Analytics's own default of 20: with click-to-filter
+        # now inviting more distinct paths/countries/referrers into view, a
+        # tighter cap made rows quietly disappear off the bottom of the list.
+        limit: 50,
         path: blank_to_nil(socket.assigns.path_filter),
         country: blank_to_nil(socket.assigns.country_filter)
       ] ++ referrer_opts(socket.assigns.referrer_filter)
