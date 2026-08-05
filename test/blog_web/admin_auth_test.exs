@@ -20,5 +20,16 @@ defmodule BlogWeb.AdminAuthTest do
 
     assert redirected_to(conn) == ~p"/admin"
     assert get_session(conn, :admin_authenticated) == true
+    assert get_session(conn, :admin_seen) == true
+  end
+
+  test "logging out clears admin_authenticated but keeps admin_seen", %{conn: conn} do
+    conn =
+      post(conn, ~p"/admin/login", %{"password" => Application.fetch_env!(:blog, :admin_password)})
+
+    conn = conn |> recycle() |> delete(~p"/admin/logout")
+
+    refute get_session(conn, :admin_authenticated)
+    assert get_session(conn, :admin_seen) == true
   end
 end

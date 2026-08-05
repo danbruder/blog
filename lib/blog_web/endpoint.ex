@@ -7,7 +7,12 @@ defmodule BlogWeb.Endpoint do
     store: :cookie,
     key: "_blog_key",
     signing_salt: "blogSessSalt",
-    same_site: "Lax"
+    same_site: "Lax",
+    # Long-lived on purpose: `:admin_seen` (see AdminSessionController) rides
+    # in this same cookie and needs to survive browser restarts so analytics
+    # can keep excluding the admin's own traffic indefinitely, not just for
+    # the current session.
+    max_age: 60 * 60 * 24 * 365 * 5
   ]
 
   socket("/live", Phoenix.LiveView.Socket,

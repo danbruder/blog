@@ -4,13 +4,18 @@ defmodule BlogWeb.AnalyticsTracker do
   each connected LiveView mount and subsequent navigation, keyed by the
   client-supplied `sailor_id` (see `BlogWeb.PresenceTracker`) so views from
   the same browser tab can be correlated without cookies.
+
+  Skips tracking entirely for any browser that has ever logged in as admin
+  (`session["admin_seen"]`, set by `BlogWeb.AdminSessionController` and
+  never cleared -- see that module), so the admin's own visits never
+  pollute their own analytics.
   """
 
   import Phoenix.LiveView
   import Phoenix.Component, only: [assign: 3]
 
-  def on_mount(:track, _params, _session, socket) do
-    if connected?(socket) do
+  def on_mount(:track, _params, session, socket) do
+    if connected?(socket) and !session["admin_seen"] do
       connect_params = get_connect_params(socket)
 
       socket =

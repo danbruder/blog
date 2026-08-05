@@ -178,6 +178,83 @@ defmodule Blog.AnalyticsTest do
       assert "/filtered-a" in paths
       refute "/filtered-b" in paths
     end
+
+    test "direct: true filters to views with no referrer at all" do
+      session_google = "sess_#{System.unique_integer([:positive])}"
+      session_direct = "sess_#{System.unique_integer([:positive])}"
+      base = unique_base()
+
+      insert_page_view(session_google, "/direct-a", "US", "https://google.com/search", base)
+      insert_page_view(session_direct, "/direct-b", "US", nil, base)
+
+      {:ok, report} =
+        Analytics.stats(DateTime.add(base, -1, :minute), DateTime.add(base, 1, :minute),
+          direct: true
+        )
+
+      paths = Enum.map(report.top_paths, & &1.path)
+      refute "/direct-a" in paths
+      assert "/direct-b" in paths
+    end
+
+    test "path: filters every breakdown down to that exact path" do
+      session_a = "sess_#{System.unique_integer([:positive])}"
+      session_b = "sess_#{System.unique_integer([:positive])}"
+      base = unique_base()
+
+      insert_page_view(session_a, "/path-a", "US", "https://google.com/search", base)
+      insert_page_view(session_b, "/path-b", "CA", nil, base)
+
+      {:ok, report} =
+        Analytics.stats(DateTime.add(base, -1, :minute), DateTime.add(base, 1, :minute),
+          path: "/path-a"
+        )
+
+      assert report.summary.views == 1
+      assert [%{path: "/path-a"}] = report.top_paths
+      assert [%{country: "US"}] = report.top_countries
+      assert [%{source: "google.com"}] = report.top_referrers
+    end
+
+    test "country: filters to that exact country, and \"Unknown\" means no country" do
+      session_us = "sess_#{System.unique_integer([:positive])}"
+      session_unknown = "sess_#{System.unique_integer([:positive])}"
+      base = unique_base()
+
+      insert_page_view(session_us, "/country-a", "US", nil, base)
+      insert_page_view(session_unknown, "/country-b", nil, nil, base)
+
+      {:ok, us_report} =
+        Analytics.stats(DateTime.add(base, -1, :minute), DateTime.add(base, 1, :minute),
+          country: "US"
+        )
+
+      assert Enum.map(us_report.top_paths, & &1.path) == ["/country-a"]
+
+      {:ok, unknown_report} =
+        Analytics.stats(DateTime.add(base, -1, :minute), DateTime.add(base, 1, :minute),
+          country: "Unknown"
+        )
+
+      assert Enum.map(unknown_report.top_paths, & &1.path) == ["/country-b"]
+    end
+
+    test "filters combine (AND) rather than override each other" do
+      session_id = "sess_#{System.unique_integer([:positive])}"
+      base = unique_base()
+
+      insert_page_view(session_id, "/combo-a", "US", "https://google.com/search", base)
+      insert_page_view(session_id, "/combo-b", "US", "https://google.com/search", base)
+
+      {:ok, report} =
+        Analytics.stats(DateTime.add(base, -1, :minute), DateTime.add(base, 1, :minute),
+          path: "/combo-a",
+          country: "US",
+          referrer_contains: "google"
+        )
+
+      assert Enum.map(report.top_paths, & &1.path) == ["/combo-a"]
+    end
   end
 
   defp insert_page_view(session_id, path, country, referrer, %DateTime{} = occurred_at) do

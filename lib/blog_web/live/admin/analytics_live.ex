@@ -11,6 +11,11 @@ defmodule BlogWeb.Admin.AnalyticsLive do
     {"all", "All time", nil}
   ]
 
+  # Sentinel written into the `referrer` query param when a "Direct" row is
+  # clicked, since "no referrer" can't be expressed as a substring to search
+  # for the way a real host can.
+  @direct_referrer "direct"
+
   @impl true
   def mount(_params, _session, socket) do
     {:ok, assign(socket, page_title: "Analytics")}
@@ -23,23 +28,67 @@ defmodule BlogWeb.Admin.AnalyticsLive do
         do: params["range"],
         else: "7d"
 
-    referrer_filter = params["referrer"] || ""
-
     {:noreply,
      socket
-     |> assign(range: range, referrer_filter: referrer_filter, ranges: @ranges)
+     |> assign(
+       range: range,
+       referrer_filter: params["referrer"] || "",
+       path_filter: params["path"] || "",
+       country_filter: params["country"] || "",
+       ranges: @ranges
+     )
      |> load_report()}
   end
 
+  # The range/referrer form -- text-box driven, so it only knows about its
+  # own two fields and relies on us to carry the click-driven filters along.
   @impl true
   def handle_event("filter", %{"range" => range, "referrer" => referrer}, socket) do
+    {:noreply, push_patch(socket, to: filter_path(socket, %{range: range, referrer: referrer}))}
+  end
+
+  # Clicking a row in one of the breakdown lists turns it into a filter.
+  def handle_event("set_filter", %{"field" => field, "value" => value}, socket) do
+    {:noreply, push_patch(socket, to: filter_path(socket, %{filter_key(field) => value}))}
+  end
+
+  def handle_event("clear_filter", %{"field" => field}, socket) do
+    {:noreply, push_patch(socket, to: filter_path(socket, %{filter_key(field) => ""}))}
+  end
+
+  def handle_event("reset_filters", _params, socket) do
     {:noreply,
-     push_patch(socket, to: ~p"/admin/analytics?#{%{range: range, referrer: referrer}}")}
+     push_patch(socket, to: filter_path(socket, %{path: "", country: "", referrer: ""}))}
+  end
+
+  defp filter_key("path"), do: :path
+  defp filter_key("country"), do: :country
+  defp filter_key("referrer"), do: :referrer
+
+  # Builds the analytics URL for the current filter state, overridden with
+  # whatever the triggering event changed -- so e.g. clicking a country
+  # keeps whatever path/referrer filter was already active.
+  defp filter_path(socket, overrides) do
+    params =
+      %{
+        range: socket.assigns.range,
+        referrer: socket.assigns.referrer_filter,
+        path: socket.assigns.path_filter,
+        country: socket.assigns.country_filter
+      }
+      |> Map.merge(overrides)
+
+    ~p"/admin/analytics?#{params}"
   end
 
   defp load_report(socket) do
     {from, to} = range_bounds(socket.assigns.range)
-    opts = [referrer_contains: blank_to_nil(socket.assigns.referrer_filter)]
+
+    opts =
+      [
+        path: blank_to_nil(socket.assigns.path_filter),
+        country: blank_to_nil(socket.assigns.country_filter)
+      ] ++ referrer_opts(socket.assigns.referrer_filter)
 
     case Analytics.stats(from, to, opts) do
       {:ok, report} ->
@@ -60,8 +109,23 @@ defmodule BlogWeb.Admin.AnalyticsLive do
     end
   end
 
+  defp referrer_opts(@direct_referrer), do: [direct: true]
+  defp referrer_opts(value), do: [referrer_contains: blank_to_nil(value)]
+
   defp blank_to_nil(""), do: nil
   defp blank_to_nil(value), do: value
+
+  defp any_filters?(assigns) do
+    assigns.path_filter != "" or assigns.country_filter != "" or assigns.referrer_filter != ""
+  end
+
+  # What a clicked "Top referrers" row should filter by: the sentinel for
+  # "Direct", the host itself otherwise.
+  defp referrer_filter_value("Direct"), do: @direct_referrer
+  defp referrer_filter_value(source), do: source
+
+  defp referrer_filter_label(@direct_referrer), do: "Direct"
+  defp referrer_filter_label(value), do: value
 
   defp range_bounds(range) do
     now = DateTime.utc_now()
@@ -114,7 +178,7 @@ defmodule BlogWeb.Admin.AnalyticsLive do
           </div>
         </div>
 
-        <form id="analytics-filter" phx-change="filter" class="mb-8 flex flex-wrap items-end gap-4">
+        <form id="analytics-filter" phx-change="filter" class="mb-4 flex flex-wrap items-end gap-4">
           <.input
             type="select"
             name="range"
@@ -130,6 +194,44 @@ defmodule BlogWeb.Admin.AnalyticsLive do
             placeholder="e.g. google"
           />
         </form>
+
+        <div :if={any_filters?(assigns)} class="mb-8 flex flex-wrap items-center gap-2">
+          <span class="label">Filtered by</span>
+          <button
+            :if={@path_filter != ""}
+            type="button"
+            phx-click="clear_filter"
+            phx-value-field="path"
+            class="mark text-[12px]"
+          >
+            Path: {@path_filter} &times;
+          </button>
+          <button
+            :if={@country_filter != ""}
+            type="button"
+            phx-click="clear_filter"
+            phx-value-field="country"
+            class="mark text-[12px]"
+          >
+            Country: {@country_filter} &times;
+          </button>
+          <button
+            :if={@referrer_filter != ""}
+            type="button"
+            phx-click="clear_filter"
+            phx-value-field="referrer"
+            class="mark text-[12px]"
+          >
+            Referrer: {referrer_filter_label(@referrer_filter)} &times;
+          </button>
+          <button
+            type="button"
+            phx-click="reset_filters"
+            class="text-[13px] text-ink-2 !shadow-[inset_0_-1px_0_var(--color-rule)] hover:!text-ink"
+          >
+            Reset
+          </button>
+        </div>
 
         <div class="mb-10 grid grid-cols-3 gap-4 border-y border-ink py-6 text-center">
           <div>
@@ -153,12 +255,22 @@ defmodule BlogWeb.Admin.AnalyticsLive do
             <h2 class="label mb-3">Top pages</h2>
             <div :if={@top_paths == []} class="text-[13px] text-ink-3">No page views yet.</div>
             <div class="divide-y divide-rule border-t border-ink">
-              <div :for={row <- @top_paths} class="flex items-center justify-between gap-4 py-2.5">
+              <button
+                :for={row <- @top_paths}
+                type="button"
+                phx-click="set_filter"
+                phx-value-field="path"
+                phx-value-value={row.path}
+                class={[
+                  "flex w-full items-center justify-between gap-4 py-2.5 text-left hover:bg-paper-2",
+                  @path_filter == row.path && "bg-paper-2"
+                ]}
+              >
                 <span class="truncate text-[13px] text-ink">{row.path}</span>
                 <span class="shrink-0 text-[13px] text-ink-2">
                   {row.views} views &middot; {format_duration(row.avg_duration_seconds)}
                 </span>
-              </div>
+              </button>
             </div>
           </section>
 
@@ -166,10 +278,20 @@ defmodule BlogWeb.Admin.AnalyticsLive do
             <h2 class="label mb-3">Top countries</h2>
             <div :if={@top_countries == []} class="text-[13px] text-ink-3">No page views yet.</div>
             <div class="divide-y divide-rule border-t border-ink">
-              <div :for={row <- @top_countries} class="flex items-center justify-between gap-4 py-2.5">
+              <button
+                :for={row <- @top_countries}
+                type="button"
+                phx-click="set_filter"
+                phx-value-field="country"
+                phx-value-value={row.country}
+                class={[
+                  "flex w-full items-center justify-between gap-4 py-2.5 text-left hover:bg-paper-2",
+                  @country_filter == row.country && "bg-paper-2"
+                ]}
+              >
                 <span class="text-[13px] text-ink">{flag(row.country)} {row.country}</span>
                 <span class="shrink-0 text-[13px] text-ink-2">{row.sessions} sessions</span>
-              </div>
+              </button>
             </div>
           </section>
 
@@ -177,10 +299,20 @@ defmodule BlogWeb.Admin.AnalyticsLive do
             <h2 class="label mb-3">Top referrers</h2>
             <div :if={@top_referrers == []} class="text-[13px] text-ink-3">No page views yet.</div>
             <div class="divide-y divide-rule border-t border-ink">
-              <div :for={row <- @top_referrers} class="flex items-center justify-between gap-4 py-2.5">
+              <button
+                :for={row <- @top_referrers}
+                type="button"
+                phx-click="set_filter"
+                phx-value-field="referrer"
+                phx-value-value={referrer_filter_value(row.source)}
+                class={[
+                  "flex w-full items-center justify-between gap-4 py-2.5 text-left hover:bg-paper-2",
+                  @referrer_filter == referrer_filter_value(row.source) && "bg-paper-2"
+                ]}
+              >
                 <span class="text-[13px] text-ink">{row.source}</span>
                 <span class="shrink-0 text-[13px] text-ink-2">{row.sessions} sessions</span>
-              </div>
+              </button>
             </div>
           </section>
         </div>
