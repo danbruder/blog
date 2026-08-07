@@ -25,26 +25,26 @@ defmodule BlogWeb.WritingLive do
     <.page_body class="pt-0">
       <div
         :for={{year, posts} <- @groups}
-        class="grid grid-cols-[64px_minmax(0,1fr)] gap-6 border-b border-rule pt-8 sm:grid-cols-[88px_minmax(0,1fr)]"
+        class="grid grid-cols-[40px_minmax(0,1fr)] gap-4 border-b border-rule pt-8 sm:grid-cols-[88px_minmax(0,1fr)] sm:gap-6"
       >
-        <div class="pt-1 font-display text-[15px] font-bold tracking-[0.02em] text-ink-3">
+        <div class="pt-1 font-display text-[13px] font-bold tracking-[0.02em] text-ink-3 sm:text-[15px]">
           {year}
         </div>
         <div>
           <.link
             :for={post <- posts}
             navigate={~p"/blog/#{post.slug}"}
-            class="group grid grid-cols-[minmax(0,1fr)_72px] items-baseline gap-5 !shadow-none hover:!bg-transparent pb-6"
+            class="group flex flex-col gap-1 !shadow-none hover:!bg-transparent pb-6 sm:grid sm:grid-cols-[minmax(0,1fr)_72px] sm:items-baseline sm:gap-5"
           >
             <div>
-              <div class="font-display text-[22px] font-medium leading-[1.2] tracking-[-0.028em] text-ink transition-colors group-hover:bg-lime group-hover:text-on-lime sm:text-[24px]">
+              <div class="font-display text-[19px] font-medium leading-[1.2] tracking-[-0.024em] text-ink transition-colors group-hover:bg-lime group-hover:text-on-lime sm:text-[22px] sm:tracking-[-0.028em] md:text-[24px]">
                 {post.title}
               </div>
               <div :if={blurb(post)} class="mt-[7px] max-w-[40em] text-[13.5px] text-ink-2">
                 {blurb(post)}
               </div>
             </div>
-            <div class="text-right text-[11.5px] tracking-[0.04em] text-ink-3">
+            <div class="text-[11.5px] tracking-[0.04em] text-ink-3 sm:text-right">
               {day_of(post)}
             </div>
           </.link>
