@@ -14,6 +14,7 @@ defmodule Blog.Application do
       {Blog.Analytics, Application.fetch_env!(:blog, Blog.Analytics)},
       Blog.SnakeGame,
       Blog.SandGame,
+      Blog.SeaBottles,
       BlogWeb.Endpoint
     ]
 

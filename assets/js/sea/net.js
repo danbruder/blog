@@ -11,6 +11,9 @@ export class SeaNet {
     this.onArrive = null // (flag) => void — another sailor joined Sea mode
     this.onDepart = null // (flag) => void — another sailor left Sea mode
     this.onEmote = null // (id) => void — another sailor waved
+    this.bottles = new Map() // id -> {id, x, z, text, flag}
+    this.onBottleDropped = null // (bottle) => void
+    this.onBottleExpired = null // (id) => void
     this._lastSent = 0
 
     const token = document
@@ -46,6 +49,18 @@ export class SeaNet {
     this.channel.on("emote", ({id}) => {
       if (id !== this.sailorId && this.onEmote) this.onEmote(id)
     })
+    // "bottles" (the initial snapshot on join) and "bottle_dropped" (each
+    // subsequent one, including a bottle *this* sailor just dropped -- the
+    // server relays it back to every member rather than excluding the
+    // sender) both funnel through the same per-bottle callback.
+    this.channel.on("bottles", ({bottles}) => {
+      for (const b of bottles) this._addBottle(b)
+    })
+    this.channel.on("bottle_dropped", (bottle) => this._addBottle(bottle))
+    this.channel.on("bottle_expired", ({id}) => {
+      this.bottles.delete(id)
+      if (this.onBottleExpired) this.onBottleExpired(id)
+    })
     this.channel.join()
   }
 
@@ -59,6 +74,15 @@ export class SeaNet {
 
   sendEmote() {
     this.channel.push("emote", {})
+  }
+
+  dropBottle(x, z, text) {
+    this.channel.push("drop_bottle", {x, z, text})
+  }
+
+  _addBottle(bottle) {
+    this.bottles.set(bottle.id, bottle)
+    if (this.onBottleDropped) this.onBottleDropped(bottle)
   }
 
   // Ease live boats toward their latest target; call each frame.

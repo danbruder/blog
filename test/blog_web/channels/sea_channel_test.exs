@@ -91,4 +91,28 @@ defmodule BlogWeb.SeaChannelTest do
     assert_broadcast "emote", %{id: "sailor-1"}
     refute_push "emote", %{id: "sailor-1"}
   end
+
+  test "dropping a bottle relays a bottle_dropped push back to the dropper too" do
+    {:ok, _r1, socket1} = join_sea("sailor-1")
+
+    push(socket1, "drop_bottle", %{"x" => 5.0, "z" => 6.0, "text" => "ahoy"})
+
+    # Unlike pos/emote (broadcast_from!, sender excluded), this is relayed
+    # from Blog.SeaBottles's own PubSub broadcast, which every member —
+    # including the dropper — is subscribed to.
+    assert_push "bottle_dropped", %{x: 5.0, z: 6.0, text: "ahoy", flag: "🏳️"}
+  end
+
+  test "a fresh join receives the current bottles snapshot" do
+    Blog.SeaBottles.drop(9.0, 9.0, "already here")
+    # drop/5 casts; list/0 is a call to the same GenServer, so waiting for it
+    # to reply guarantees the cast above was already processed (same sender,
+    # same mailbox, strict FIFO) before we join below.
+    Blog.SeaBottles.list()
+
+    {:ok, _reply, _socket} = join_sea("sailor-1")
+
+    assert_push "bottles", %{bottles: bottles}
+    assert Enum.any?(bottles, &(&1.text == "already here"))
+  end
 end

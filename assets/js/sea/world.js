@@ -47,6 +47,29 @@ export function nearestIsland(x, z, islands) {
   return best ? {island: best, distance: Math.sqrt(bestD)} : null
 }
 
+const BOTTLE_READ_RADIUS = 12
+
+// Bottle whose position is nearest (x, z) and within reading range, or null
+// — used to auto-reveal a floating message-in-a-bottle's text as you
+// approach, the same "no key needed to see it" treatment as an island's
+// label banner.
+export function nearestBottle(x, z, bottles, radius = BOTTLE_READ_RADIUS) {
+  let best = null
+  let bestD = Infinity
+  for (const b of bottles) {
+    const dx = b.x - x
+    const dz = b.z - z
+    const d = dx * dx + dz * dz
+    if (d < bestD) {
+      bestD = d
+      best = b
+    }
+  }
+  if (!best) return null
+  const distance = Math.sqrt(bestD)
+  return distance <= radius ? {bottle: best, distance} : null
+}
+
 // True once a boat at `distance` from `island`'s center is close enough that
 // pressing dock would work — kept in sync with nearestDockable's threshold.
 export function isCloseEnoughToDock(island, distance, margin = DOCK_MARGIN) {

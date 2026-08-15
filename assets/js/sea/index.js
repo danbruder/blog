@@ -1,10 +1,11 @@
-import {SeaScene, flagTexture, emoteSprite} from "./scene.js"
+import {SeaScene, flagTexture, emoteSprite, bottleSprite} from "./scene.js"
 import {createControls} from "./controls.js"
 import {SeaNet} from "./net.js"
 import {SeaAudio} from "./audio.js"
 import {
   nearestDockable,
   nearestIsland,
+  nearestBottle,
   isCloseEnoughToDock,
   resolveCollision,
   makeSharks,
@@ -30,6 +31,7 @@ const BITE_COOLDOWN = 2 // seconds of invulnerability after a bite
 const DOCK_CHIME_DELAY = 150 // ms to let the chime start before navigating away
 const EMOTE_COOLDOWN = 0.8 // seconds between waves, so holding/mashing the key doesn't spam
 const EMOTE_DURATION = 1.3 // seconds the wave sprite rises and fades over
+const BOTTLE_MAX_LENGTH = 80
 
 let active = null
 
@@ -63,6 +65,7 @@ class Sea {
     this.wasColliding = false
     this.emoteCooldown = 0
     this.emotes = [] // active {sprite, boatGroup, t} wave sprites, see updateEmotes()
+    this.bottleMeshes = new Map() // id -> {sprite, bottle}
     this.selfBoat = this.scene.makeBoat(flagTexture("🏴"), true, sailorId)
 
     this.controls = createControls(el)
@@ -82,8 +85,12 @@ class Sea {
 
     this.hint = document.createElement("div")
     this.hint.className = "sea-hint"
-    this.hint.textContent = "Arrows / WASD to sail · Space to dock · E to wave"
+    this.hint.textContent = "Arrows / WASD to sail · Space to dock · E to wave · B for a bottle"
     el.appendChild(this.hint)
+
+    this.bottleBanner = document.createElement("div")
+    this.bottleBanner.className = "sea-bottle-banner"
+    el.appendChild(this.bottleBanner)
 
     this.biteMsg = document.createElement("div")
     this.biteMsg.className = "sea-bite"
@@ -106,6 +113,8 @@ class Sea {
       if (boat) this.spawnEmote(boat)
       this.audio.wave()
     }
+    this.net.onBottleDropped = (bottle) => this.spawnBottle(bottle)
+    this.net.onBottleExpired = (id) => this.despawnBottle(id)
 
     // Ambient waves + a few event sounds (splash, shark bite, dock chime).
     // Always muted on first visit — the mute button click is the only thing
@@ -199,6 +208,13 @@ class Sea {
       this.tryEmote()
     }
     this.updateEmotes()
+
+    if (input.drop) {
+      input.drop = false
+      this.tryDropBottle()
+    }
+    this.updateBottles()
+    this.updateBottleBanner()
 
     this.scene.animateWater(this.t)
     this.scene.chase(this.pos, this.pos.h)
@@ -373,6 +389,65 @@ class Sea {
     }
   }
 
+  // Prompts for up to BOTTLE_MAX_LENGTH characters and, if given anything
+  // non-blank, drops it at the current position. A blocking native prompt
+  // is a deliberate simplification over a custom text-input overlay — it's
+  // a rare, deliberate action (unlike steering), and handles cancel/empty
+  // for free.
+  tryDropBottle() {
+    const text = window.prompt(`Drop a message in a bottle (max ${BOTTLE_MAX_LENGTH} chars):`, "")
+    if (text == null) return
+    const trimmed = text.trim().slice(0, BOTTLE_MAX_LENGTH)
+    if (!trimmed) return
+    this.net.dropBottle(round(this.pos.x), round(this.pos.z), trimmed)
+  }
+
+  spawnBottle(bottle) {
+    if (this.bottleMeshes.has(bottle.id)) return // already have it (e.g. duplicate join snapshot)
+    const sprite = bottleSprite()
+    sprite.position.set(bottle.x, 1.5, bottle.z)
+    this.scene.add(sprite)
+    this.bottleMeshes.set(bottle.id, {sprite, bottle})
+  }
+
+  despawnBottle(id) {
+    const entry = this.bottleMeshes.get(id)
+    if (!entry) return
+    this.scene.remove(entry.sprite)
+    this.bottleMeshes.delete(id)
+  }
+
+  // Gentle per-bottle bob, phase-offset by id so a cluster of bottles
+  // doesn't move in lockstep.
+  updateBottles() {
+    for (const {sprite, bottle} of this.bottleMeshes.values()) {
+      sprite.position.y = 1.5 + Math.sin(this.t * 1.2 + hash(String(bottle.id))) * 0.3
+    }
+  }
+
+  // Auto-reveals the nearest bottle's text once you're close enough to read
+  // it — no key needed, same "just approach it" treatment updateBanner()
+  // gives an island's title.
+  updateBottleBanner() {
+    const bottles = Array.from(this.bottleMeshes.values()).map((e) => e.bottle)
+    const near = nearestBottle(this.pos.x, this.pos.z, bottles)
+    if (!near) {
+      this.bottleBanner.style.opacity = "0"
+      return
+    }
+
+    const p = this.scene.project(near.bottle.x, 3, near.bottle.z)
+    if (!p.visible) {
+      this.bottleBanner.style.opacity = "0"
+      return
+    }
+
+    this.bottleBanner.textContent = `${near.bottle.flag} "${near.bottle.text}"`
+    this.bottleBanner.style.left = `${p.x}px`
+    this.bottleBanner.style.top = `${p.y}px`
+    this.bottleBanner.style.opacity = "1"
+  }
+
   // Floats the label above the actual island in the scene (not fixed to the
   // top of the screen) by projecting its 3D position to screen pixels each
   // frame, so it tracks the island as the chase cam moves.
@@ -458,6 +533,7 @@ class Sea {
     if (this.biteMsg.parentNode) this.biteMsg.remove()
     if (this.toast.parentNode) this.toast.remove()
     if (this.muteBtn.parentNode) this.muteBtn.remove()
+    if (this.bottleBanner.parentNode) this.bottleBanner.remove()
   }
 }
 

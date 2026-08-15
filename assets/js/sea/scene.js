@@ -291,6 +291,17 @@ export class SeaScene {
     this.scene.remove(group)
   }
 
+  // Generic scene-graph attach/detach for standalone objects that aren't
+  // boats or islands (e.g. a bottle sprite) — keeps callers from reaching
+  // into the internal THREE.Scene directly.
+  add(object) {
+    this.scene.add(object)
+  }
+
+  remove(object) {
+    this.scene.remove(object)
+  }
+
   // A single raked fin blade: a thin triangle (root-to-root along the base,
   // swept tip above) extruded for thickness. Local origin is the *front*
   // root, extending backward (-z) and up (+y) from there, so callers place
@@ -409,6 +420,15 @@ export function emoteSprite(emoji) {
   const mat = new THREE.SpriteMaterial({map: tex, transparent: true, depthTest: false})
   const sprite = new THREE.Sprite(mat)
   sprite.scale.set(3.2, 3.2, 1)
+  return sprite
+}
+
+// A floating message-in-a-bottle marker: a smaller emoteSprite bobbing near
+// the waterline rather than above a boat's mast. Caller positions/animates
+// it (see Sea#updateBottles in index.js) and removes it on expiry.
+export function bottleSprite() {
+  const sprite = emoteSprite("🍾")
+  sprite.scale.set(2, 2, 1)
   return sprite
 }
 

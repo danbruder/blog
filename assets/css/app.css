@@ -394,6 +394,12 @@ pre code.hljs {
 .sea-mute { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px;
   display: flex; align-items: center; justify-content: center; font-size: 16px;
   border: 2px solid var(--color-ink); background: var(--color-paper); cursor: pointer; }
+.sea-bottle-banner { position: absolute; top: 0; left: 0; transform: translate(-50%, -100%);
+  font-family: "Space Grotesk", system-ui, sans-serif; font-style: italic; font-weight: 500;
+  font-size: clamp(12px, 1.6vw, 16px); color: var(--color-ink); max-width: 60vw;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  background: var(--color-paper); border: 2px solid var(--color-ink);
+  padding: 5px 10px; pointer-events: none; opacity: 0; transition: opacity 150ms ease; }
 
 /* Post footer kudos button (see the `Kudos` hook in app.js). The ring
    (--color-lime) fills clockwise over the 5s hold; the thumb grows with it.
