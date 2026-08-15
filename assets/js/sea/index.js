@@ -1,6 +1,7 @@
 import {SeaScene, flagTexture} from "./scene.js"
 import {createControls} from "./controls.js"
 import {SeaNet} from "./net.js"
+import {SeaAudio} from "./audio.js"
 import {
   nearestDockable,
   nearestIsland,
@@ -26,6 +27,7 @@ const SHARK_COUNT = 5
 const SHARK_BOUNDS = 140 // sharks patrol within this radius of the harbor
 const BITE_BOUNCE = -0.6 // harder knockback than a plain crash
 const BITE_COOLDOWN = 2 // seconds of invulnerability after a bite
+const DOCK_CHIME_DELAY = 150 // ms to let the chime start before navigating away
 
 let active = null
 
@@ -56,6 +58,7 @@ class Sea {
     const harbor = this.islandsByPath.get("/") || {x: 0, z: 0}
     this.pos = loadPos() || {x: harbor.x, z: harbor.z + 20, h: Math.PI}
     this.speed = 0
+    this.wasColliding = false
     this.selfBoat = this.scene.makeBoat(flagTexture("🏴"), true, sailorId)
 
     this.controls = createControls(el)
@@ -90,6 +93,21 @@ class Sea {
     this.toastTimer = null
     this.net.onArrive = (flag) => this.queueToast(`${flag} a sailor has joined the sea`)
     this.net.onDepart = (flag) => this.queueToast(`${flag} a sailor has left the sea`)
+
+    // Ambient waves + a few event sounds (splash, shark bite, dock chime).
+    // Always muted on first visit — the mute button click is the only thing
+    // that can turn it on. See audio.js for the autoplay-safe details.
+    this.audio = new SeaAudio()
+    this.muteBtn = document.createElement("button")
+    this.muteBtn.className = "sea-mute"
+    this.muteBtn.type = "button"
+    this.refreshMuteBtn()
+    this.muteBtn.addEventListener("click", () => {
+      this.audio.toggle()
+      this.refreshMuteBtn()
+    })
+    el.appendChild(this.muteBtn)
+    this.audio.armFromStoredPreference(el, () => this.refreshMuteBtn())
 
     this.onNavigate = (e) => {
       this.pos.x = e.detail.x
@@ -131,7 +149,12 @@ class Sea {
     const nextZ = this.pos.z + Math.cos(this.pos.h) * this.speed
     const land = resolveCollision(nextX, nextZ, this.islands)
     const boats = resolveCollision(land.x, land.z, this.boatObstacles(), BOAT_COLLISION_MARGIN)
-    if (land.hit || boats.hit) this.speed *= CRASH_BOUNCE
+    const colliding = land.hit || boats.hit
+    if (colliding) this.speed *= CRASH_BOUNCE
+    // Edge-triggered so holding the throttle into an island plays one splash
+    // on impact, not one every frame for as long as contact continues.
+    if (colliding && !this.wasColliding) this.audio.splash()
+    this.wasColliding = colliding
     this.pos.x = boats.x
     this.pos.z = boats.z
 
@@ -182,6 +205,7 @@ class Sea {
 
     this.biteCooldown = BITE_COOLDOWN
     this.speed *= BITE_BOUNCE
+    this.audio.biteAlarm()
     const dx = this.pos.x - shark.x
     const dz = this.pos.z - shark.z
     const d = Math.hypot(dx, dz) || 0.001
@@ -340,6 +364,14 @@ class Sea {
     }, 2500)
   }
 
+  // Floats/hides the mute button's icon to match the audio module's actual
+  // state (which can change out from under a click — e.g. the stored-
+  // preference auto-resume on first keypress).
+  refreshMuteBtn() {
+    this.muteBtn.textContent = this.audio.muted ? "🔇" : "🔊"
+    this.muteBtn.setAttribute("aria-label", this.audio.muted ? "Unmute sea sounds" : "Mute sea sounds")
+  }
+
   dockTo(island) {
     // Leaving the sea to read a post. Mark that a sea session is paused (and
     // save where the boat was) so the destination page can offer a banner
@@ -347,7 +379,12 @@ class Sea {
     sessionStorage.seaActive = "1"
     sessionStorage.removeItem("seaBannerDismissed")
     savePos(this.pos)
-    window.location.href = island.path
+    this.audio.dockChime()
+    // A brief delay so the chime actually gets to start before the page
+    // unload cuts audio off — imperceptible as navigation latency.
+    setTimeout(() => {
+      window.location.href = island.path
+    }, DOCK_CHIME_DELAY)
   }
 
   destroy() {
@@ -355,6 +392,7 @@ class Sea {
     savePos(this.pos)
     this.controls.destroy()
     this.net.destroy()
+    this.audio.destroy()
     this.scene.dispose()
     seaBus.removeEventListener("sea:navigate", this.onNavigate)
     clearTimeout(this._biteMsgTimer)
@@ -363,6 +401,7 @@ class Sea {
     if (this.hint.parentNode) this.hint.remove()
     if (this.biteMsg.parentNode) this.biteMsg.remove()
     if (this.toast.parentNode) this.toast.remove()
+    if (this.muteBtn.parentNode) this.muteBtn.remove()
   }
 }
 

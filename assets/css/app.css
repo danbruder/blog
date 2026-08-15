@@ -378,3 +378,6 @@ pre code.hljs {
   font-size: clamp(12px, 1.6vw, 15px); letter-spacing: 0.02em; white-space: nowrap;
   color: var(--color-ink); background: var(--color-paper); border: 2px solid var(--color-ink);
   padding: 6px 14px; pointer-events: none; opacity: 0; transition: opacity 300ms ease; }
+.sea-mute { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+  border: 2px solid var(--color-ink); background: var(--color-paper); cursor: pointer; }
