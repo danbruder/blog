@@ -125,11 +125,15 @@ let Hooks = {
       ctx.clearRect(0, 0, w, h)
       const b = this.bounds()
 
-      ctx.fillStyle = this.themeColor("--color-ink-3")
+      const inkColor = this.themeColor("--color-ink-3")
+      const limeColor = this.themeColor("--color-lime")
       for (const isl of state.islands) {
         const {px, py} = this.toScreen(isl.x, isl.z, b)
+        // Trending islands stand out here too — bigger, lime dot instead of
+        // the muted default, matching the beacon in the 3D scene.
+        ctx.fillStyle = isl.trending ? limeColor : inkColor
         ctx.beginPath()
-        ctx.arc(px, py, 2.5, 0, Math.PI * 2)
+        ctx.arc(px, py, isl.trending ? 4 : 2.5, 0, Math.PI * 2)
         ctx.fill()
       }
 

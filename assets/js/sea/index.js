@@ -466,9 +466,10 @@ class Sea {
       return
     }
 
+    const title = island.trending ? `🔥 ${island.title}` : island.title
     this.banner.textContent = isCloseEnoughToDock(island, near.distance)
-      ? `${island.title} — press Space to dock`
-      : island.title
+      ? `${title} — press Space to dock`
+      : title
     this.banner.style.left = `${p.x}px`
     this.banner.style.top = `${p.y}px`
     this.banner.style.opacity = "1"

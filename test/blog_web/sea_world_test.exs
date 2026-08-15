@@ -90,6 +90,18 @@ defmodule BlogWeb.SeaWorldTest do
     assert a == b
   end
 
+  test "every island reports a boolean :trending flag" do
+    # Not asserting *which* island is trending: Blog.Analytics is one
+    # shared, singleton, in-memory store for the whole test run (like
+    # Blog.AnalyticsTest notes), so exact view counts/ranking here would be
+    # racing every other concurrently-running test that generates a real
+    # page view. This just proves the plumbing always yields a boolean
+    # rather than crashing island loading if analytics has a hiccup.
+    for island <- SeaWorld.islands() do
+      assert is_boolean(island.trending)
+    end
+  end
+
   test "unpublished posts get no island" do
     {:ok, _} =
       Blog.Content.create_post(%{

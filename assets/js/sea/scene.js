@@ -14,6 +14,10 @@ const COL = {
   shark: 0x5b6470
 }
 
+// How much taller a trending island's silhouette stands versus its base
+// (non-trending) height — see SeaWorld/addIsland's `trending` flag.
+const TRENDING_HEIGHT_BOOST = 1.35
+
 // A small family of fills at the same brightness/saturation as the brand's
 // lime and signal-blue accents, so colorful islands and boats still read as
 // "one system" — everything keeps the same thick ink outline regardless of
@@ -116,13 +120,13 @@ export class SeaScene {
   // A cheap procedural palm: an ink trunk plus a squashed low-poly canopy.
   // Positions are derived from the island's hash so every sailor sees the
   // same trees in the same spots.
-  _palms(group, h, radius, baseY) {
+  _palms(group, h, radius, baseY, bonus = 0) {
     if (!this._palmTrunkGeo) {
       this._palmTrunkGeo = new THREE.CylinderGeometry(0.12, 0.18, 2.4)
       this._palmLeafGeo = new THREE.IcosahedronGeometry(0.9, 0)
     }
     const leafMat = new THREE.MeshToonMaterial({color: COL.palm, gradientMap: this.gradient})
-    const count = 2 + (h % 3) // 2..4
+    const count = 2 + (h % 3) + bonus // 2..4, more overgrown when trending
     for (let i = 0; i < count; i++) {
       const a = ((h >> (i * 5 + 1)) % 360) * (Math.PI / 180)
       const r = radius * (0.15 + ((h >> (i * 3 + 2)) % 40) / 100) // scattered near the shoreline
@@ -139,6 +143,23 @@ export class SeaScene {
     }
   }
 
+  // A soft lime glow standing above a trending island's peak — static
+  // (no per-frame animation needed) but unlit and translucent so it reads
+  // as a beacon rather than solid geometry, visible from well across the
+  // archipelago.
+  _beacon(group, peakY) {
+    const geo = new THREE.ConeGeometry(0.6, 6, 8)
+    const mat = new THREE.MeshBasicMaterial({
+      color: COL.lime,
+      transparent: true,
+      opacity: 0.55,
+      depthWrite: false
+    })
+    const beacon = new THREE.Mesh(geo, mat)
+    beacon.position.y = peakY + 3
+    group.add(beacon)
+  }
+
   // Islands are stacked hexagonal bands — a sand beach, a landmass slope,
   // and a peak (rocky if the island is tall) — plus a few palms, rather than
   // a single cone, so the silhouette reads as terrain rather than a triangle.
@@ -148,14 +169,19 @@ export class SeaScene {
     const group = new THREE.Group()
     const h = hashStr(island.path)
     const radius = 5 + ((h % 100) / 100) * 5 // 5..10
-    const height = 7 + (((h >> 8) % 100) / 100) * 9 // 7..16
+    const baseHeight = 7 + (((h >> 8) % 100) / 100) * 9 // 7..16
+    // Trending islands stand taller -- decide the peak's rock/vegetation
+    // fill from the *base* height first, so a trending boost never turns an
+    // otherwise-green peak to bare rock; it should read as overgrown, not
+    // just tall.
+    const fill = themedColor(island.color || island.section)
+    const peakFill = baseHeight > 12 ? COL.rock : fill
+    const height = island.trending ? baseHeight * TRENDING_HEIGHT_BOOST : baseHeight
     island.radius = radius
 
-    const fill = themedColor(island.color || island.section)
     const sandH = height * 0.16
     const slopeH = height * 0.5
     const peakH = height - sandH - slopeH
-    const peakFill = height > 12 ? COL.rock : fill
 
     let y = 0
     const beach = this._band(radius * 0.72, radius * 1.1, sandH, COL.sand)
@@ -175,7 +201,8 @@ export class SeaScene {
 
     island.height = y // actual peak height, used to float the label above it
 
-    this._palms(group, h, radius, sandH)
+    this._palms(group, h, radius, sandH, island.trending ? 2 : 0)
+    if (island.trending) this._beacon(group, y)
 
     group.position.set(island.x, 0, island.z)
     group.userData.island = island
