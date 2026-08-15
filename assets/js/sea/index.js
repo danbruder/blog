@@ -83,6 +83,14 @@ class Sea {
     this.biteMsg.textContent = "🦈 Bitten! Watch the fins."
     el.appendChild(this.biteMsg)
 
+    this.toast = document.createElement("div")
+    this.toast.className = "sea-toast"
+    el.appendChild(this.toast)
+    this.toastQueue = []
+    this.toastTimer = null
+    this.net.onArrive = (flag) => this.queueToast(`${flag} a sailor has joined the sea`)
+    this.net.onDepart = (flag) => this.queueToast(`${flag} a sailor has left the sea`)
+
     this.onNavigate = (e) => {
       this.pos.x = e.detail.x
       this.pos.z = e.detail.z
@@ -311,6 +319,27 @@ class Sea {
     this.banner.style.opacity = "1"
   }
 
+  // One arrival/departure line at a time, queued so a burst of joins/leaves
+  // doesn't overwrite itself mid-fade.
+  queueToast(text) {
+    this.toastQueue.push(text)
+    if (!this.toastTimer) this.showNextToast()
+  }
+
+  showNextToast() {
+    const text = this.toastQueue.shift()
+    if (!text) {
+      this.toastTimer = null
+      return
+    }
+    this.toast.textContent = text
+    this.toast.style.opacity = "1"
+    this.toastTimer = setTimeout(() => {
+      this.toast.style.opacity = "0"
+      this.toastTimer = setTimeout(() => this.showNextToast(), 300)
+    }, 2500)
+  }
+
   dockTo(island) {
     // Leaving the sea to read a post. Mark that a sea session is paused (and
     // save where the boat was) so the destination page can offer a banner
@@ -329,9 +358,11 @@ class Sea {
     this.scene.dispose()
     seaBus.removeEventListener("sea:navigate", this.onNavigate)
     clearTimeout(this._biteMsgTimer)
+    clearTimeout(this.toastTimer)
     if (this.banner.parentNode) this.banner.remove()
     if (this.hint.parentNode) this.hint.remove()
     if (this.biteMsg.parentNode) this.biteMsg.remove()
+    if (this.toast.parentNode) this.toast.remove()
   }
 }
 
