@@ -84,6 +84,24 @@ defmodule BlogWeb.Admin.PostFormLive do
 
   defp render_preview(body), do: Content.render_markdown(body)
 
+  # Purely client-side: no server round-trip needed to enter/exit the
+  # focused writing mode, so the toggle stays instant.
+  defp toggle_fullscreen(js \\ %JS{}) do
+    js
+    |> JS.add_class("is-fullscreen", to: "#editor-pane")
+    |> JS.add_class("hidden", to: "#fullscreen-toggle")
+    |> JS.remove_class("hidden", to: "#fullscreen-exit")
+    |> JS.add_class("overflow-hidden", to: "body")
+  end
+
+  defp exit_fullscreen(js \\ %JS{}) do
+    js
+    |> JS.remove_class("is-fullscreen", to: "#editor-pane")
+    |> JS.remove_class("hidden", to: "#fullscreen-toggle")
+    |> JS.add_class("hidden", to: "#fullscreen-exit")
+    |> JS.remove_class("overflow-hidden", to: "body")
+  end
+
   defp slugify(title) do
     title
     |> String.downcase()
@@ -136,7 +154,32 @@ defmodule BlogWeb.Admin.PostFormLive do
 
           <.input field={@form[:published]} type="checkbox" label="Published (visible on site)" />
 
-          <div class="grid gap-6 lg:grid-cols-2">
+          <div class="mb-2 flex items-center justify-end">
+            <button
+              type="button"
+              id="fullscreen-toggle"
+              phx-click={toggle_fullscreen()}
+              class="border border-ink bg-paper px-3 py-[7px] text-[12px] font-semibold tracking-[0.04em] text-ink-2 transition-colors hover:bg-lime hover:text-on-lime"
+            >
+              ⤢ Full screen
+            </button>
+          </div>
+
+          <div
+            id="editor-pane"
+            class="editor-pane grid gap-6 lg:grid-cols-2"
+            phx-window-keydown={exit_fullscreen()}
+            phx-key="Escape"
+          >
+            <button
+              type="button"
+              id="fullscreen-exit"
+              phx-click={exit_fullscreen()}
+              class="absolute right-6 top-6 z-10 hidden border border-ink bg-paper px-3 py-[7px] text-[12px] font-semibold tracking-[0.04em] text-ink-2 transition-colors hover:bg-lime hover:text-on-lime"
+            >
+              ⤢ Exit full screen <span class="text-ink-3">&middot; Esc</span>
+            </button>
+
             <.input field={@form[:body]} type="textarea" label="Body (Markdown)" rows="24" />
             <div>
               <.label for="preview">Preview</.label>
