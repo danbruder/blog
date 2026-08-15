@@ -1,10 +1,11 @@
 // Steering input for the local boat. `state.throttle` is 0..1 forward,
-// `state.turn` is -1..1 (left/right), `state.dock` latches true when the dock
-// key/button is pressed. Works with keyboard (arrows/WASD + space) and an
-// on-screen touch joystick + Dock button injected into `overlay`.
+// `state.turn` is -1..1 (left/right), `state.dock` and `state.emote` latch
+// true when their key/button is pressed. Works with keyboard (arrows/WASD +
+// space + E) and an on-screen touch joystick + Dock/Wave buttons injected
+// into `overlay`.
 
 export function createControls(overlay) {
-  const state = {throttle: 0, turn: 0, dock: false}
+  const state = {throttle: 0, turn: 0, dock: false, emote: false}
   const keys = new Set()
   let touchActive = false
   let touchTurn = 0
@@ -12,12 +13,13 @@ export function createControls(overlay) {
 
   const onKey = (down) => (e) => {
     const k = e.key.toLowerCase()
-    if (["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d", " "].includes(k)) {
+    if (["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d", " ", "e"].includes(k)) {
       e.preventDefault()
     }
     if (down) keys.add(k)
     else keys.delete(k)
     if (down && (k === " ")) state.dock = true
+    if (down && (k === "e")) state.emote = true
   }
   const kd = onKey(true)
   const ku = onKey(false)
@@ -31,7 +33,10 @@ export function createControls(overlay) {
     <div class="sea-stick" data-stick>
       <div class="sea-nub" data-nub></div>
     </div>
-    <button class="sea-dock" data-dock type="button">Dock</button>`
+    <div class="sea-buttons">
+      <button class="sea-wave-btn" data-wave type="button">👋</button>
+      <button class="sea-dock" data-dock type="button">Dock</button>
+    </div>`
   overlay.appendChild(pad)
 
   const stick = pad.querySelector("[data-stick]")
@@ -71,6 +76,7 @@ export function createControls(overlay) {
   stick.addEventListener("touchend", resetTouch)
   stick.addEventListener("touchcancel", resetTouch)
   pad.querySelector("[data-dock]").addEventListener("click", () => (state.dock = true))
+  pad.querySelector("[data-wave]").addEventListener("click", () => (state.emote = true))
 
   // Recompute turn/throttle from whichever input source is active every call,
   // so releasing a key (or the touch stick) actually zeroes it out instead of

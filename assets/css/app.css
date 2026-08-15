@@ -363,9 +363,12 @@ pre code.hljs {
   background: rgba(238,240,236,.5); position: relative; touch-action: none; }
 .sea-nub { width: 40px; height: 40px; background: var(--color-lime);
   border: 2px solid var(--color-ink); position: absolute; left: 26px; top: 26px; }
+.sea-buttons { display: flex; gap: 10px; align-items: flex-end; }
 .sea-dock { border: 2px solid var(--color-ink); background: var(--color-lime);
   color: var(--on-lime); font-weight: 700; text-transform: uppercase;
   letter-spacing: .08em; padding: 12px 18px; font-size: 13px; }
+.sea-wave-btn { width: 44px; height: 44px; border: 2px solid var(--color-ink);
+  background: var(--color-paper); font-size: 18px; }
 @media (hover: hover) and (pointer: fine) { .sea-touch { display: none; } }
 
 .sea-banner { position: absolute; top: 0; left: 0; transform: translate(-50%, -100%);

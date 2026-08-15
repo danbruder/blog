@@ -9,7 +9,9 @@ defmodule BlogWeb.SeaChannel do
 
   Joining/leaving *this channel* (i.e. entering/exiting Sea mode, not just
   visiting the site) also fans out `"arrived"` / `"gone"` events so other
-  sailors can show an arrival/departure toast.
+  sailors can show an arrival/departure toast. `"emote"` is a single,
+  content-free wave gesture fanned out the same way as `"pos"` — deliberately
+  not a chat channel.
   """
 
   use Phoenix.Channel
@@ -50,6 +52,14 @@ defmodule BlogWeb.SeaChannel do
   @impl true
   def handle_in("pos", %{"x" => x, "z" => z, "h" => h}, socket) do
     broadcast_from!(socket, "pos", %{id: socket.assigns.sailor_id, x: x, z: z, h: h})
+    {:noreply, socket}
+  end
+
+  # The wave/emote gesture — deliberately payload-free (no text, no
+  # customization) so it can't grow into a chat channel by accident.
+  @impl true
+  def handle_in("emote", _params, socket) do
+    broadcast_from!(socket, "emote", %{id: socket.assigns.sailor_id})
     {:noreply, socket}
   end
 

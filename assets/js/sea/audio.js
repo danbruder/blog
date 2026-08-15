@@ -153,6 +153,27 @@ export class SeaAudio {
     })
   }
 
+  // A short, friendly two-note toot for the wave/emote gesture — distinct
+  // from the bite's descending growl and the dock's three-note arpeggio.
+  wave() {
+    this._oneShot((ctx, out) => {
+      ;[440, 587.33].forEach((freq, i) => {
+        const osc = ctx.createOscillator()
+        osc.type = "triangle"
+        osc.frequency.value = freq
+        const gain = ctx.createGain()
+        const start = ctx.currentTime + i * 0.1
+        gain.gain.setValueAtTime(0, start)
+        gain.gain.linearRampToValueAtTime(0.4, start + 0.02)
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.25)
+        osc.connect(gain)
+        gain.connect(out)
+        osc.start(start)
+        osc.stop(start + 0.25)
+      })
+    })
+  }
+
   // A little three-note major arpeggio for docking.
   dockChime() {
     this._oneShot((ctx, out) => {

@@ -393,6 +393,25 @@ export class SeaScene {
   }
 }
 
+// A billboarded emoji sprite (always faces the camera, unlike a plane mesh)
+// for the wave/emote gesture — a bare transparent glyph, not a flag swatch.
+// Callers attach it to a boat group and animate/remove it themselves.
+export function emoteSprite(emoji) {
+  const c = document.createElement("canvas")
+  c.width = c.height = 128
+  const ctx = c.getContext("2d")
+  ctx.font = "96px system-ui, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif"
+  ctx.textAlign = "center"
+  ctx.textBaseline = "middle"
+  ctx.fillText(emoji, 64, 70)
+  const tex = new THREE.CanvasTexture(c)
+  tex.needsUpdate = true
+  const mat = new THREE.SpriteMaterial({map: tex, transparent: true, depthTest: false})
+  const sprite = new THREE.Sprite(mat)
+  sprite.scale.set(3.2, 3.2, 1)
+  return sprite
+}
+
 // Builds a CanvasTexture showing an emoji flag on a lime sail.
 export function flagTexture(flag) {
   const c = document.createElement("canvas")
