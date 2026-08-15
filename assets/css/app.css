@@ -345,3 +345,51 @@ pre code.hljs {
   white-space: nowrap; color: oklch(0.6 0.19 25); background: var(--color-paper);
   border: 2px solid oklch(0.6 0.19 25); padding: 8px 16px;
   pointer-events: none; opacity: 0; transition: opacity 150ms ease; }
+
+/* Post footer kudos button (see the `Kudos` hook in app.js). The ring
+   (--color-lime) fills clockwise over the 5s hold; the thumb grows with it.
+   .is-given is the resting "already given" state -- filled ring, no hover. */
+.kudos-button {
+  cursor: pointer;
+  background: var(--color-paper);
+}
+.kudos-button:hover {
+  background: var(--color-paper-2);
+}
+.kudos-widget.is-given .kudos-button {
+  cursor: default;
+  color: var(--on-lime);
+  background: var(--color-lime);
+  border-color: var(--color-lime);
+}
+.kudos-widget.is-holding .kudos-button {
+  background: var(--color-paper-2);
+}
+
+.kudos-confetti-field {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 80;
+}
+.kudos-confetti-piece {
+  position: absolute;
+  top: -12px;
+  width: 8px;
+  height: 14px;
+  opacity: 0.9;
+  animation-name: kudos-confetti-fall;
+  animation-timing-function: cubic-bezier(0.35, 0, 0.65, 1);
+  animation-fill-mode: forwards;
+}
+@keyframes kudos-confetti-fall {
+  0% {
+    transform: translate(0, -5vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--drift), 108vh) rotate(var(--spin));
+    opacity: 0.75;
+  }
+}

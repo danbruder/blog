@@ -256,6 +256,130 @@ let Hooks = {
       }
       this.ctx.putImageData(img, 0, 0)
     }
+  },
+  // The "hold for 5s to give kudos" button under each post. Hold state and
+  // the completion fetch are entirely client-driven (phx-update="ignore" --
+  // see BlogWeb.PostLive.Show) so the confetti and progress fill never
+  // wait on a server round trip; the server only needs to know once, when
+  // the hold actually completes.
+  Kudos: {
+    RADIUS: 15.5,
+    HOLD_MS: 5000,
+
+    mounted() {
+      this.circumference = 2 * Math.PI * this.RADIUS
+      this.button = this.el.querySelector("[data-kudos-button]")
+      this.progress = this.el.querySelector("[data-kudos-progress]")
+      this.countEl = this.el.querySelector("[data-kudos-count]")
+      this.labelEl = this.el.querySelector("[data-kudos-label]")
+      this.path = this.el.dataset.path
+      this.given = this.el.dataset.given === "true"
+      this.timer = null
+
+      this.progress.style.strokeDasharray = `${this.circumference}`
+      this.setFill(0, false)
+
+      if (this.given) {
+        this.markGiven()
+      } else {
+        this.button.addEventListener("pointerenter", () => this.startHold())
+        this.button.addEventListener("pointerleave", () => this.cancelHold())
+        // Prevent a click/tap alone (no hold) from doing anything odd.
+        this.button.addEventListener("pointerdown", (e) => e.preventDefault())
+      }
+    },
+
+    destroyed() {
+      if (this.timer) clearTimeout(this.timer)
+    },
+
+    // fraction is 0..1 of the ring to fill; animate controls whether the
+    // fill transitions smoothly (holding/resetting) or jumps instantly
+    // (initial paint, already-given state).
+    setFill(fraction, animate) {
+      this.progress.style.transition = animate
+        ? `stroke-dashoffset ${animate}ms ${fraction > 0 ? "linear" : "ease"}`
+        : "none"
+      this.progress.style.strokeDashoffset = `${this.circumference * (1 - fraction)}`
+    },
+
+    startHold() {
+      if (this.given || this.timer) return
+      this.el.classList.add("is-holding")
+      this.button.style.transition = `transform ${this.HOLD_MS}ms ease`
+      this.button.style.transform = "scale(1.18)"
+      this.setFill(1, this.HOLD_MS)
+      this.timer = setTimeout(() => this.complete(), this.HOLD_MS)
+    },
+
+    cancelHold() {
+      if (!this.timer) return
+      clearTimeout(this.timer)
+      this.timer = null
+      this.el.classList.remove("is-holding")
+      this.button.style.transition = "transform 250ms ease"
+      this.button.style.transform = "scale(1)"
+      this.setFill(0, 250)
+    },
+
+    complete() {
+      this.timer = null
+      this.given = true
+      this.markGiven()
+      this.confetti()
+
+      const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+
+      fetch("/kudos", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "x-csrf-token": csrfToken},
+        body: JSON.stringify({path: this.path, session_id: window.SAILOR_ID})
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (this.countEl && typeof data.kudos === "number") {
+            this.countEl.textContent = data.kudos
+          }
+        })
+        .catch(() => {}) // best-effort -- the hold already happened visually
+    },
+
+    markGiven() {
+      this.el.classList.remove("is-holding")
+      this.el.classList.add("is-given")
+      this.button.style.transition = "transform 250ms ease"
+      this.button.style.transform = "scale(1)"
+      this.setFill(1, false)
+      if (this.labelEl) this.labelEl.textContent = "thanks!"
+      this.button.disabled = true
+    },
+
+    confetti() {
+      const colors = [
+        "var(--color-lime)",
+        "var(--color-signal)",
+        "var(--color-ink)",
+        "#f97316",
+        "#e879f9"
+      ]
+      const field = document.createElement("div")
+      field.className = "kudos-confetti-field"
+      document.body.appendChild(field)
+
+      for (let i = 0; i < 110; i++) {
+        const piece = document.createElement("span")
+        piece.className = "kudos-confetti-piece"
+        piece.style.left = `${Math.random() * 100}vw`
+        piece.style.background = colors[i % colors.length]
+        piece.style.setProperty("--drift", `${(Math.random() - 0.5) * 160}px`)
+        piece.style.setProperty("--spin", `${(Math.random() - 0.5) * 900}deg`)
+        piece.style.animationDuration = `${1.8 + Math.random() * 1.4}s`
+        piece.style.animationDelay = `${Math.random() * 0.35}s`
+        field.appendChild(piece)
+      }
+
+      setTimeout(() => field.remove(), 3600)
+    }
   }
 }
 
