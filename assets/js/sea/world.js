@@ -184,3 +184,27 @@ export function regattaBuoys(harbor) {
 export function isAtBuoy(x, z, buoy, radius = REGATTA_HIT_RADIUS) {
   return Math.hypot(buoy.x - x, buoy.z - z) <= radius
 }
+
+// Real-world day/night cycle, always following US Eastern time regardless
+// of the visitor's own timezone -- so everyone sailing together sees the
+// same sky at once. Intl.DateTimeFormat resolves America/New_York via the
+// browser's IANA tz database, which handles the EST/EDT DST transition
+// automatically (no manual UTC-offset math to get wrong).
+export function easternHour(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    hour: "numeric",
+    minute: "numeric",
+    hourCycle: "h23" // forces 0..23 (rather than en-US's default h24, which reports midnight as "24")
+  }).formatToParts(date)
+  const hour = Number(parts.find((p) => p.type === "hour").value)
+  const minute = Number(parts.find((p) => p.type === "minute").value)
+  return hour + minute / 60
+}
+
+// 0 (deepest night, ~1am ET) .. 1 (brightest day, ~1pm ET) — a smooth
+// cosine curve rather than discrete day/night/dawn/dusk buckets, so the sky
+// eases continuously through the day instead of snapping between states.
+export function dayFactor(hour) {
+  return (Math.cos(((hour - 13) / 24) * Math.PI * 2) + 1) / 2
+}

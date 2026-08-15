@@ -18,6 +18,28 @@ const COL = {
 // (non-trending) height — see SeaWorld/addIsland's `trending` flag.
 const TRENDING_HEIGHT_BOOST = 1.35
 
+// Day/night endpoints the scene lerps between — see applyTimeOfDay(). Kept
+// as plain hex numbers (not THREE.Color) since they're only ever fed
+// straight into `new THREE.Color(...)`.
+const NIGHT = {
+  sky: 0x161a33,
+  fogNear: 90,
+  fogFar: 240,
+  sunColor: 0x8fa0ff,
+  sunIntensity: 0.45,
+  hemiIntensity: 0.3,
+  sea: 0x1c2470
+}
+const DAY = {
+  sky: COL.paper,
+  fogNear: 120,
+  fogFar: 320,
+  sunColor: 0xffffff,
+  sunIntensity: 2.2,
+  hemiIntensity: 1.1,
+  sea: COL.sea
+}
+
 // A small family of fills at the same brightness/saturation as the brand's
 // lime and signal-blue accents, so colorful islands and boats still read as
 // "one system" — everything keeps the same thick ink outline regardless of
@@ -85,16 +107,35 @@ export class SeaScene {
     )
     this.camera.position.set(0, 24, 34)
 
-    const sun = new THREE.DirectionalLight(0xffffff, 2.2)
-    sun.position.set(30, 60, 20)
-    this.scene.add(sun)
-    this.scene.add(new THREE.HemisphereLight(COL.paper, COL.seaDark, 1.1))
+    this.sun = new THREE.DirectionalLight(0xffffff, 2.2)
+    this.sun.position.set(30, 60, 20)
+    this.scene.add(this.sun)
+    this.hemi = new THREE.HemisphereLight(COL.paper, COL.seaDark, 1.1)
+    this.scene.add(this.hemi)
 
     this._water()
 
     this.boats = new Map() // id -> {group}
     this._onResize = () => this.resize()
     window.addEventListener("resize", this._onResize)
+  }
+
+  // Blends sky/fog/lighting/sea between NIGHT and DAY. `t` is 0 (deepest
+  // night) .. 1 (brightest day) — see world.js's dayFactor(), which derives
+  // it from the real time of day in US Eastern regardless of the visitor's
+  // own timezone, so everyone sailing together sees the same sky at once.
+  applyTimeOfDay(t) {
+    const sky = new THREE.Color(NIGHT.sky).lerp(new THREE.Color(DAY.sky), t)
+    this.scene.background = sky
+    this.scene.fog.color = sky
+    this.scene.fog.near = THREE.MathUtils.lerp(NIGHT.fogNear, DAY.fogNear, t)
+    this.scene.fog.far = THREE.MathUtils.lerp(NIGHT.fogFar, DAY.fogFar, t)
+
+    this.sun.color = new THREE.Color(NIGHT.sunColor).lerp(new THREE.Color(DAY.sunColor), t)
+    this.sun.intensity = THREE.MathUtils.lerp(NIGHT.sunIntensity, DAY.sunIntensity, t)
+    this.hemi.intensity = THREE.MathUtils.lerp(NIGHT.hemiIntensity, DAY.hemiIntensity, t)
+
+    this.water.material.color = new THREE.Color(NIGHT.sea).lerp(new THREE.Color(DAY.sea), t)
   }
 
   _water() {

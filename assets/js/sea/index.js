@@ -13,7 +13,9 @@ import {
   sharkBreach,
   nearestBitingShark,
   regattaBuoys,
-  isAtBuoy
+  isAtBuoy,
+  easternHour,
+  dayFactor
 } from "./world.js"
 import {seaBus} from "./bus.js"
 
@@ -35,6 +37,7 @@ const EMOTE_COOLDOWN = 0.8 // seconds between waves, so holding/mashing the key 
 const EMOTE_DURATION = 1.3 // seconds the wave sprite rises and fades over
 const BOTTLE_MAX_LENGTH = 80
 const REGATTA_BEST_KEY = "seaRegattaBest"
+const TIME_OF_DAY_REFRESH_MS = 60_000 // sky doesn't need per-frame updates -- just re-check each minute
 const BUOY_RESTING_SCALE = 3.2
 const BUOY_TARGET_SCALE = 4.6 // bigger than resting, marks the current target
 
@@ -61,6 +64,16 @@ class Sea {
 
     this.scene = new SeaScene(el)
     for (const isl of islands) this.scene.addIsland(isl)
+
+    // Always follows US Eastern time, not the visitor's own timezone, so
+    // every sailor sees the same sky at once. Refreshed periodically rather
+    // than per-frame -- the sky doesn't need to update faster than once a
+    // minute, and this also catches a tab left open across the dawn/dusk
+    // curve or a DST transition.
+    this.scene.applyTimeOfDay(dayFactor(easternHour()))
+    this.timeOfDayTimer = setInterval(() => {
+      this.scene.applyTimeOfDay(dayFactor(easternHour()))
+    }, TIME_OF_DAY_REFRESH_MS)
 
     // Resume at the last saved spot (e.g. returning from a docked post);
     // otherwise start at the harbor.
@@ -613,6 +626,7 @@ class Sea {
     seaBus.removeEventListener("sea:navigate", this.onNavigate)
     clearTimeout(this._biteMsgTimer)
     clearTimeout(this.toastTimer)
+    clearInterval(this.timeOfDayTimer)
     if (this.banner.parentNode) this.banner.remove()
     if (this.hint.parentNode) this.hint.remove()
     if (this.biteMsg.parentNode) this.biteMsg.remove()

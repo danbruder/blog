@@ -22,7 +22,7 @@ chase cam, keyboard + touch controls, sidebar minimap.
 | 4 | Message in a bottle | Done |
 | 5 | Trending islands from analytics | Done |
 | 6 | Regatta / buoy objective | Done |
-| 7 | Day/night cycle (Eastern time) | Not started |
+| 7 | Day/night cycle (Eastern time) | Done |
 | 8 | Wake trails | Not started |
 | 9 | More ambient creatures/hazards | Not started |
 | 10 | Boat customization | Not started |
