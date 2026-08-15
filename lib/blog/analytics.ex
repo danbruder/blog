@@ -33,6 +33,7 @@ defmodule Blog.Analytics do
 
   @table "events"
   @page_view_event "page_view"
+  @kudos_event "kudos"
   # A gap longer than this between two page views in the same session isn't
   # "time on page" so much as an abandoned/backgrounded tab; treat it as
   # unknown rather than skewing the average.
@@ -53,11 +54,19 @@ defmodule Blog.Analytics do
     GenServer.cast(__MODULE__, {:track, event_name, attrs})
   end
 
+  # Trend buckets are grouped by plain integer-divided time windows rather
+  # than a calendar-aware GROUP BY DATE_TRUNC(...): DATE_TRUNC is icu/core
+  # territory, same availability risk as the AVG/SUM extension gap described
+  # in the moduledoc, and integer division sidesteps it entirely (see
+  # `bucket_seconds/1`).
+  @trend_buckets [hour: 3_600, day: 86_400, month: 30 * 86_400]
+
   @doc """
   Returns aggregated `"page_view"` stats for `[from, to)` (both `DateTime`):
 
       {:ok, %{
         summary: %{views: 123, sessions: 45, avg_duration_seconds: 38.2},
+        trend: [%{at: ~U[...], views: 12}, ...],
         top_paths: [%{path:, views:, sessions:, avg_duration_seconds:}, ...],
         top_countries: [%{country:, sessions:}, ...],
         top_referrers: [%{source:, sessions:}, ...]
@@ -74,6 +83,10 @@ defmodule Blog.Analytics do
     * `:country` - only count views from this exact country code, or
       `"Unknown"` for views with no resolved country
     * `:limit` - max rows per breakdown list (default 20)
+    * `:trend_bucket` - `:hour`, `:day`, or `:month` (default `:day`); the
+      width of each `trend` bucket. Buckets with no views are zero-filled
+      across the whole `[from, to)` window, so `trend` is always evenly
+      spaced and safe to chart directly.
 
   `source` in `top_referrers` is a bare host (`"google.com"`, `"Direct"`
   for no referrer). `avg_duration_seconds` is `nil` when the underlying
@@ -93,6 +106,29 @@ defmodule Blog.Analytics do
 
   @doc "Forces an immediate bulk write of any buffered events. Also handy in tests."
   def flush, do: GenServer.call(__MODULE__, :flush)
+
+  @doc """
+  Records a "kudos" event for `path` -- a reader holding down the thumbs-up
+  button on a post for the full 5 seconds. `session_id` is optional and
+  purely informational (matches `track/2`'s convention); double-submission
+  is prevented upstream by `BlogWeb.KudosController`, not here.
+  """
+  def track_kudos(path, session_id \\ nil) do
+    track(@kudos_event, %{path: path, session_id: session_id})
+  end
+
+  @doc """
+  Returns per-post stats for the footer shown under each post:
+
+      {:ok, %{views_all_time: 123, views_last_week: 4, kudos: 7}}
+
+  `views_*` count `"page_view"` events for the exact `path`; `kudos` counts
+  `"kudos"` events for it. "Last week" is a rolling 7 days ending now, not a
+  calendar week.
+  """
+  def post_stats(path) do
+    GenServer.call(__MODULE__, {:post_stats, path})
+  end
 
   @impl true
   def init(opts) do
@@ -189,12 +225,16 @@ defmodule Blog.Analytics do
   def handle_call({:stats, from, to, opts}, _from, state) do
     state = flush_buffer(state)
     limit = Keyword.get(opts, :limit, 20)
+    bucket = Keyword.get(opts, :trend_bucket, :day)
+    bucket_seconds = Keyword.fetch!(@trend_buckets, bucket)
     {filter_sql, params} = where_clause_and_params(from, to, opts)
     where_sql = ctes(filter_sql)
     avg_expr = if state.avg_supported?, do: "AVG(duration_us)", else: "NULL"
 
     reply =
       with {:ok, summary} <- fetch_one(state.conn, where_sql <> summary_sql(avg_expr), params),
+           {:ok, trend} <-
+             fetch_all(state.conn, where_sql <> trend_sql(bucket_seconds), params),
            {:ok, top_paths} <-
              fetch_all(state.conn, where_sql <> top_paths_sql(avg_expr, limit), params),
            {:ok, top_countries} <-
@@ -204,10 +244,33 @@ defmodule Blog.Analytics do
         {:ok,
          %{
            summary: decode_summary(summary),
+           trend: build_trend(trend, from, to, bucket_seconds),
            top_paths: Enum.map(top_paths, &decode_top_path/1),
            top_countries: Enum.map(top_countries, &decode_country/1),
            top_referrers: Enum.map(top_referrers, &decode_referrer/1)
          }}
+      end
+
+    {:reply, reply, state}
+  end
+
+  @impl true
+  def handle_call({:post_stats, path}, _from, state) do
+    state = flush_buffer(state)
+    week_ago_us = DateTime.utc_now() |> DateTime.add(-7, :day) |> DateTime.to_unix(:microsecond)
+
+    sql = """
+    SELECT
+      (SELECT COUNT(*) FROM #{@table} WHERE event_name = $1 AND path = $2) AS views_all_time,
+      (SELECT COUNT(*) FROM #{@table} WHERE event_name = $1 AND path = $2 AND occurred_at_us >= $3)
+        AS views_last_week,
+      (SELECT COUNT(*) FROM #{@table} WHERE event_name = $4 AND path = $2) AS kudos
+    """
+
+    reply =
+      with {:ok, [views_all_time, views_last_week, kudos]} <-
+             fetch_one(state.conn, sql, [@page_view_event, path, week_ago_us, @kudos_event]) do
+        {:ok, %{views_all_time: views_all_time, views_last_week: views_last_week, kudos: kudos}}
       end
 
     {:reply, reply, state}
@@ -308,6 +371,15 @@ defmodule Blog.Analytics do
     """
   end
 
+  defp trend_sql(bucket_seconds) do
+    """
+    SELECT occurred_at_us // #{bucket_seconds * 1_000_000} AS bucket, COUNT(*) AS views
+    FROM filtered
+    GROUP BY bucket
+    ORDER BY bucket
+    """
+  end
+
   defp top_paths_sql(avg_expr, limit) do
     """
     SELECT path, COUNT(*) AS views, COUNT(DISTINCT session_id) AS sessions,
@@ -355,6 +427,37 @@ defmodule Blog.Analytics do
 
   defp decode_summary([views, sessions, avg_duration_us]) do
     %{views: views, sessions: sessions, avg_duration_seconds: to_seconds(avg_duration_us)}
+  end
+
+  # Zero-fills every bucket across [from, to) -- not just the ones DuckDB
+  # happened to return rows for -- so callers can chart `trend` directly
+  # without worrying about gaps collapsing the x-axis.
+  #
+  # The leading edge is trimmed to the first bucket with any data, though:
+  # "all time" always requests from a fixed 2020 anchor (see range_bounds/1
+  # in AnalyticsLive), regardless of when this particular filter's data
+  # actually starts, so zero-filling the full request would chart years of
+  # meaningless empty buckets before the first real event. The trailing edge
+  # stays anchored to `to` -- a quiet stretch *after* real data existed is
+  # worth seeing, unlike padding before any existed.
+  defp build_trend(rows, from, to, bucket_seconds) do
+    counts = Map.new(rows, fn [bucket, views] -> {bucket, views} end)
+    requested_from_bucket = div(DateTime.to_unix(from, :second), bucket_seconds)
+
+    to_bucket =
+      div(DateTime.to_unix(to, :second) - 1, bucket_seconds)
+      |> max(requested_from_bucket)
+
+    from_bucket =
+      case Map.keys(counts) do
+        [] -> requested_from_bucket
+        buckets -> Enum.min(buckets) |> max(requested_from_bucket)
+      end
+      |> min(to_bucket)
+
+    for bucket <- from_bucket..to_bucket do
+      %{at: DateTime.from_unix!(bucket * bucket_seconds), views: Map.get(counts, bucket, 0)}
+    end
   end
 
   defp decode_top_path([path, views, sessions, avg_duration_us]) do
