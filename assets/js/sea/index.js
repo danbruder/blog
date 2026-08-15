@@ -49,6 +49,10 @@ const FISH_COUNT = 8
 const FISH_BOUNDS = 120 // flying fish patrol within this radius of the harbor
 const CUSTOM_COLOR_KEY = "seaCustomColor"
 const CUSTOM_FLAG_KEY = "seaCustomFlag"
+// Curated rather than free text, same reasoning as the hull PALETTE: a
+// fixed set keeps every sailor's picker rendering something every browser
+// actually has a glyph for.
+const FLAG_EMOJI = ["🏴", "🏳️", "🏁", "🚩", "⚓", "⛵", "🦈", "🐙", "🐬", "🌊", "⭐", "💀", "🔥", "🍀", "🌈", "⚡"]
 const BUOY_RESTING_SCALE = 3.2
 const BUOY_TARGET_SCALE = 4.6 // bigger than resting, marks the current target
 
@@ -710,10 +714,10 @@ class Sea {
     this.muteBtn.setAttribute("aria-label", this.audio.muted ? "Unmute sea sounds" : "Mute sea sounds")
   }
 
-  // Small hidden-by-default popover: a swatch per PALETTE color plus a
-  // "flag" button that prompts for an emoji, both applied immediately and
-  // persisted to localStorage. See the customColor/customFlag comment
-  // above for why this only affects this sailor's own view.
+  // Small hidden-by-default popover: a swatch per PALETTE color, then a
+  // swatch per FLAG_EMOJI option, both applied immediately and persisted to
+  // localStorage. See the customColor/customFlag comment above for why
+  // this only affects this sailor's own view.
   buildCustomizePanel() {
     const panel = document.createElement("div")
     panel.className = "sea-customize-panel"
@@ -737,20 +741,22 @@ class Sea {
     }
     panel.appendChild(swatches)
 
-    const flagBtn = document.createElement("button")
-    flagBtn.type = "button"
-    flagBtn.className = "sea-flag-btn"
-    flagBtn.textContent = "Set sail flag"
-    flagBtn.addEventListener("click", () => {
-      const chosen = window.prompt("Sail flag/emoji:", this.customFlag || "🏴")
-      if (chosen == null) return
-      const trimmed = chosen.trim()
-      this.customFlag = trimmed || null
-      if (trimmed) localStorage.setItem(CUSTOM_FLAG_KEY, trimmed)
-      else localStorage.removeItem(CUSTOM_FLAG_KEY)
-      this.scene.setSailTexture(this.selfBoat, flagTexture(trimmed || "🏴"))
-    })
-    panel.appendChild(flagBtn)
+    const flags = document.createElement("div")
+    flags.className = "sea-swatches"
+    for (const emoji of FLAG_EMOJI) {
+      const btn = document.createElement("button")
+      btn.type = "button"
+      btn.className = "sea-flag-swatch"
+      btn.textContent = emoji
+      btn.setAttribute("aria-label", `Set sail flag ${emoji}`)
+      btn.addEventListener("click", () => {
+        this.customFlag = emoji
+        localStorage.setItem(CUSTOM_FLAG_KEY, emoji)
+        this.scene.setSailTexture(this.selfBoat, flagTexture(emoji))
+      })
+      flags.appendChild(btn)
+    }
+    panel.appendChild(flags)
 
     return panel
   }
