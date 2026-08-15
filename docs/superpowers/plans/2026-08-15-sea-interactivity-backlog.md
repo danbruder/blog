@@ -16,7 +16,7 @@ chase cam, keyboard + touch controls, sidebar minimap.
 
 | # | Item | Status |
 |---|---|---|
-| 1 | Arrival/departure toast | Not started |
+| 1 | Arrival/departure toast | Done |
 | 2 | Ambient + event sound (muted by default) | Not started |
 | 3 | Wave/emote key | Not started |
 | 4 | Message in a bottle | Not started |

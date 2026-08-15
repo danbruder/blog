@@ -8,6 +8,8 @@ export class SeaNet {
     this.roster = [] // [{id, path, flag}]
     this.remote = new Map() // id -> {x, z, h, tx, tz, th}  (t* = target)
     this.onRoster = null
+    this.onArrive = null // (flag) => void — another sailor joined Sea mode
+    this.onDepart = null // (flag) => void — another sailor left Sea mode
     this._lastSent = 0
 
     const token = document
@@ -29,7 +31,17 @@ export class SeaNet {
       cur.th = h
       this.remote.set(id, cur)
     })
-    this.channel.on("gone", ({id}) => this.remote.delete(id))
+    // The server already excludes the joining sailor from "arrived" via
+    // broadcast_from!, but "gone" (sent via broadcast! from terminate/2, when
+    // the leaving sailor's own socket is already closed) can't do the same —
+    // guard here so a sailor never toasts their own arrival/departure.
+    this.channel.on("arrived", ({id, flag}) => {
+      if (id !== this.sailorId && this.onArrive) this.onArrive(flag)
+    })
+    this.channel.on("gone", ({id, flag}) => {
+      this.remote.delete(id)
+      if (id !== this.sailorId && this.onDepart) this.onDepart(flag)
+    })
     this.channel.join()
   }
 
