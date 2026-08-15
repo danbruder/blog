@@ -109,7 +109,7 @@ defmodule Blog.Analytics do
 
   @doc """
   Records a "kudos" event for `path` -- a reader holding down the thumbs-up
-  button on a post for the full 5 seconds. `session_id` is optional and
+  button on a post for the full 3 seconds. `session_id` is optional and
   purely informational (matches `track/2`'s convention); double-submission
   is prevented upstream by `BlogWeb.KudosController`, not here.
   """

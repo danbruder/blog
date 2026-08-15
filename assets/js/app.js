@@ -261,26 +261,26 @@ let Hooks = {
       this.ctx.putImageData(img, 0, 0)
     }
   },
-  // The "hold for 5s to give kudos" button under each post. Hold state and
+  // The "hold for 3s to give kudos" button under each post. Hold state and
   // the completion fetch are entirely client-driven (phx-update="ignore" --
-  // see BlogWeb.PostLive.Show) so the confetti and progress fill never
-  // wait on a server round trip; the server only needs to know once, when
-  // the hold actually completes.
+  // see BlogWeb.PostLive.Show) so the confetti and fill never wait on a
+  // server round trip; the server only needs to know once, when the hold
+  // actually completes.
   Kudos: {
-    RADIUS: 15.5,
-    HOLD_MS: 5000,
+    HOLD_MS: 3000,
+    // Scale reached at the end of the hold -- big enough that "getting
+    // bigger" reads clearly rather than needing a side-by-side to notice.
+    HOLD_SCALE: 1.5,
 
     mounted() {
-      this.circumference = 2 * Math.PI * this.RADIUS
       this.button = this.el.querySelector("[data-kudos-button]")
-      this.progress = this.el.querySelector("[data-kudos-progress]")
+      this.fill = this.el.querySelector("[data-kudos-fill]")
       this.countEl = this.el.querySelector("[data-kudos-count]")
       this.labelEl = this.el.querySelector("[data-kudos-label]")
       this.path = this.el.dataset.path
       this.given = this.el.dataset.given === "true"
       this.timer = null
 
-      this.progress.style.strokeDasharray = `${this.circumference}`
       this.setFill(0, false)
 
       if (this.given) {
@@ -297,22 +297,28 @@ let Hooks = {
       if (this.timer) clearTimeout(this.timer)
     },
 
-    // fraction is 0..1 of the ring to fill; animate controls whether the
-    // fill transitions smoothly (holding/resetting) or jumps instantly
-    // (initial paint, already-given state).
+    // fraction is 0..1 of the square to fill from the bottom up; animate
+    // (ms, or false) controls whether the fill/color/icon transition
+    // smoothly (holding/resetting) or jump instantly (initial paint,
+    // already-given state). Fill and icon color move together so the
+    // button has already reached its "given" look the instant it's full.
     setFill(fraction, animate) {
-      this.progress.style.transition = animate
-        ? `stroke-dashoffset ${animate}ms ${fraction > 0 ? "linear" : "ease"}`
+      const transition = animate
+        ? `height ${animate}ms linear, color ${animate}ms ${fraction > 0 ? "ease-in" : "ease"}`
         : "none"
-      this.progress.style.strokeDashoffset = `${this.circumference * (1 - fraction)}`
+      this.fill.style.transition = transition
+      this.fill.style.height = `${fraction * 100}%`
+      this.button.style.transition = animate ? `${transition}, transform ${animate}ms ease` : "none"
+      this.button.style.color = fraction > 0 ? "var(--on-lime)" : ""
     },
 
     startHold() {
       if (this.given || this.timer) return
       this.el.classList.add("is-holding")
-      this.button.style.transition = `transform ${this.HOLD_MS}ms ease`
-      this.button.style.transform = "scale(1.18)"
+      // Set the transition (via setFill) before the transform it covers,
+      // so the button's very first hold picks it up rather than snapping.
       this.setFill(1, this.HOLD_MS)
+      this.button.style.transform = `scale(${this.HOLD_SCALE})`
       this.timer = setTimeout(() => this.complete(), this.HOLD_MS)
     },
 
@@ -321,9 +327,8 @@ let Hooks = {
       clearTimeout(this.timer)
       this.timer = null
       this.el.classList.remove("is-holding")
-      this.button.style.transition = "transform 250ms ease"
-      this.button.style.transform = "scale(1)"
       this.setFill(0, 250)
+      this.button.style.transform = "scale(1)"
     },
 
     complete() {
@@ -351,7 +356,6 @@ let Hooks = {
     markGiven() {
       this.el.classList.remove("is-holding")
       this.el.classList.add("is-given")
-      this.button.style.transition = "transform 250ms ease"
       this.button.style.transform = "scale(1)"
       this.setFill(1, false)
       if (this.labelEl) this.labelEl.textContent = "thanks!"
