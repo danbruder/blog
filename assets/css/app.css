@@ -417,9 +417,10 @@ pre code.hljs {
   color: var(--color-ink); font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
   font-size: 11px; padding: 8px 10px; cursor: pointer; }
 
-/* Post footer kudos button (see the `Kudos` hook in app.js). The ring
-   (--color-lime) fills clockwise over the 5s hold; the thumb grows with it.
-   .is-given is the resting "already given" state -- filled ring, no hover. */
+/* Post footer kudos button (see the `Kudos` hook in app.js). [data-kudos-fill]
+   (--color-lime) rises bottom-to-top over the 3s hold while the button
+   grows; .is-given is the resting "already given" state it lands on --
+   fully filled, no hover. */
 .kudos-button {
   cursor: pointer;
   background: var(--color-paper);
@@ -433,8 +434,11 @@ pre code.hljs {
   background: var(--color-lime);
   border-color: var(--color-lime);
 }
-.kudos-widget.is-holding .kudos-button {
-  background: var(--color-paper-2);
+.kudos-fill {
+  z-index: 0;
+}
+.kudos-thumb {
+  z-index: 1;
 }
 
 .kudos-confetti-field {

@@ -22,7 +22,7 @@ defmodule BlogWeb.PostLive.ShowTest do
     assert html =~ "<strong>bold</strong>"
   end
 
-  test "renders a note at /notes/:slug without the newsletter form or snake footer", %{
+  test "renders a note at /notes/:slug without the newsletter form or 3D CTA", %{
     conn: conn
   } do
     {:ok, _note} =
@@ -39,7 +39,24 @@ defmodule BlogWeb.PostLive.ShowTest do
 
     assert html =~ "My Note"
     refute html =~ "Newsletter signup"
-    refute html =~ "have a go at the game of"
+    refute html =~ "Explore this site in 3D"
+  end
+
+  test "a post's footer links to the 3D site and not to the snake game", %{conn: conn} do
+    {:ok, _post} =
+      Content.create_post(%{
+        title: "My Post",
+        slug: "my-post-3d",
+        body: "Body",
+        kind: "post",
+        published: true,
+        published_at: ~D[2024-01-01]
+      })
+
+    {:ok, _view, html} = live(conn, ~p"/blog/my-post-3d")
+
+    assert html =~ "Explore this site in 3D"
+    refute html =~ "snake"
   end
 
   test "footer omits view counts and shows the kudos widget when a post has no traffic yet", %{

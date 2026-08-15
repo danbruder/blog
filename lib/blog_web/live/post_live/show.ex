@@ -83,33 +83,14 @@ defmodule BlogWeb.PostLive.Show do
           <button
             type="button"
             data-kudos-button
-            class="kudos-button relative flex h-10 w-10 shrink-0 items-center justify-center border border-ink text-ink transition-colors"
+            class="kudos-button relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden border border-ink text-ink transition-colors"
             aria-label="Give kudos"
-            title="Hold for 5 seconds to give kudos"
+            title="Hold for 3 seconds to give kudos"
           >
-            <svg
-              viewBox="0 0 36 36"
-              class="pointer-events-none absolute inset-0 h-full w-full -rotate-90"
-            >
-              <circle
-                cx="18"
-                cy="18"
-                r="15.5"
-                fill="none"
-                stroke="var(--color-rule)"
-                stroke-width="2"
-              />
-              <circle
-                data-kudos-progress
-                cx="18"
-                cy="18"
-                r="15.5"
-                fill="none"
-                stroke="var(--color-lime)"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-            </svg>
+            <span
+              data-kudos-fill
+              class="kudos-fill pointer-events-none absolute inset-x-0 bottom-0 h-0 bg-lime"
+            ></span>
             <svg
               viewBox="0 0 24 24"
               class="kudos-thumb pointer-events-none relative h-4 w-4"
@@ -158,16 +139,10 @@ defmodule BlogWeb.PostLive.Show do
       <div :if={@post.kind == "post"} class="mt-12 border-t border-ink pt-[18px]">
         <p class="label mb-2">Made it this far?</p>
         <.link
-          navigate={~p"/games/snake"}
+          navigate={~p"/sea"}
           class="font-display text-[22px] font-medium leading-[1.2] tracking-[-0.028em] !shadow-none hover:!bg-lime hover:!text-on-lime"
         >
-          Have a go at the game of snake →
-        </.link>
-        <.link
-          navigate={~p"/sea"}
-          class="mt-1 block font-display text-[22px] font-medium leading-[1.2] tracking-[-0.028em] !shadow-none hover:!bg-lime hover:!text-on-lime"
-        >
-          Or explore this site in 3D →
+          Explore this site in 3D →
         </.link>
       </div>
     </article>
