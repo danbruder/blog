@@ -92,10 +92,45 @@ defmodule Blog.AnalyticsTest do
       # timer-based flush.
       for _ <- 1..200, do: Analytics.track(event_name)
 
-      {:ok, _columns, rows} =
-        Analytics.query("SELECT COUNT(*) FROM events WHERE event_name = $1", [event_name])
+      # Blog.Analytics is one shared, singleton-named GenServer -- its
+      # buffer holds every *other* concurrently-running async: false test
+      # module's track/2 calls too, not just this test's. That means the
+      # 200-item threshold can be tripped by a mix of senders partway
+      # through this loop, flushing some of our rows early; the rest of
+      # our 200 then sit in the next (not-yet-full) buffer until something
+      # else's activity tops it back up. So "handled" (guaranteed above)
+      # doesn't always mean "already on disk" the instant the loop above
+      # returns. Poll briefly rather than asserting immediately -- still
+      # well under the 5s scheduled-flush interval, so a pass here still
+      # shows the size trigger (not that timer) is what wrote these.
+      rows =
+        eventually([[200]], fn ->
+          {:ok, _columns, rows} =
+            Analytics.query("SELECT COUNT(*) FROM events WHERE event_name = $1", [event_name])
+
+          rows
+        end)
 
       assert [[200]] = rows
+    end
+  end
+
+  # Retries `fun` (which must be side-effect-safe to repeat) until it
+  # returns `target`, or gives up and returns whatever the last attempt got
+  # -- for asserting on state that becomes eventually consistent shortly
+  # after an async trigger, without a fixed sleep that's either too short
+  # (flaky) or wastes time on every passing run (too long).
+  defp eventually(target, fun, attempts \\ 20) do
+    case fun.() do
+      ^target ->
+        target
+
+      result when attempts <= 1 ->
+        result
+
+      _ ->
+        Process.sleep(10)
+        eventually(target, fun, attempts - 1)
     end
   end
 
