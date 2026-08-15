@@ -1,6 +1,7 @@
-import {SeaScene, flagTexture} from "./scene.js"
+import {SeaScene, flagTexture, emoteSprite} from "./scene.js"
 import {createControls} from "./controls.js"
 import {SeaNet} from "./net.js"
+import {SeaAudio} from "./audio.js"
 import {
   nearestDockable,
   nearestIsland,
@@ -26,6 +27,9 @@ const SHARK_COUNT = 5
 const SHARK_BOUNDS = 140 // sharks patrol within this radius of the harbor
 const BITE_BOUNCE = -0.6 // harder knockback than a plain crash
 const BITE_COOLDOWN = 2 // seconds of invulnerability after a bite
+const DOCK_CHIME_DELAY = 150 // ms to let the chime start before navigating away
+const EMOTE_COOLDOWN = 0.8 // seconds between waves, so holding/mashing the key doesn't spam
+const EMOTE_DURATION = 1.3 // seconds the wave sprite rises and fades over
 
 let active = null
 
@@ -56,6 +60,9 @@ class Sea {
     const harbor = this.islandsByPath.get("/") || {x: 0, z: 0}
     this.pos = loadPos() || {x: harbor.x, z: harbor.z + 20, h: Math.PI}
     this.speed = 0
+    this.wasColliding = false
+    this.emoteCooldown = 0
+    this.emotes = [] // active {sprite, boatGroup, t} wave sprites, see updateEmotes()
     this.selfBoat = this.scene.makeBoat(flagTexture("🏴"), true, sailorId)
 
     this.controls = createControls(el)
@@ -75,7 +82,7 @@ class Sea {
 
     this.hint = document.createElement("div")
     this.hint.className = "sea-hint"
-    this.hint.textContent = "Arrows / WASD to sail · Space to dock"
+    this.hint.textContent = "Arrows / WASD to sail · Space to dock · E to wave"
     el.appendChild(this.hint)
 
     this.biteMsg = document.createElement("div")
@@ -90,6 +97,30 @@ class Sea {
     this.toastTimer = null
     this.net.onArrive = (flag) => this.queueToast(`${flag} a sailor has joined the sea`)
     this.net.onDepart = (flag) => this.queueToast(`${flag} a sailor has left the sea`)
+    this.net.onEmote = (id) => {
+      // Best-effort visual: only attaches if that sailor's boat is currently
+      // rendered (live sailor or anchored reader). The sound plays either
+      // way, so a wave still reads as "someone out there waved" even if
+      // their boat isn't drawn (e.g. past MAX_BOATS).
+      const boat = this.remoteBoats.get(id) || this.readerBoats.get(id)
+      if (boat) this.spawnEmote(boat)
+      this.audio.wave()
+    }
+
+    // Ambient waves + a few event sounds (splash, shark bite, dock chime).
+    // Always muted on first visit — the mute button click is the only thing
+    // that can turn it on. See audio.js for the autoplay-safe details.
+    this.audio = new SeaAudio()
+    this.muteBtn = document.createElement("button")
+    this.muteBtn.className = "sea-mute"
+    this.muteBtn.type = "button"
+    this.refreshMuteBtn()
+    this.muteBtn.addEventListener("click", () => {
+      this.audio.toggle()
+      this.refreshMuteBtn()
+    })
+    el.appendChild(this.muteBtn)
+    this.audio.armFromStoredPreference(el, () => this.refreshMuteBtn())
 
     this.onNavigate = (e) => {
       this.pos.x = e.detail.x
@@ -131,7 +162,12 @@ class Sea {
     const nextZ = this.pos.z + Math.cos(this.pos.h) * this.speed
     const land = resolveCollision(nextX, nextZ, this.islands)
     const boats = resolveCollision(land.x, land.z, this.boatObstacles(), BOAT_COLLISION_MARGIN)
-    if (land.hit || boats.hit) this.speed *= CRASH_BOUNCE
+    const colliding = land.hit || boats.hit
+    if (colliding) this.speed *= CRASH_BOUNCE
+    // Edge-triggered so holding the throttle into an island plays one splash
+    // on impact, not one every frame for as long as contact continues.
+    if (colliding && !this.wasColliding) this.audio.splash()
+    this.wasColliding = colliding
     this.pos.x = boats.x
     this.pos.z = boats.z
 
@@ -156,6 +192,13 @@ class Sea {
       const isl = nearestDockable(this.pos.x, this.pos.z, this.islands)
       if (isl) this.dockTo(isl)
     }
+
+    if (this.emoteCooldown > 0) this.emoteCooldown -= 0.016
+    if (input.emote) {
+      input.emote = false
+      this.tryEmote()
+    }
+    this.updateEmotes()
 
     this.scene.animateWater(this.t)
     this.scene.chase(this.pos, this.pos.h)
@@ -182,6 +225,7 @@ class Sea {
 
     this.biteCooldown = BITE_COOLDOWN
     this.speed *= BITE_BOUNCE
+    this.audio.biteAlarm()
     const dx = this.pos.x - shark.x
     const dz = this.pos.z - shark.z
     const d = Math.hypot(dx, dz) || 0.001
@@ -293,6 +337,42 @@ class Sea {
     return s ? s.flag : "🏳️"
   }
 
+  // The wave/emote gesture: local feedback (sprite + sound) plus a network
+  // broadcast so other sailors see/hear it too. Cooldown-gated so holding
+  // or mashing the key doesn't spam either.
+  tryEmote() {
+    if (this.emoteCooldown > 0) return
+    this.emoteCooldown = EMOTE_COOLDOWN
+    this.spawnEmote(this.selfBoat)
+    this.audio.wave()
+    this.net.sendEmote()
+  }
+
+  spawnEmote(boatGroup) {
+    const sprite = emoteSprite("👋")
+    sprite.position.set(0, 6, 0)
+    boatGroup.add(sprite)
+    this.emotes.push({sprite, boatGroup, t: 0})
+  }
+
+  // Rises and fades each active wave sprite, removing it once its duration
+  // is up — run every frame regardless of whether *this* sailor just waved,
+  // since remote waves land in the same queue via `net.onEmote`.
+  updateEmotes() {
+    for (let i = this.emotes.length - 1; i >= 0; i--) {
+      const e = this.emotes[i]
+      e.t += 0.016
+      if (e.t >= EMOTE_DURATION) {
+        e.boatGroup.remove(e.sprite)
+        this.emotes.splice(i, 1)
+        continue
+      }
+      const p = e.t / EMOTE_DURATION
+      e.sprite.position.y = 6 + p * 2.5
+      e.sprite.material.opacity = 1 - p
+    }
+  }
+
   // Floats the label above the actual island in the scene (not fixed to the
   // top of the screen) by projecting its 3D position to screen pixels each
   // frame, so it tracks the island as the chase cam moves.
@@ -340,6 +420,14 @@ class Sea {
     }, 2500)
   }
 
+  // Floats/hides the mute button's icon to match the audio module's actual
+  // state (which can change out from under a click — e.g. the stored-
+  // preference auto-resume on first keypress).
+  refreshMuteBtn() {
+    this.muteBtn.textContent = this.audio.muted ? "🔇" : "🔊"
+    this.muteBtn.setAttribute("aria-label", this.audio.muted ? "Unmute sea sounds" : "Mute sea sounds")
+  }
+
   dockTo(island) {
     // Leaving the sea to read a post. Mark that a sea session is paused (and
     // save where the boat was) so the destination page can offer a banner
@@ -347,7 +435,12 @@ class Sea {
     sessionStorage.seaActive = "1"
     sessionStorage.removeItem("seaBannerDismissed")
     savePos(this.pos)
-    window.location.href = island.path
+    this.audio.dockChime()
+    // A brief delay so the chime actually gets to start before the page
+    // unload cuts audio off — imperceptible as navigation latency.
+    setTimeout(() => {
+      window.location.href = island.path
+    }, DOCK_CHIME_DELAY)
   }
 
   destroy() {
@@ -355,6 +448,7 @@ class Sea {
     savePos(this.pos)
     this.controls.destroy()
     this.net.destroy()
+    this.audio.destroy()
     this.scene.dispose()
     seaBus.removeEventListener("sea:navigate", this.onNavigate)
     clearTimeout(this._biteMsgTimer)
@@ -363,6 +457,7 @@ class Sea {
     if (this.hint.parentNode) this.hint.remove()
     if (this.biteMsg.parentNode) this.biteMsg.remove()
     if (this.toast.parentNode) this.toast.remove()
+    if (this.muteBtn.parentNode) this.muteBtn.remove()
   }
 }
 

@@ -82,4 +82,13 @@ defmodule BlogWeb.SeaChannelTest do
 
     assert_broadcast "arrived", %{id: "sailor-2", flag: "🏳️"}
   end
+
+  test "emotes broadcast to other members but not the sender" do
+    {:ok, _r1, socket1} = join_sea("sailor-1")
+
+    push(socket1, "emote", %{})
+
+    assert_broadcast "emote", %{id: "sailor-1"}
+    refute_push "emote", %{id: "sailor-1"}
+  end
 end

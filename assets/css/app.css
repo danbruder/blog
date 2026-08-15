@@ -363,9 +363,12 @@ pre code.hljs {
   background: rgba(238,240,236,.5); position: relative; touch-action: none; }
 .sea-nub { width: 40px; height: 40px; background: var(--color-lime);
   border: 2px solid var(--color-ink); position: absolute; left: 26px; top: 26px; }
+.sea-buttons { display: flex; gap: 10px; align-items: flex-end; }
 .sea-dock { border: 2px solid var(--color-ink); background: var(--color-lime);
   color: var(--on-lime); font-weight: 700; text-transform: uppercase;
   letter-spacing: .08em; padding: 12px 18px; font-size: 13px; }
+.sea-wave-btn { width: 44px; height: 44px; border: 2px solid var(--color-ink);
+  background: var(--color-paper); font-size: 18px; }
 @media (hover: hover) and (pointer: fine) { .sea-touch { display: none; } }
 
 .sea-banner { position: absolute; top: 0; left: 0; transform: translate(-50%, -100%);
@@ -388,6 +391,9 @@ pre code.hljs {
   font-size: clamp(12px, 1.6vw, 15px); letter-spacing: 0.02em; white-space: nowrap;
   color: var(--color-ink); background: var(--color-paper); border: 2px solid var(--color-ink);
   padding: 6px 14px; pointer-events: none; opacity: 0; transition: opacity 300ms ease; }
+.sea-mute { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+  border: 2px solid var(--color-ink); background: var(--color-paper); cursor: pointer; }
 
 /* Post footer kudos button (see the `Kudos` hook in app.js). The ring
    (--color-lime) fills clockwise over the 5s hold; the thumb grows with it.

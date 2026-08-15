@@ -10,6 +10,7 @@ export class SeaNet {
     this.onRoster = null
     this.onArrive = null // (flag) => void — another sailor joined Sea mode
     this.onDepart = null // (flag) => void — another sailor left Sea mode
+    this.onEmote = null // (id) => void — another sailor waved
     this._lastSent = 0
 
     const token = document
@@ -42,6 +43,9 @@ export class SeaNet {
       this.remote.delete(id)
       if (id !== this.sailorId && this.onDepart) this.onDepart(flag)
     })
+    this.channel.on("emote", ({id}) => {
+      if (id !== this.sailorId && this.onEmote) this.onEmote(id)
+    })
     this.channel.join()
   }
 
@@ -51,6 +55,10 @@ export class SeaNet {
     if (now - this._lastSent < 80) return
     this._lastSent = now
     this.channel.push("pos", {x, z, h})
+  }
+
+  sendEmote() {
+    this.channel.push("emote", {})
   }
 
   // Ease live boats toward their latest target; call each frame.

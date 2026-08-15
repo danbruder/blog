@@ -17,8 +17,8 @@ chase cam, keyboard + touch controls, sidebar minimap.
 | # | Item | Status |
 |---|---|---|
 | 1 | Arrival/departure toast | Done |
-| 2 | Ambient + event sound (muted by default) | Not started |
-| 3 | Wave/emote key | Not started |
+| 2 | Ambient + event sound (muted by default) | Done |
+| 3 | Wave/emote key | Done |
 | 4 | Message in a bottle | Not started |
 | 5 | Trending islands from analytics | Not started |
 | 6 | Regatta / buoy objective | Not started |
