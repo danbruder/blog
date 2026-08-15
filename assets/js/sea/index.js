@@ -15,7 +15,11 @@ import {
   regattaBuoys,
   isAtBuoy,
   easternHour,
-  dayFactor
+  dayFactor,
+  makeFlyingFish,
+  stepFish,
+  fishLeap,
+  driftwoodPieces
 } from "./world.js"
 import {seaBus} from "./bus.js"
 
@@ -41,6 +45,8 @@ const TIME_OF_DAY_REFRESH_MS = 60_000 // sky doesn't need per-frame updates -- j
 const WAKE_SPAWN_DISTANCE = 2.5 // a boat drops one wake puff per this many units traveled
 const WAKE_DURATION = 1.6 // seconds a puff takes to fully fade
 const MAX_WAKES = 120 // hard cap so a crowded sea can't run away with the segment count
+const FISH_COUNT = 8
+const FISH_BOUNDS = 120 // flying fish patrol within this radius of the harbor
 const BUOY_RESTING_SCALE = 3.2
 const BUOY_TARGET_SCALE = 4.6 // bigger than resting, marks the current target
 
@@ -119,6 +125,17 @@ class Sea {
     this.sharks = makeSharks(SHARK_COUNT, SHARK_BOUNDS)
     this.sharkMeshes = this.sharks.map(() => this.scene.addShark())
     this.biteCooldown = 0
+
+    // Flying fish are the same story, minus the biting — pure atmosphere.
+    this.fish = makeFlyingFish(FISH_COUNT, FISH_BOUNDS)
+    this.fishMeshes = this.fish.map(() => this.scene.addFish())
+
+    // Driftwood is fully static set-dressing: built once, bobbed gently,
+    // never re-simulated.
+    this.driftwood = driftwoodPieces().map((piece) => ({
+      mesh: this.scene.addDriftwood(piece),
+      piece
+    }))
 
     this.banner = document.createElement("div")
     this.banner.className = "sea-banner"
@@ -228,6 +245,8 @@ class Sea {
     this.maybeSpawnWake(this.sailorId, this.pos.x, this.pos.z, this.pos.h)
 
     this.stepSharks()
+    this.stepAllFish()
+    this.bobDriftwood()
 
     this.net.sendPos(
       round(this.pos.x),
@@ -300,6 +319,24 @@ class Sea {
     this._biteMsgTimer = setTimeout(() => {
       this.biteMsg.style.opacity = "0"
     }, 1200)
+  }
+
+  // Advances every flying fish's patrol/leap state — pure atmosphere, no
+  // interaction with the boat at all (unlike sharks).
+  stepAllFish() {
+    for (let i = 0; i < this.fish.length; i++) {
+      const f = this.fish[i]
+      stepFish(f, 0.016, FISH_BOUNDS)
+      this.scene.updateFish(this.fishMeshes[i], f, fishLeap(f))
+    }
+  }
+
+  // Driftwood never moves horizontally — just a slow vertical bob,
+  // phase-offset per piece the same way reader boats and bottles are.
+  bobDriftwood() {
+    for (const {mesh, piece} of this.driftwood) {
+      mesh.position.y = 0.3 + Math.sin(this.t * 0.9 + hash(`${piece.x},${piece.z}`)) * 0.15
+    }
   }
 
   // Live sailors (from net.remote). A sailor id that is also in the roster is

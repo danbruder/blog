@@ -24,7 +24,7 @@ chase cam, keyboard + touch controls, sidebar minimap.
 | 6 | Regatta / buoy objective | Done |
 | 7 | Day/night cycle (Eastern time) | Done |
 | 8 | Wake trails | Done |
-| 9 | More ambient creatures/hazards | Not started |
+| 9 | More ambient creatures/hazards | Done |
 | 10 | Boat customization | Not started |
 
 ---
@@ -84,6 +84,10 @@ sailing and you can see where people have been.
 
 Beyond sharks: flying fish, an occasional surfacing whale, floating
 driftwood — variety without added gameplay complexity.
+
+Shipped: flying fish (patrol + periodic leap, no interaction with the
+boat) and floating driftwood (static, gently bobbing). Skipped the whale
+to keep the scene from getting crowded — can revisit later.
 
 ## 10. Boat customization
 

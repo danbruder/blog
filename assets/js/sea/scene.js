@@ -424,6 +424,55 @@ export class SeaScene {
     group.rotation.x = -breach * 0.4
   }
 
+  // A flying fish: a small silvery body plus one tail fin, much smaller
+  // than a shark and with no dorsal fin (nothing to look menacing about) —
+  // ambient variety, see world.js's fish patrol/leap helpers this renders.
+  addFish() {
+    const group = new THREE.Group()
+    const fishColor = 0x9fd3ff
+
+    const bodyGeo = new THREE.IcosahedronGeometry(0.4, 0)
+    const body = new THREE.Mesh(
+      bodyGeo,
+      new THREE.MeshToonMaterial({color: fishColor, gradientMap: this.gradient})
+    )
+    body.scale.set(0.7, 0.5, 1.6)
+    body.add(outline(bodyGeo, 1.1))
+    group.add(body)
+
+    const tail = this._finBlade(0.5, 0.4, 0.06, fishColor)
+    tail.position.set(0, 0, -0.7)
+    group.add(tail)
+
+    this.scene.add(group)
+    return group
+  }
+
+  // Applies one frame of a fish's simulated state (see world.js) — same
+  // shape as updateShark, but fish leap much higher relative to their size
+  // and never lean into a "bite" pose.
+  updateFish(group, fish, leap) {
+    group.position.set(fish.x, 0.3 + leap * 2.4, fish.z)
+    group.rotation.y = fish.h
+    group.rotation.x = -leap * 0.5
+  }
+
+  // One static piece of driftwood: a lime-toned ink-outlined log lying on
+  // its side. Purely decorative set-dressing (see world.js's
+  // driftwoodPieces) — no collision, no per-frame simulation beyond the
+  // caller's gentle bob.
+  addDriftwood(piece) {
+    const geo = new THREE.CylinderGeometry(0.22, 0.28, 3.2, 6)
+    const mat = new THREE.MeshToonMaterial({color: 0x8a6a45, gradientMap: this.gradient})
+    const log = new THREE.Mesh(geo, mat)
+    log.add(outline(geo, 1.08))
+    log.rotation.z = Math.PI / 2 // lie on its side rather than stand upright
+    log.rotation.y = piece.rot
+    log.position.set(piece.x, 0.3, piece.z)
+    this.scene.add(log)
+    return log
+  }
+
   // Cheap animated swell.
   animateWater(t) {
     const pos = this.waterGeo.attributes.position
