@@ -1,4 +1,4 @@
-import {SeaScene, flagTexture, emoteSprite, bottleSprite, wakeSegment} from "./scene.js"
+import {SeaScene, flagTexture, emoteSprite, bottleSprite, wakeSegment, PALETTE} from "./scene.js"
 import {createControls} from "./controls.js"
 import {SeaNet} from "./net.js"
 import {SeaAudio} from "./audio.js"
@@ -47,6 +47,8 @@ const WAKE_DURATION = 1.6 // seconds a puff takes to fully fade
 const MAX_WAKES = 120 // hard cap so a crowded sea can't run away with the segment count
 const FISH_COUNT = 8
 const FISH_BOUNDS = 120 // flying fish patrol within this radius of the harbor
+const CUSTOM_COLOR_KEY = "seaCustomColor"
+const CUSTOM_FLAG_KEY = "seaCustomFlag"
 const BUOY_RESTING_SCALE = 3.2
 const BUOY_TARGET_SCALE = 4.6 // bigger than resting, marks the current target
 
@@ -95,7 +97,28 @@ class Sea {
     this.bottleMeshes = new Map() // id -> {sprite, bottle}
     this.wakes = [] // active {mesh, t} wake puffs, see updateWakes()
     this.lastWakePos = new Map() // sailorId -> {x, z}, throttles wake spawning by distance traveled
-    this.selfBoat = this.scene.makeBoat(flagTexture("🏴"), true, sailorId)
+    // A customized hull color/flag (see the 🎨 picker below) is applied
+    // right after creation, overriding the hash-derived hull color and the
+    // placeholder "🏴" flag for *this sailor's own view only* — other
+    // sailors still see this boat's hash-derived color and GeoIP flag, the
+    // same as before. Syncing a custom look to other viewers would need
+    // extending the presence/channel roster; left for later.
+    this.customColor = localStorage.getItem(CUSTOM_COLOR_KEY)
+    this.customFlag = localStorage.getItem(CUSTOM_FLAG_KEY)
+    this.selfBoat = this.scene.makeBoat(flagTexture(this.customFlag || "🏴"), true, sailorId)
+    if (this.customColor) this.scene.setHullColor(this.selfBoat, this.customColor)
+
+    this.customizeBtn = document.createElement("button")
+    this.customizeBtn.className = "sea-customize-btn"
+    this.customizeBtn.type = "button"
+    this.customizeBtn.textContent = "🎨"
+    this.customizeBtn.setAttribute("aria-label", "Customize your boat")
+    this.customizePanel = this.buildCustomizePanel()
+    this.customizeBtn.addEventListener("click", () => {
+      this.customizePanel.style.display = this.customizePanel.style.display === "none" ? "flex" : "none"
+    })
+    el.appendChild(this.customizeBtn)
+    el.appendChild(this.customizePanel)
 
     // Regatta: a fixed ring of buoys around the harbor, sailed in order.
     // Buoy 0 starts the clock; the last one stops it and reports a time.
@@ -687,6 +710,51 @@ class Sea {
     this.muteBtn.setAttribute("aria-label", this.audio.muted ? "Unmute sea sounds" : "Mute sea sounds")
   }
 
+  // Small hidden-by-default popover: a swatch per PALETTE color plus a
+  // "flag" button that prompts for an emoji, both applied immediately and
+  // persisted to localStorage. See the customColor/customFlag comment
+  // above for why this only affects this sailor's own view.
+  buildCustomizePanel() {
+    const panel = document.createElement("div")
+    panel.className = "sea-customize-panel"
+    panel.style.display = "none"
+
+    const swatches = document.createElement("div")
+    swatches.className = "sea-swatches"
+    for (const hex of PALETTE) {
+      const css = `#${hex.toString(16).padStart(6, "0")}`
+      const swatch = document.createElement("button")
+      swatch.type = "button"
+      swatch.className = "sea-swatch"
+      swatch.style.background = css
+      swatch.setAttribute("aria-label", `Set hull color ${css}`)
+      swatch.addEventListener("click", () => {
+        this.customColor = css
+        localStorage.setItem(CUSTOM_COLOR_KEY, css)
+        this.scene.setHullColor(this.selfBoat, css)
+      })
+      swatches.appendChild(swatch)
+    }
+    panel.appendChild(swatches)
+
+    const flagBtn = document.createElement("button")
+    flagBtn.type = "button"
+    flagBtn.className = "sea-flag-btn"
+    flagBtn.textContent = "Set sail flag"
+    flagBtn.addEventListener("click", () => {
+      const chosen = window.prompt("Sail flag/emoji:", this.customFlag || "🏴")
+      if (chosen == null) return
+      const trimmed = chosen.trim()
+      this.customFlag = trimmed || null
+      if (trimmed) localStorage.setItem(CUSTOM_FLAG_KEY, trimmed)
+      else localStorage.removeItem(CUSTOM_FLAG_KEY)
+      this.scene.setSailTexture(this.selfBoat, flagTexture(trimmed || "🏴"))
+    })
+    panel.appendChild(flagBtn)
+
+    return panel
+  }
+
   dockTo(island) {
     // Leaving the sea to read a post. Mark that a sea session is paused (and
     // save where the boat was) so the destination page can offer a banner
@@ -720,6 +788,8 @@ class Sea {
     if (this.muteBtn.parentNode) this.muteBtn.remove()
     if (this.bottleBanner.parentNode) this.bottleBanner.remove()
     if (this.regattaHud.parentNode) this.regattaHud.remove()
+    if (this.customizeBtn.parentNode) this.customizeBtn.remove()
+    if (this.customizePanel.parentNode) this.customizePanel.remove()
   }
 }
 

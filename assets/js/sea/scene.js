@@ -44,7 +44,11 @@ const DAY = {
 // lime and signal-blue accents, so colorful islands and boats still read as
 // "one system" — everything keeps the same thick ink outline regardless of
 // fill, which is what ties it together visually.
-const PALETTE = [
+// Exported so a sailor's boat-customization picker (see index.js) offers
+// exactly this palette — a custom hull color still "belongs" to the same
+// system as everyone else's hash-derived one, just chosen instead of
+// assigned.
+export const PALETTE = [
   0xc4e600, // lime (brand)
   0x4fd6c4, // teal
   0xff8a3d, // coral
@@ -310,6 +314,7 @@ export class SeaScene {
       new THREE.MeshToonMaterial({color: themedColor(sailorId), gradientMap: this.gradient})
     )
     hull.position.y = 1
+    hull.userData.isHull = true // lets setHullColor find it later without threading a reference through
     group.add(outline(hullGeo, 1.1).translateY(1))
     group.add(hull)
 
@@ -339,6 +344,7 @@ export class SeaScene {
     })
     const sail = new THREE.Mesh(sailGeo, sailMat)
     sail.position.set(0, 3.1, 0.2)
+    sail.userData.isSail = true // lets setSailTexture find it later
     group.add(sail)
 
     if (isSelf) {
@@ -353,6 +359,26 @@ export class SeaScene {
 
     this.scene.add(group)
     return group
+  }
+
+  // Re-tints an already-built boat's hull — used to apply a sailor's
+  // customized color over the hash-derived default (see index.js's
+  // boat-customization picker). No-op if `group` isn't a boat.
+  setHullColor(group, colorHex) {
+    const hull = group.children.find((c) => c.userData.isHull)
+    if (hull) hull.material.color.set(colorHex)
+  }
+
+  // Swaps an already-built boat's sail texture (e.g. a custom flag emoji
+  // instead of the hash/GeoIP default). Disposes the old texture -- unlike
+  // most meshes in this file, textures here are swapped at runtime rather
+  // than built once, so leaving the old one behind would actually leak.
+  setSailTexture(group, texture) {
+    const sail = group.children.find((c) => c.userData.isSail)
+    if (!sail) return
+    sail.material.map?.dispose()
+    sail.material.map = texture
+    sail.material.needsUpdate = true
   }
 
   removeBoat(group) {

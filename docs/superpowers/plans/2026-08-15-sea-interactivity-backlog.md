@@ -25,7 +25,7 @@ chase cam, keyboard + touch controls, sidebar minimap.
 | 7 | Day/night cycle (Eastern time) | Done |
 | 8 | Wake trails | Done |
 | 9 | More ambient creatures/hazards | Done |
-| 10 | Boat customization | Not started |
+| 10 | Boat customization | Done |
 
 ---
 
@@ -93,3 +93,10 @@ to keep the scene from getting crowded — can revisit later.
 
 Let a visitor pick a hull color or flag emoji (localStorage-persisted)
 instead of always deriving hull color from a hash of the session id.
+
+Shipped as self-view-only: a 🎨 picker sets your hull color (from the same
+palette the hash-derived system draws from) and sail flag/emoji, persisted
+and applied immediately to your own boat. Other sailors still see your
+hash-derived color and GeoIP flag — syncing a custom look to other viewers
+would need extending the presence/channel roster; left as a future
+follow-up rather than done here.
