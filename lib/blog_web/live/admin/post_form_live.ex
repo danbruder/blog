@@ -4,11 +4,6 @@ defmodule BlogWeb.Admin.PostFormLive do
   alias Blog.Content
   alias Blog.Content.Post
 
-  # How often (while there are unsaved changes) the draft gets written to
-  # the DB in the background. Keeps writes bounded to a fixed cadence
-  # instead of firing on every keystroke.
-  @autosave_interval :timer.seconds(30)
-
   @impl true
   def mount(params, _session, socket) do
     post =
@@ -19,20 +14,14 @@ defmodule BlogWeb.Admin.PostFormLive do
 
     changeset = Content.change_post(post)
 
-    socket =
-      socket
-      |> assign(
-        page_title: if(socket.assigns.live_action == :new, do: "New post", else: "Edit post"),
-        post: post
-      )
-      |> assign_form(changeset)
-      |> assign(:preview_html, render_preview(post.body))
-      |> assign(:dirty, false)
-      |> assign(:last_saved_at, nil)
-
-    socket = if connected?(socket), do: schedule_autosave(socket), else: socket
-
-    {:ok, socket}
+    {:ok,
+     socket
+     |> assign(
+       page_title: if(socket.assigns.live_action == :new, do: "New post", else: "Edit post"),
+       post: post
+     )
+     |> assign_form(changeset)
+     |> assign(:preview_html, render_preview(post.body))}
   end
 
   @impl true
@@ -45,7 +34,6 @@ defmodule BlogWeb.Admin.PostFormLive do
     {:noreply,
      socket
      |> assign_form(changeset)
-     |> assign(:dirty, true)
      |> assign(:preview_html, render_preview(post_params["body"]))}
   end
 
@@ -57,10 +45,7 @@ defmodule BlogWeb.Admin.PostFormLive do
     changeset =
       Content.change_post(socket.assigns.post, Map.put(current_params, "slug", slug))
 
-    {:noreply,
-     socket
-     |> assign_form(changeset)
-     |> assign(:dirty, true)}
+    {:noreply, assign_form(socket, changeset)}
   end
 
   def handle_event("save", %{"post" => post_params}, socket) do
@@ -93,76 +78,11 @@ defmodule BlogWeb.Admin.PostFormLive do
     end
   end
 
-  # Ticks every @autosave_interval regardless of activity; only actually
-  # writes to the DB when there are unsaved changes, so an idle editor
-  # costs nothing.
-  @impl true
-  def handle_info(:autosave, socket) do
-    socket = if socket.assigns.dirty, do: autosave(socket), else: socket
-    {:noreply, schedule_autosave(socket)}
-  end
-
-  defp schedule_autosave(socket) do
-    Process.send_after(self(), :autosave, @autosave_interval)
-    socket
-  end
-
-  defp autosave(socket) do
-    post_params = socket.assigns.form.params
-
-    changeset =
-      socket.assigns.post
-      |> Content.change_post(post_params)
-      |> Map.put(:action, :validate)
-
-    if changeset.valid? do
-      case persist_draft(socket, post_params) do
-        {:ok, post} ->
-          socket
-          |> assign(:post, post)
-          |> assign(:dirty, false)
-          |> assign(:last_saved_at, DateTime.utc_now())
-          |> promote_new_draft(post)
-
-        # Leave :dirty so the next tick retries — e.g. a slug collision
-        # the writer hasn't noticed yet.
-        {:error, _changeset} ->
-          socket
-      end
-    else
-      socket
-    end
-  end
-
-  defp persist_draft(%{assigns: %{live_action: :new}}, post_params),
-    do: Content.create_post(post_params)
-
-  defp persist_draft(%{assigns: %{live_action: :edit, post: post}}, post_params),
-    do: Content.update_post(post, post_params)
-
-  # A brand-new post's first autosave creates the row; swap the URL and
-  # live_action over to :edit so it keeps updating that same row instead
-  # of creating a new one on every subsequent tick (or on manual Save).
-  defp promote_new_draft(%{assigns: %{live_action: :new}} = socket, post) do
-    socket
-    |> assign(:live_action, :edit)
-    |> assign(:page_title, "Edit post")
-    |> push_patch(to: ~p"/admin/posts/#{post.id}/edit")
-  end
-
-  defp promote_new_draft(socket, _post), do: socket
-
   defp assign_form(socket, changeset) do
     assign(socket, form: to_form(changeset))
   end
 
   defp render_preview(body), do: Content.render_markdown(body)
-
-  defp autosave_status(true, _last_saved_at), do: "Unsaved changes"
-  defp autosave_status(false, nil), do: nil
-  defp autosave_status(false, last_saved_at) do
-    "Autosaved #{Calendar.strftime(last_saved_at, "%H:%M UTC")}"
-  end
 
   # Purely client-side: no server round-trip needed to enter/exit the
   # focused writing mode, so the toggle stays instant.
@@ -274,12 +194,6 @@ defmodule BlogWeb.Admin.PostFormLive do
 
           <:actions>
             <.button type="submit">Save</.button>
-            <span
-              :if={status = autosave_status(@dirty, @last_saved_at)}
-              class="text-[13px] text-ink-3"
-            >
-              {status}
-            </span>
             <.link
               navigate={~p"/admin"}
               class="text-[13px] text-ink-2 !shadow-[inset_0_-1px_0_var(--color-rule)] hover:!text-ink"
