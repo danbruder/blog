@@ -14,6 +14,7 @@ export class SeaNet {
     this.bottles = new Map() // id -> {id, x, z, text, flag}
     this.onBottleDropped = null // (bottle) => void
     this.onBottleExpired = null // (id) => void
+    this.onRegattaFinish = null // (seconds) => void — another sailor finished the regatta
     this._lastSent = 0
 
     const token = document
@@ -61,6 +62,9 @@ export class SeaNet {
       this.bottles.delete(id)
       if (this.onBottleExpired) this.onBottleExpired(id)
     })
+    this.channel.on("regatta_finish", ({id, seconds}) => {
+      if (id !== this.sailorId && this.onRegattaFinish) this.onRegattaFinish(seconds)
+    })
     this.channel.join()
   }
 
@@ -78,6 +82,10 @@ export class SeaNet {
 
   dropBottle(x, z, text) {
     this.channel.push("drop_bottle", {x, z, text})
+  }
+
+  sendRegattaFinish(seconds) {
+    this.channel.push("regatta_finish", {seconds})
   }
 
   _addBottle(bottle) {

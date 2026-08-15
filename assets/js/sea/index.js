@@ -11,7 +11,9 @@ import {
   makeSharks,
   stepShark,
   sharkBreach,
-  nearestBitingShark
+  nearestBitingShark,
+  regattaBuoys,
+  isAtBuoy
 } from "./world.js"
 import {seaBus} from "./bus.js"
 
@@ -32,6 +34,9 @@ const DOCK_CHIME_DELAY = 150 // ms to let the chime start before navigating away
 const EMOTE_COOLDOWN = 0.8 // seconds between waves, so holding/mashing the key doesn't spam
 const EMOTE_DURATION = 1.3 // seconds the wave sprite rises and fades over
 const BOTTLE_MAX_LENGTH = 80
+const REGATTA_BEST_KEY = "seaRegattaBest"
+const BUOY_RESTING_SCALE = 3.2
+const BUOY_TARGET_SCALE = 4.6 // bigger than resting, marks the current target
 
 let active = null
 
@@ -67,6 +72,24 @@ class Sea {
     this.emotes = [] // active {sprite, boatGroup, t} wave sprites, see updateEmotes()
     this.bottleMeshes = new Map() // id -> {sprite, bottle}
     this.selfBoat = this.scene.makeBoat(flagTexture("🏴"), true, sailorId)
+
+    // Regatta: a fixed ring of buoys around the harbor, sailed in order.
+    // Buoy 0 starts the clock; the last one stops it and reports a time.
+    this.buoys = regattaBuoys(harbor)
+    this.buoyMeshes = this.buoys.map((b) => {
+      const sprite = emoteSprite("🚩")
+      sprite.scale.set(BUOY_RESTING_SCALE, BUOY_RESTING_SCALE, 1)
+      sprite.position.set(b.x, 3, b.z)
+      this.scene.add(sprite)
+      return sprite
+    })
+    this.regattaNext = 0 // index of the next buoy that must be hit
+    this.regattaStart = null // this.t at buoy 0, or null when no run is active
+    this.regattaBest = parseFloat(localStorage.getItem(REGATTA_BEST_KEY)) || null
+
+    this.regattaHud = document.createElement("div")
+    this.regattaHud.className = "sea-regatta"
+    el.appendChild(this.regattaHud)
 
     this.controls = createControls(el)
     this.net = new SeaNet(sailorId)
@@ -115,6 +138,8 @@ class Sea {
     }
     this.net.onBottleDropped = (bottle) => this.spawnBottle(bottle)
     this.net.onBottleExpired = (id) => this.despawnBottle(id)
+    this.net.onRegattaFinish = (seconds) =>
+      this.queueToast(`🏁 a sailor finished the regatta in ${seconds.toFixed(1)}s`)
 
     // Ambient waves + a few event sounds (splash, shark bite, dock chime).
     // Always muted on first visit — the mute button click is the only thing
@@ -215,6 +240,8 @@ class Sea {
     }
     this.updateBottles()
     this.updateBottleBanner()
+
+    this.updateRegatta()
 
     this.scene.animateWater(this.t)
     this.scene.chase(this.pos, this.pos.h)
@@ -448,6 +475,63 @@ class Sea {
     this.bottleBanner.style.opacity = "1"
   }
 
+  // Bobs every buoy, keeps the current target visually bigger than the
+  // rest, and advances the regatta on a hit: buoy 0 starts the clock, the
+  // last buoy stops it, reports the time (local + broadcast), and resets
+  // for another lap.
+  updateRegatta() {
+    for (let i = 0; i < this.buoyMeshes.length; i++) {
+      const sprite = this.buoyMeshes[i]
+      const isTarget = i === this.regattaNext
+      const scale = isTarget ? BUOY_TARGET_SCALE : BUOY_RESTING_SCALE
+      sprite.scale.set(scale, scale, 1)
+      sprite.position.y = 3 + Math.sin(this.t * 1.3 + i) * 0.4
+    }
+
+    const target = this.buoys[this.regattaNext]
+    if (isAtBuoy(this.pos.x, this.pos.z, target)) {
+      if (this.regattaNext === 0) this.regattaStart = this.t
+      this.regattaNext += 1
+
+      if (this.regattaNext >= this.buoys.length) {
+        const elapsed = this.t - this.regattaStart
+        this.regattaNext = 0
+        this.regattaStart = null
+
+        const improved = this.regattaBest === null || elapsed < this.regattaBest
+        if (improved) {
+          this.regattaBest = elapsed
+          localStorage.setItem(REGATTA_BEST_KEY, String(elapsed))
+        }
+
+        this.audio.finishFanfare()
+        this.queueToast(
+          improved
+            ? `🏁 Regatta finished in ${elapsed.toFixed(1)}s — new best!`
+            : `🏁 Regatta finished in ${elapsed.toFixed(1)}s`
+        )
+        this.net.sendRegattaFinish(elapsed)
+      }
+    }
+
+    this.updateRegattaHud()
+  }
+
+  updateRegattaHud() {
+    if (this.regattaStart !== null) {
+      const elapsed = this.t - this.regattaStart
+      const best = this.regattaBest !== null ? ` · best ${this.regattaBest.toFixed(1)}s` : ""
+      this.regattaHud.textContent =
+        `Buoy ${this.regattaNext + 1}/${this.buoys.length} · ${elapsed.toFixed(1)}s${best}`
+      this.regattaHud.style.opacity = "1"
+    } else if (this.regattaBest !== null) {
+      this.regattaHud.textContent = `Regatta best: ${this.regattaBest.toFixed(1)}s`
+      this.regattaHud.style.opacity = "1"
+    } else {
+      this.regattaHud.style.opacity = "0"
+    }
+  }
+
   // Floats the label above the actual island in the scene (not fixed to the
   // top of the screen) by projecting its 3D position to screen pixels each
   // frame, so it tracks the island as the chase cam moves.
@@ -535,6 +619,7 @@ class Sea {
     if (this.toast.parentNode) this.toast.remove()
     if (this.muteBtn.parentNode) this.muteBtn.remove()
     if (this.bottleBanner.parentNode) this.bottleBanner.remove()
+    if (this.regattaHud.parentNode) this.regattaHud.remove()
   }
 }
 

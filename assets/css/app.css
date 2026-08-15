@@ -400,6 +400,11 @@ pre code.hljs {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   background: var(--color-paper); border: 2px solid var(--color-ink);
   padding: 5px 10px; pointer-events: none; opacity: 0; transition: opacity 150ms ease; }
+.sea-regatta { position: absolute; top: 16px; left: 16px;
+  font-family: "Space Grotesk", system-ui, sans-serif; font-weight: 700;
+  font-size: clamp(11px, 1.5vw, 13px); letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--color-ink); background: var(--color-paper); border: 2px solid var(--color-ink);
+  padding: 6px 12px; pointer-events: none; opacity: 0; transition: opacity 200ms ease; }
 
 /* Post footer kudos button (see the `Kudos` hook in app.js). The ring
    (--color-lime) fills clockwise over the 5s hold; the thumb grows with it.

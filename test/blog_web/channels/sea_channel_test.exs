@@ -103,6 +103,15 @@ defmodule BlogWeb.SeaChannelTest do
     assert_push "bottle_dropped", %{x: 5.0, z: 6.0, text: "ahoy", flag: "🏳️"}
   end
 
+  test "regatta finishes broadcast to other members but not the sender" do
+    {:ok, _r1, socket1} = join_sea("sailor-1")
+
+    push(socket1, "regatta_finish", %{"seconds" => 42.5})
+
+    assert_broadcast "regatta_finish", %{id: "sailor-1", seconds: 42.5}
+    refute_push "regatta_finish", %{id: "sailor-1"}
+  end
+
   test "a fresh join receives the current bottles snapshot" do
     Blog.SeaBottles.drop(9.0, 9.0, "already here")
     # drop/5 casts; list/0 is a call to the same GenServer, so waiting for it

@@ -160,3 +160,27 @@ export function nearestBitingShark(x, z, sharks, radius = SHARK_BITE_RADIUS) {
   }
   return null
 }
+
+// Regatta: a fixed ring of buoys around the harbor, sailed in order (buoy 0
+// starts the clock, the last one stops it). Purely a client-side layout —
+// same for every sailor since it's derived from the harbor position alone,
+// no server round-trip needed.
+const REGATTA_BUOY_COUNT = 5
+const REGATTA_RADIUS = 70
+const REGATTA_HIT_RADIUS = 7
+
+export function regattaBuoys(harbor) {
+  const buoys = []
+  for (let i = 0; i < REGATTA_BUOY_COUNT; i++) {
+    const angle = (i / REGATTA_BUOY_COUNT) * Math.PI * 2
+    buoys.push({
+      x: harbor.x + Math.cos(angle) * REGATTA_RADIUS,
+      z: harbor.z + Math.sin(angle) * REGATTA_RADIUS
+    })
+  }
+  return buoys
+}
+
+export function isAtBuoy(x, z, buoy, radius = REGATTA_HIT_RADIUS) {
+  return Math.hypot(buoy.x - x, buoy.z - z) <= radius
+}

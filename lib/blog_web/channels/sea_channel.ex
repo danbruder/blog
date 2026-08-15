@@ -17,6 +17,11 @@ defmodule BlogWeb.SeaChannel do
   `Blog.SeaBottles`'s ephemeral messages-in-bottles: a sailor drops a short
   note, everyone in Sea mode sees it float until it auto-expires. Also not
   chat — one-way, capped length, no thread.
+
+  `"regatta_finish"` fans a finish time out to the rest of the channel
+  (same `broadcast_from!` shape as `"emote"`) when a sailor completes the
+  buoy-ring regatta -- the ring itself is deterministic client-side layout,
+  not server state.
   """
 
   use Phoenix.Channel
@@ -90,6 +95,15 @@ defmodule BlogWeb.SeaChannel do
   @impl true
   def handle_in("drop_bottle", %{"x" => x, "z" => z, "text" => text}, socket) do
     SeaBottles.drop(x, z, text, socket.assigns[:flag] || "🏳️")
+    {:noreply, socket}
+  end
+
+  # The regatta buoy ring is entirely client-side (deterministic from the
+  # harbor position, see world.js's regattaBuoys) -- this just fans out a
+  # finish-line brag to other sailors, the same shape as "emote".
+  @impl true
+  def handle_in("regatta_finish", %{"seconds" => seconds}, socket) do
+    broadcast_from!(socket, "regatta_finish", %{id: socket.assigns.sailor_id, seconds: seconds})
     {:noreply, socket}
   end
 
