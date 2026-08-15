@@ -33,6 +33,7 @@ defmodule Blog.Analytics do
 
   @table "events"
   @page_view_event "page_view"
+  @kudos_event "kudos"
   # A gap longer than this between two page views in the same session isn't
   # "time on page" so much as an abandoned/backgrounded tab; treat it as
   # unknown rather than skewing the average.
@@ -93,6 +94,29 @@ defmodule Blog.Analytics do
 
   @doc "Forces an immediate bulk write of any buffered events. Also handy in tests."
   def flush, do: GenServer.call(__MODULE__, :flush)
+
+  @doc """
+  Records a "kudos" event for `path` -- a reader holding down the thumbs-up
+  button on a post for the full 5 seconds. `session_id` is optional and
+  purely informational (matches `track/2`'s convention); double-submission
+  is prevented upstream by `BlogWeb.KudosController`, not here.
+  """
+  def track_kudos(path, session_id \\ nil) do
+    track(@kudos_event, %{path: path, session_id: session_id})
+  end
+
+  @doc """
+  Returns per-post stats for the footer shown under each post:
+
+      {:ok, %{views_all_time: 123, views_last_week: 4, kudos: 7}}
+
+  `views_*` count `"page_view"` events for the exact `path`; `kudos` counts
+  `"kudos"` events for it. "Last week" is a rolling 7 days ending now, not a
+  calendar week.
+  """
+  def post_stats(path) do
+    GenServer.call(__MODULE__, {:post_stats, path})
+  end
 
   @impl true
   def init(opts) do
@@ -208,6 +232,28 @@ defmodule Blog.Analytics do
            top_countries: Enum.map(top_countries, &decode_country/1),
            top_referrers: Enum.map(top_referrers, &decode_referrer/1)
          }}
+      end
+
+    {:reply, reply, state}
+  end
+
+  @impl true
+  def handle_call({:post_stats, path}, _from, state) do
+    state = flush_buffer(state)
+    week_ago_us = DateTime.utc_now() |> DateTime.add(-7, :day) |> DateTime.to_unix(:microsecond)
+
+    sql = """
+    SELECT
+      (SELECT COUNT(*) FROM #{@table} WHERE event_name = $1 AND path = $2) AS views_all_time,
+      (SELECT COUNT(*) FROM #{@table} WHERE event_name = $1 AND path = $2 AND occurred_at_us >= $3)
+        AS views_last_week,
+      (SELECT COUNT(*) FROM #{@table} WHERE event_name = $4 AND path = $2) AS kudos
+    """
+
+    reply =
+      with {:ok, [views_all_time, views_last_week, kudos]} <-
+             fetch_one(state.conn, sql, [@page_view_event, path, week_ago_us, @kudos_event]) do
+        {:ok, %{views_all_time: views_all_time, views_last_week: views_last_week, kudos: kudos}}
       end
 
     {:reply, reply, state}

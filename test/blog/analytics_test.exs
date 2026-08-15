@@ -257,6 +257,34 @@ defmodule Blog.AnalyticsTest do
     end
   end
 
+  describe "post_stats/1" do
+    test "counts all-time and last-week page views, plus kudos, for one path" do
+      path = "/blog/post-stats-#{System.unique_integer([:positive])}"
+      now = DateTime.utc_now()
+
+      insert_page_view("sess-a", path, "US", nil, now)
+      insert_page_view("sess-b", path, "US", nil, DateTime.add(now, -1, :day))
+      insert_page_view("sess-c", path, "US", nil, DateTime.add(now, -10, :day))
+      insert_page_view("sess-d", "/blog/some-other-post", "US", nil, now)
+
+      Analytics.track_kudos(path, "sess-a")
+      Analytics.track_kudos(path, "sess-b")
+      Analytics.track_kudos("/blog/some-other-post", "sess-d")
+
+      {:ok, stats} = Analytics.post_stats(path)
+
+      assert stats == %{views_all_time: 3, views_last_week: 2, kudos: 2}
+    end
+
+    test "returns zeros for a path with no events" do
+      path = "/blog/never-viewed-#{System.unique_integer([:positive])}"
+
+      {:ok, stats} = Analytics.post_stats(path)
+
+      assert stats == %{views_all_time: 0, views_last_week: 0, kudos: 0}
+    end
+  end
+
   defp insert_page_view(session_id, path, country, referrer, %DateTime{} = occurred_at) do
     {:ok, _columns, _rows} =
       Analytics.query(

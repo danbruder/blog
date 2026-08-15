@@ -1,10 +1,11 @@
 defmodule BlogWeb.PostLive.Show do
   use BlogWeb, :live_view
 
+  alias Blog.Analytics
   alias Blog.Content
 
   @impl true
-  def mount(%{"slug" => slug}, _session, socket) do
+  def mount(%{"slug" => slug}, session, socket) do
     case Content.get_published_by_slug(slug) do
       nil ->
         {:ok,
@@ -13,13 +14,18 @@ defmodule BlogWeb.PostLive.Show do
          |> redirect(to: ~p"/")}
 
       post ->
+        post_path = post_path(post)
+
         {:ok,
          assign(socket,
            post: post,
            page_title: post.title,
            meta_description: Content.excerpt(post),
            reading_time: reading_time(post),
-           body_html: Content.render_body(post)
+           body_html: Content.render_body(post),
+           post_path: post_path,
+           stats: post_stats(post_path),
+           kudos_given?: post_path in (session["kudos_paths"] || [])
          )}
     end
   end
@@ -53,6 +59,75 @@ defmodule BlogWeb.PostLive.Show do
 
       <div id="post-body" phx-hook="Highlight" phx-update="ignore" class="markdown-content">
         {Phoenix.HTML.raw(@body_html)}
+      </div>
+
+      <div class="mt-10 flex flex-wrap items-center justify-between gap-6 border-t border-rule pt-6">
+        <div class="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-ink-3">
+          <span :if={@stats.views_all_time > 0}>
+            {format_count(@stats.views_all_time)} views all time
+          </span>
+          <span :if={@stats.views_last_week > 0}>
+            {format_count(@stats.views_last_week)} in the last week
+          </span>
+        </div>
+
+        <div
+          id="kudos"
+          phx-hook="Kudos"
+          phx-update="ignore"
+          data-path={@post_path}
+          data-given={to_string(@kudos_given?)}
+          data-kudos={@stats.kudos}
+          class="kudos-widget flex items-center gap-2.5"
+        >
+          <button
+            type="button"
+            data-kudos-button
+            class="kudos-button relative flex h-10 w-10 shrink-0 items-center justify-center border border-ink text-ink transition-colors"
+            aria-label="Give kudos"
+            title="Hold for 5 seconds to give kudos"
+          >
+            <svg
+              viewBox="0 0 36 36"
+              class="pointer-events-none absolute inset-0 h-full w-full -rotate-90"
+            >
+              <circle
+                cx="18"
+                cy="18"
+                r="15.5"
+                fill="none"
+                stroke="var(--color-rule)"
+                stroke-width="2"
+              />
+              <circle
+                data-kudos-progress
+                cx="18"
+                cy="18"
+                r="15.5"
+                fill="none"
+                stroke="var(--color-lime)"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+            <svg
+              viewBox="0 0 24 24"
+              class="kudos-thumb pointer-events-none relative h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M7 22V10M2 13v7a2 2 0 0 0 2 2h12.6a2 2 0 0 0 1.98-1.7l1.2-8A2 2 0 0 0 17.8 10H13V5a2 2 0 0 0-2-2L7 10" />
+            </svg>
+          </button>
+          <span class="text-[13px] text-ink-2">
+            <span data-kudos-count>{@stats.kudos}</span>
+            kudos &middot;
+            <span data-kudos-label>{if @kudos_given?, do: "Thanks!", else: "hold to give kudos"}</span>
+          </span>
+        </div>
       </div>
 
       <form
@@ -104,6 +179,28 @@ defmodule BlogWeb.PostLive.Show do
 
   defp back_label(%{kind: "note"}), do: "notes"
   defp back_label(_), do: "writing"
+
+  # The path this post is served at -- matches the routes in
+  # BlogWeb.Router, and thus the `path` that BlogWeb.AnalyticsTracker
+  # records page views under and what BlogWeb.KudosController keys kudos to.
+  defp post_path(%{kind: "note", slug: slug}), do: ~p"/notes/#{slug}"
+  defp post_path(%{slug: slug}), do: ~p"/blog/#{slug}"
+
+  defp post_stats(path) do
+    case Analytics.post_stats(path) do
+      {:ok, stats} -> stats
+      {:error, _reason} -> %{views_all_time: 0, views_last_week: 0, kudos: 0}
+    end
+  end
+
+  # "12345" -> "12,345"; used for the view counts in the post footer.
+  defp format_count(n) when is_integer(n) do
+    n
+    |> Integer.to_string()
+    |> String.reverse()
+    |> String.replace(~r/(\d{3})(?=\d)/, "\\1,")
+    |> String.reverse()
+  end
 
   defp reading_time(%{body: body}) when is_binary(body) do
     words = body |> String.split(~r/\s+/, trim: true) |> length()
