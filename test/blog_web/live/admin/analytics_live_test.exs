@@ -68,7 +68,7 @@ defmodule BlogWeb.Admin.AnalyticsLiveTest do
 
       html =
         view
-        |> element("button[phx-value-value='/foo']")
+        |> element("button[phx-value-filter-value='/foo']")
         |> render_click()
 
       assert_patch(
@@ -104,7 +104,7 @@ defmodule BlogWeb.Admin.AnalyticsLiveTest do
 
       html =
         view
-        |> element("button[phx-value-value='CA']")
+        |> element("button[phx-value-filter-value='CA']")
         |> render_click()
 
       assert html =~ "/ca-page"
@@ -125,7 +125,7 @@ defmodule BlogWeb.Admin.AnalyticsLiveTest do
 
       html =
         view
-        |> element("button[phx-value-value='direct']")
+        |> element("button[phx-value-filter-value='direct']")
         |> render_click()
 
       assert html =~ "/direct-page"

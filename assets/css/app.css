@@ -96,6 +96,16 @@
     padding: 0 6px;
   }
 
+  /* A soft lime wash for relative-magnitude bars (analytics top-N lists).
+     Tailwind's bg-lime/NN opacity modifier can't be used here: every color
+     in this system is a bare `var(--color-*)` reference (see tokens above),
+     which Tailwind can't decompose into RGB channels at build time to
+     apply an alpha modifier to, so it silently resolves to transparent.
+     color-mix() does the same blend at paint time instead. */
+  .bar-fill {
+    background: color-mix(in oklab, var(--color-lime) 35%, transparent);
+  }
+
   /* Bordered cell rows — always a grid, never growing flex items, so a
      lone last cell can't stretch to full width. */
   .cells {
