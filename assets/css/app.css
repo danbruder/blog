@@ -111,6 +111,34 @@
 }
 
 /* ─────────────────────────────────────────────────────────────
+   Post editor — focused writing mode. `.editor-pane` normally
+   flows inline (body textarea + rendered preview, stacked on
+   mobile, side by side at lg). Toggling `.is-fullscreen` (via
+   Phoenix.LiveView.JS, client-side only) lifts it out to cover
+   the viewport with the same left/right split at any width.
+   ───────────────────────────────────────────────────────────── */
+.editor-pane.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  padding: 1.5rem;
+  background: var(--color-paper);
+}
+.editor-pane.is-fullscreen > div {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  margin-bottom: 0;
+  flex-direction: column;
+}
+.editor-pane.is-fullscreen textarea,
+.editor-pane.is-fullscreen #preview {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────
    Prose (rendered markdown post bodies).
    ───────────────────────────────────────────────────────────── */
 .markdown-content {
