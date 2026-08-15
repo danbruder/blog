@@ -42,11 +42,44 @@ defmodule BlogWeb.SeaChannelTest do
     refute_push "pos", %{id: "sailor-1"}
   end
 
-  test "leaving broadcasts a gone event" do
+  test "leaving broadcasts a gone event with the sailor's flag" do
     Process.flag(:trap_exit, true)
+
+    {:ok, _} =
+      Presence.track(self(), PresenceTracker.topic(), "reader-key", %{
+        country: "US",
+        sailor_id: "sailor-1",
+        path: "/writing",
+        joined_at: 0
+      })
+
     {:ok, _r1, socket1} = join_sea("sailor-1")
     ref = leave(socket1)
     assert_reply ref, :ok
-    assert_broadcast "gone", %{id: "sailor-1"}
+    assert_broadcast "gone", %{id: "sailor-1", flag: "🇺🇸"}
+  end
+
+  test "joining broadcasts an arrived event with the sailor's flag" do
+    {:ok, _} =
+      Presence.track(self(), PresenceTracker.topic(), "reader-key", %{
+        country: "GB",
+        sailor_id: "sailor-2",
+        path: "/",
+        joined_at: 0
+      })
+
+    {:ok, _r1, _socket1} = join_sea("sailor-1")
+    {:ok, _r2, _socket2} = join_sea("sailor-2")
+
+    # broadcast_from! is what excludes the joining sailor themself from this
+    # event, the same mechanism already covered for "pos" above.
+    assert_broadcast "arrived", %{id: "sailor-2", flag: "🇬🇧"}
+  end
+
+  test "a sailor with no presence entry arrives under a blank flag" do
+    {:ok, _r1, _socket1} = join_sea("sailor-1")
+    {:ok, _r2, _socket2} = join_sea("sailor-2")
+
+    assert_broadcast "arrived", %{id: "sailor-2", flag: "🏳️"}
   end
 end

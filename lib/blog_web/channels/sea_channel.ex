@@ -6,6 +6,10 @@ defmodule BlogWeb.SeaChannel do
   right island. Sailors then broadcast their `{x, z, h}` position, which is
   fanned out to the other members and rendered as a live boat. Everything here
   is ephemeral — no storage.
+
+  Joining/leaving *this channel* (i.e. entering/exiting Sea mode, not just
+  visiting the site) also fans out `"arrived"` / `"gone"` events so other
+  sailors can show an arrival/departure toast.
   """
 
   use Phoenix.Channel
@@ -22,8 +26,19 @@ defmodule BlogWeb.SeaChannel do
 
   @impl true
   def handle_info(:after_join, socket) do
-    push(socket, "roster", %{sailors: roster()})
-    {:noreply, socket}
+    sailors = roster()
+    push(socket, "roster", %{sailors: sailors})
+
+    flag =
+      case Enum.find(sailors, &(&1.id == socket.assigns.sailor_id)) do
+        %{flag: flag} -> flag
+        nil -> "🏳️"
+      end
+
+    # Told to everyone already sailing, not this sailor themself — stash the
+    # flag in assigns so `terminate/2` can reuse it for the matching "gone".
+    broadcast_from!(socket, "arrived", %{id: socket.assigns.sailor_id, flag: flag})
+    {:noreply, assign(socket, :flag, flag)}
   end
 
   # A reader joined/left/navigated: refresh the roster for this sailor.
@@ -41,7 +56,7 @@ defmodule BlogWeb.SeaChannel do
   @impl true
   def terminate(_reason, socket) do
     if id = socket.assigns[:sailor_id] do
-      broadcast!(socket, "gone", %{id: id})
+      broadcast!(socket, "gone", %{id: id, flag: socket.assigns[:flag] || "🏳️"})
     end
 
     :ok

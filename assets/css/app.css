@@ -111,6 +111,34 @@
 }
 
 /* ─────────────────────────────────────────────────────────────
+   Post editor — focused writing mode. `.editor-pane` normally
+   flows inline (body textarea + rendered preview, stacked on
+   mobile, side by side at lg). Toggling `.is-fullscreen` (via
+   Phoenix.LiveView.JS, client-side only) lifts it out to cover
+   the viewport with the same left/right split at any width.
+   ───────────────────────────────────────────────────────────── */
+.editor-pane.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  padding: 1.5rem;
+  background: var(--color-paper);
+}
+.editor-pane.is-fullscreen > div {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  margin-bottom: 0;
+  flex-direction: column;
+}
+.editor-pane.is-fullscreen textarea,
+.editor-pane.is-fullscreen #preview {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────
    Prose (rendered markdown post bodies).
    ───────────────────────────────────────────────────────────── */
 .markdown-content {
@@ -345,6 +373,11 @@ pre code.hljs {
   white-space: nowrap; color: oklch(0.6 0.19 25); background: var(--color-paper);
   border: 2px solid oklch(0.6 0.19 25); padding: 8px 16px;
   pointer-events: none; opacity: 0; transition: opacity 150ms ease; }
+.sea-toast { position: absolute; top: 48px; left: 50%; transform: translateX(-50%);
+  font-family: "Space Grotesk", system-ui, sans-serif; font-weight: 700;
+  font-size: clamp(12px, 1.6vw, 15px); letter-spacing: 0.02em; white-space: nowrap;
+  color: var(--color-ink); background: var(--color-paper); border: 2px solid var(--color-ink);
+  padding: 6px 14px; pointer-events: none; opacity: 0; transition: opacity 300ms ease; }
 
 /* Post footer kudos button (see the `Kudos` hook in app.js). The ring
    (--color-lime) fills clockwise over the 5s hold; the thumb grows with it.
