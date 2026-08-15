@@ -6,8 +6,16 @@ defmodule BlogWeb.SeaWorld do
   hash of the path) and clustered by section so the layout is the same for
   everyone and stable across reloads. Publishing a post automatically adds an
   island the next time the page loads.
+
+  Each island also carries `trending: true/false` -- the top few pages by
+  view count over the last `@trending_window_hours` (from `Blog.Analytics`)
+  render taller/more overgrown, so sailing the archipelago surfaces what's
+  actually being read right now. Best-effort: if analytics is unavailable
+  for any reason, every island just comes back non-trending rather than
+  failing the whole island list.
   """
 
+  alias Blog.Analytics
   alias Blog.Content
 
   # Section index islands and the order/angle each section's cluster sits at.
@@ -26,13 +34,17 @@ defmodule BlogWeb.SeaWorld do
     {"games", "/games/sand", "Falling Sand"}
   ]
 
+  @trending_count 3
+  @trending_window_hours 24
+
   @type island :: %{
           path: String.t(),
           title: String.t(),
           section: String.t(),
           x: float(),
           z: float(),
-          color: String.t()
+          color: String.t(),
+          trending: boolean()
         }
 
   @spec islands() :: [island()]
@@ -51,11 +63,38 @@ defmodule BlogWeb.SeaWorld do
         {"notes", "/notes/#{p.slug}", p.title, color_key(p, "notes")}
       end)
 
+    trending = trending_paths()
+
     (fixed ++ posts ++ notes)
     |> Enum.map(fn {section, path, title, color} ->
       {x, z} = position(section, path)
-      %{path: path, title: title, section: section, x: x, z: z, color: color}
+
+      %{
+        path: path,
+        title: title,
+        section: section,
+        x: x,
+        z: z,
+        color: color,
+        trending: path in trending
+      }
     end)
+  end
+
+  # The top @trending_count paths by view count in the last
+  # @trending_window_hours, straight from the same stats/3 the admin
+  # analytics dashboard uses. Any failure (analytics down, a query error)
+  # degrades to "nothing is trending" rather than breaking island loading.
+  defp trending_paths do
+    to = DateTime.utc_now()
+    from = DateTime.add(to, -@trending_window_hours * 60 * 60, :second)
+
+    case Analytics.stats(from, to, limit: @trending_count) do
+      {:ok, %{top_paths: top_paths}} -> Enum.map(top_paths, & &1.path)
+      _ -> []
+    end
+  catch
+    :exit, _ -> []
   end
 
   # Colors are keyed off the post's category, falling back to its first tag,

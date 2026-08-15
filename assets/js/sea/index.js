@@ -1,16 +1,25 @@
-import {SeaScene, flagTexture, emoteSprite} from "./scene.js"
+import {SeaScene, flagTexture, emoteSprite, bottleSprite, wakeSegment, PALETTE} from "./scene.js"
 import {createControls} from "./controls.js"
 import {SeaNet} from "./net.js"
 import {SeaAudio} from "./audio.js"
 import {
   nearestDockable,
   nearestIsland,
+  nearestBottle,
   isCloseEnoughToDock,
   resolveCollision,
   makeSharks,
   stepShark,
   sharkBreach,
-  nearestBitingShark
+  nearestBitingShark,
+  regattaBuoys,
+  isAtBuoy,
+  easternHour,
+  dayFactor,
+  makeFlyingFish,
+  stepFish,
+  fishLeap,
+  driftwoodPieces
 } from "./world.js"
 import {seaBus} from "./bus.js"
 
@@ -30,6 +39,18 @@ const BITE_COOLDOWN = 2 // seconds of invulnerability after a bite
 const DOCK_CHIME_DELAY = 150 // ms to let the chime start before navigating away
 const EMOTE_COOLDOWN = 0.8 // seconds between waves, so holding/mashing the key doesn't spam
 const EMOTE_DURATION = 1.3 // seconds the wave sprite rises and fades over
+const BOTTLE_MAX_LENGTH = 80
+const REGATTA_BEST_KEY = "seaRegattaBest"
+const TIME_OF_DAY_REFRESH_MS = 60_000 // sky doesn't need per-frame updates -- just re-check each minute
+const WAKE_SPAWN_DISTANCE = 2.5 // a boat drops one wake puff per this many units traveled
+const WAKE_DURATION = 1.6 // seconds a puff takes to fully fade
+const MAX_WAKES = 120 // hard cap so a crowded sea can't run away with the segment count
+const FISH_COUNT = 8
+const FISH_BOUNDS = 120 // flying fish patrol within this radius of the harbor
+const CUSTOM_COLOR_KEY = "seaCustomColor"
+const CUSTOM_FLAG_KEY = "seaCustomFlag"
+const BUOY_RESTING_SCALE = 3.2
+const BUOY_TARGET_SCALE = 4.6 // bigger than resting, marks the current target
 
 let active = null
 
@@ -55,6 +76,16 @@ class Sea {
     this.scene = new SeaScene(el)
     for (const isl of islands) this.scene.addIsland(isl)
 
+    // Always follows US Eastern time, not the visitor's own timezone, so
+    // every sailor sees the same sky at once. Refreshed periodically rather
+    // than per-frame -- the sky doesn't need to update faster than once a
+    // minute, and this also catches a tab left open across the dawn/dusk
+    // curve or a DST transition.
+    this.scene.applyTimeOfDay(dayFactor(easternHour()))
+    this.timeOfDayTimer = setInterval(() => {
+      this.scene.applyTimeOfDay(dayFactor(easternHour()))
+    }, TIME_OF_DAY_REFRESH_MS)
+
     // Resume at the last saved spot (e.g. returning from a docked post);
     // otherwise start at the harbor.
     const harbor = this.islandsByPath.get("/") || {x: 0, z: 0}
@@ -63,7 +94,49 @@ class Sea {
     this.wasColliding = false
     this.emoteCooldown = 0
     this.emotes = [] // active {sprite, boatGroup, t} wave sprites, see updateEmotes()
-    this.selfBoat = this.scene.makeBoat(flagTexture("🏴"), true, sailorId)
+    this.bottleMeshes = new Map() // id -> {sprite, bottle}
+    this.wakes = [] // active {mesh, t} wake puffs, see updateWakes()
+    this.lastWakePos = new Map() // sailorId -> {x, z}, throttles wake spawning by distance traveled
+    // A customized hull color/flag (see the 🎨 picker below) is applied
+    // right after creation, overriding the hash-derived hull color and the
+    // placeholder "🏴" flag for *this sailor's own view only* — other
+    // sailors still see this boat's hash-derived color and GeoIP flag, the
+    // same as before. Syncing a custom look to other viewers would need
+    // extending the presence/channel roster; left for later.
+    this.customColor = localStorage.getItem(CUSTOM_COLOR_KEY)
+    this.customFlag = localStorage.getItem(CUSTOM_FLAG_KEY)
+    this.selfBoat = this.scene.makeBoat(flagTexture(this.customFlag || "🏴"), true, sailorId)
+    if (this.customColor) this.scene.setHullColor(this.selfBoat, this.customColor)
+
+    this.customizeBtn = document.createElement("button")
+    this.customizeBtn.className = "sea-customize-btn"
+    this.customizeBtn.type = "button"
+    this.customizeBtn.textContent = "🎨"
+    this.customizeBtn.setAttribute("aria-label", "Customize your boat")
+    this.customizePanel = this.buildCustomizePanel()
+    this.customizeBtn.addEventListener("click", () => {
+      this.customizePanel.style.display = this.customizePanel.style.display === "none" ? "flex" : "none"
+    })
+    el.appendChild(this.customizeBtn)
+    el.appendChild(this.customizePanel)
+
+    // Regatta: a fixed ring of buoys around the harbor, sailed in order.
+    // Buoy 0 starts the clock; the last one stops it and reports a time.
+    this.buoys = regattaBuoys(harbor)
+    this.buoyMeshes = this.buoys.map((b) => {
+      const sprite = emoteSprite("🚩")
+      sprite.scale.set(BUOY_RESTING_SCALE, BUOY_RESTING_SCALE, 1)
+      sprite.position.set(b.x, 3, b.z)
+      this.scene.add(sprite)
+      return sprite
+    })
+    this.regattaNext = 0 // index of the next buoy that must be hit
+    this.regattaStart = null // this.t at buoy 0, or null when no run is active
+    this.regattaBest = parseFloat(localStorage.getItem(REGATTA_BEST_KEY)) || null
+
+    this.regattaHud = document.createElement("div")
+    this.regattaHud.className = "sea-regatta"
+    el.appendChild(this.regattaHud)
 
     this.controls = createControls(el)
     this.net = new SeaNet(sailorId)
@@ -76,14 +149,29 @@ class Sea {
     this.sharkMeshes = this.sharks.map(() => this.scene.addShark())
     this.biteCooldown = 0
 
+    // Flying fish are the same story, minus the biting — pure atmosphere.
+    this.fish = makeFlyingFish(FISH_COUNT, FISH_BOUNDS)
+    this.fishMeshes = this.fish.map(() => this.scene.addFish())
+
+    // Driftwood is fully static set-dressing: built once, bobbed gently,
+    // never re-simulated.
+    this.driftwood = driftwoodPieces().map((piece) => ({
+      mesh: this.scene.addDriftwood(piece),
+      piece
+    }))
+
     this.banner = document.createElement("div")
     this.banner.className = "sea-banner"
     el.appendChild(this.banner)
 
     this.hint = document.createElement("div")
     this.hint.className = "sea-hint"
-    this.hint.textContent = "Arrows / WASD to sail · Space to dock · E to wave"
+    this.hint.textContent = "Arrows / WASD to sail · Space to dock · E to wave · B for a bottle"
     el.appendChild(this.hint)
+
+    this.bottleBanner = document.createElement("div")
+    this.bottleBanner.className = "sea-bottle-banner"
+    el.appendChild(this.bottleBanner)
 
     this.biteMsg = document.createElement("div")
     this.biteMsg.className = "sea-bite"
@@ -106,6 +194,10 @@ class Sea {
       if (boat) this.spawnEmote(boat)
       this.audio.wave()
     }
+    this.net.onBottleDropped = (bottle) => this.spawnBottle(bottle)
+    this.net.onBottleExpired = (id) => this.despawnBottle(id)
+    this.net.onRegattaFinish = (seconds) =>
+      this.queueToast(`🏁 a sailor finished the regatta in ${seconds.toFixed(1)}s`)
 
     // Ambient waves + a few event sounds (splash, shark bite, dock chime).
     // Always muted on first visit — the mute button click is the only thing
@@ -173,8 +265,11 @@ class Sea {
 
     this.selfBoat.position.set(this.pos.x, 0, this.pos.z)
     this.selfBoat.rotation.y = this.pos.h
+    this.maybeSpawnWake(this.sailorId, this.pos.x, this.pos.z, this.pos.h)
 
     this.stepSharks()
+    this.stepAllFish()
+    this.bobDriftwood()
 
     this.net.sendPos(
       round(this.pos.x),
@@ -199,6 +294,16 @@ class Sea {
       this.tryEmote()
     }
     this.updateEmotes()
+
+    if (input.drop) {
+      input.drop = false
+      this.tryDropBottle()
+    }
+    this.updateBottles()
+    this.updateBottleBanner()
+
+    this.updateRegatta()
+    this.updateWakes()
 
     this.scene.animateWater(this.t)
     this.scene.chase(this.pos, this.pos.h)
@@ -239,6 +344,24 @@ class Sea {
     }, 1200)
   }
 
+  // Advances every flying fish's patrol/leap state — pure atmosphere, no
+  // interaction with the boat at all (unlike sharks).
+  stepAllFish() {
+    for (let i = 0; i < this.fish.length; i++) {
+      const f = this.fish[i]
+      stepFish(f, 0.016, FISH_BOUNDS)
+      this.scene.updateFish(this.fishMeshes[i], f, fishLeap(f))
+    }
+  }
+
+  // Driftwood never moves horizontally — just a slow vertical bob,
+  // phase-offset per piece the same way reader boats and bottles are.
+  bobDriftwood() {
+    for (const {mesh, piece} of this.driftwood) {
+      mesh.position.y = 0.3 + Math.sin(this.t * 0.9 + hash(`${piece.x},${piece.z}`)) * 0.15
+    }
+  }
+
   // Live sailors (from net.remote). A sailor id that is also in the roster is
   // still drawn from its live position; the roster only anchors *readers*.
   syncOtherBoats() {
@@ -256,11 +379,13 @@ class Sea {
       }
       b.position.set(p.x, 0, p.z)
       b.rotation.y = p.h
+      this.maybeSpawnWake(id, p.x, p.z, p.h)
     }
     for (const [id, b] of this.remoteBoats) {
       if (!liveIds.has(id)) {
         this.scene.removeBoat(b)
         this.remoteBoats.delete(id)
+        this.lastWakePos.delete(id) // stop tracking distance-traveled for a sailor who's gone
       }
     }
 
@@ -287,6 +412,46 @@ class Sea {
         this.scene.removeBoat(b)
         this.readerBoats.delete(id)
       }
+    }
+  }
+
+  // Drops one wake puff behind `id`'s boat once it's traveled
+  // WAKE_SPAWN_DISTANCE since its last one — called for the self boat and
+  // every live remote sailor (not anchored readers, which don't move), so
+  // distance-since-last-spawn is what throttles density, not a fixed timer;
+  // a stationary boat naturally stops generating wake.
+  maybeSpawnWake(id, x, z, h) {
+    const last = this.lastWakePos.get(id)
+    if (last && Math.hypot(x - last.x, z - last.z) < WAKE_SPAWN_DISTANCE) return
+    this.lastWakePos.set(id, {x, z})
+
+    if (this.wakes.length >= MAX_WAKES) {
+      const oldest = this.wakes.shift()
+      this.scene.remove(oldest.mesh)
+    }
+
+    const mesh = wakeSegment()
+    // Drop it a little behind the stern rather than right under the boat.
+    mesh.position.set(x - Math.sin(h) * 2, 0.12, z - Math.cos(h) * 2)
+    mesh.rotation.y = h
+    this.scene.add(mesh)
+    this.wakes.push({mesh, t: 0})
+  }
+
+  // Fades and slightly spreads each active wake puff, removing it once its
+  // duration is up.
+  updateWakes() {
+    for (let i = this.wakes.length - 1; i >= 0; i--) {
+      const w = this.wakes[i]
+      w.t += 0.016
+      if (w.t >= WAKE_DURATION) {
+        this.scene.remove(w.mesh)
+        this.wakes.splice(i, 1)
+        continue
+      }
+      const p = w.t / WAKE_DURATION
+      w.mesh.material.opacity = 0.5 * (1 - p)
+      w.mesh.scale.setScalar(1 + p * 0.6)
     }
   }
 
@@ -373,6 +538,122 @@ class Sea {
     }
   }
 
+  // Prompts for up to BOTTLE_MAX_LENGTH characters and, if given anything
+  // non-blank, drops it at the current position. A blocking native prompt
+  // is a deliberate simplification over a custom text-input overlay — it's
+  // a rare, deliberate action (unlike steering), and handles cancel/empty
+  // for free.
+  tryDropBottle() {
+    const text = window.prompt(`Drop a message in a bottle (max ${BOTTLE_MAX_LENGTH} chars):`, "")
+    if (text == null) return
+    const trimmed = text.trim().slice(0, BOTTLE_MAX_LENGTH)
+    if (!trimmed) return
+    this.net.dropBottle(round(this.pos.x), round(this.pos.z), trimmed)
+  }
+
+  spawnBottle(bottle) {
+    if (this.bottleMeshes.has(bottle.id)) return // already have it (e.g. duplicate join snapshot)
+    const sprite = bottleSprite()
+    sprite.position.set(bottle.x, 1.5, bottle.z)
+    this.scene.add(sprite)
+    this.bottleMeshes.set(bottle.id, {sprite, bottle})
+  }
+
+  despawnBottle(id) {
+    const entry = this.bottleMeshes.get(id)
+    if (!entry) return
+    this.scene.remove(entry.sprite)
+    this.bottleMeshes.delete(id)
+  }
+
+  // Gentle per-bottle bob, phase-offset by id so a cluster of bottles
+  // doesn't move in lockstep.
+  updateBottles() {
+    for (const {sprite, bottle} of this.bottleMeshes.values()) {
+      sprite.position.y = 1.5 + Math.sin(this.t * 1.2 + hash(String(bottle.id))) * 0.3
+    }
+  }
+
+  // Auto-reveals the nearest bottle's text once you're close enough to read
+  // it — no key needed, same "just approach it" treatment updateBanner()
+  // gives an island's title.
+  updateBottleBanner() {
+    const bottles = Array.from(this.bottleMeshes.values()).map((e) => e.bottle)
+    const near = nearestBottle(this.pos.x, this.pos.z, bottles)
+    if (!near) {
+      this.bottleBanner.style.opacity = "0"
+      return
+    }
+
+    const p = this.scene.project(near.bottle.x, 3, near.bottle.z)
+    if (!p.visible) {
+      this.bottleBanner.style.opacity = "0"
+      return
+    }
+
+    this.bottleBanner.textContent = `${near.bottle.flag} "${near.bottle.text}"`
+    this.bottleBanner.style.left = `${p.x}px`
+    this.bottleBanner.style.top = `${p.y}px`
+    this.bottleBanner.style.opacity = "1"
+  }
+
+  // Bobs every buoy, keeps the current target visually bigger than the
+  // rest, and advances the regatta on a hit: buoy 0 starts the clock, the
+  // last buoy stops it, reports the time (local + broadcast), and resets
+  // for another lap.
+  updateRegatta() {
+    for (let i = 0; i < this.buoyMeshes.length; i++) {
+      const sprite = this.buoyMeshes[i]
+      const isTarget = i === this.regattaNext
+      const scale = isTarget ? BUOY_TARGET_SCALE : BUOY_RESTING_SCALE
+      sprite.scale.set(scale, scale, 1)
+      sprite.position.y = 3 + Math.sin(this.t * 1.3 + i) * 0.4
+    }
+
+    const target = this.buoys[this.regattaNext]
+    if (isAtBuoy(this.pos.x, this.pos.z, target)) {
+      if (this.regattaNext === 0) this.regattaStart = this.t
+      this.regattaNext += 1
+
+      if (this.regattaNext >= this.buoys.length) {
+        const elapsed = this.t - this.regattaStart
+        this.regattaNext = 0
+        this.regattaStart = null
+
+        const improved = this.regattaBest === null || elapsed < this.regattaBest
+        if (improved) {
+          this.regattaBest = elapsed
+          localStorage.setItem(REGATTA_BEST_KEY, String(elapsed))
+        }
+
+        this.audio.finishFanfare()
+        this.queueToast(
+          improved
+            ? `🏁 Regatta finished in ${elapsed.toFixed(1)}s — new best!`
+            : `🏁 Regatta finished in ${elapsed.toFixed(1)}s`
+        )
+        this.net.sendRegattaFinish(elapsed)
+      }
+    }
+
+    this.updateRegattaHud()
+  }
+
+  updateRegattaHud() {
+    if (this.regattaStart !== null) {
+      const elapsed = this.t - this.regattaStart
+      const best = this.regattaBest !== null ? ` · best ${this.regattaBest.toFixed(1)}s` : ""
+      this.regattaHud.textContent =
+        `Buoy ${this.regattaNext + 1}/${this.buoys.length} · ${elapsed.toFixed(1)}s${best}`
+      this.regattaHud.style.opacity = "1"
+    } else if (this.regattaBest !== null) {
+      this.regattaHud.textContent = `Regatta best: ${this.regattaBest.toFixed(1)}s`
+      this.regattaHud.style.opacity = "1"
+    } else {
+      this.regattaHud.style.opacity = "0"
+    }
+  }
+
   // Floats the label above the actual island in the scene (not fixed to the
   // top of the screen) by projecting its 3D position to screen pixels each
   // frame, so it tracks the island as the chase cam moves.
@@ -391,9 +672,10 @@ class Sea {
       return
     }
 
+    const title = island.trending ? `🔥 ${island.title}` : island.title
     this.banner.textContent = isCloseEnoughToDock(island, near.distance)
-      ? `${island.title} — press Space to dock`
-      : island.title
+      ? `${title} — press Space to dock`
+      : title
     this.banner.style.left = `${p.x}px`
     this.banner.style.top = `${p.y}px`
     this.banner.style.opacity = "1"
@@ -428,6 +710,51 @@ class Sea {
     this.muteBtn.setAttribute("aria-label", this.audio.muted ? "Unmute sea sounds" : "Mute sea sounds")
   }
 
+  // Small hidden-by-default popover: a swatch per PALETTE color plus a
+  // "flag" button that prompts for an emoji, both applied immediately and
+  // persisted to localStorage. See the customColor/customFlag comment
+  // above for why this only affects this sailor's own view.
+  buildCustomizePanel() {
+    const panel = document.createElement("div")
+    panel.className = "sea-customize-panel"
+    panel.style.display = "none"
+
+    const swatches = document.createElement("div")
+    swatches.className = "sea-swatches"
+    for (const hex of PALETTE) {
+      const css = `#${hex.toString(16).padStart(6, "0")}`
+      const swatch = document.createElement("button")
+      swatch.type = "button"
+      swatch.className = "sea-swatch"
+      swatch.style.background = css
+      swatch.setAttribute("aria-label", `Set hull color ${css}`)
+      swatch.addEventListener("click", () => {
+        this.customColor = css
+        localStorage.setItem(CUSTOM_COLOR_KEY, css)
+        this.scene.setHullColor(this.selfBoat, css)
+      })
+      swatches.appendChild(swatch)
+    }
+    panel.appendChild(swatches)
+
+    const flagBtn = document.createElement("button")
+    flagBtn.type = "button"
+    flagBtn.className = "sea-flag-btn"
+    flagBtn.textContent = "Set sail flag"
+    flagBtn.addEventListener("click", () => {
+      const chosen = window.prompt("Sail flag/emoji:", this.customFlag || "🏴")
+      if (chosen == null) return
+      const trimmed = chosen.trim()
+      this.customFlag = trimmed || null
+      if (trimmed) localStorage.setItem(CUSTOM_FLAG_KEY, trimmed)
+      else localStorage.removeItem(CUSTOM_FLAG_KEY)
+      this.scene.setSailTexture(this.selfBoat, flagTexture(trimmed || "🏴"))
+    })
+    panel.appendChild(flagBtn)
+
+    return panel
+  }
+
   dockTo(island) {
     // Leaving the sea to read a post. Mark that a sea session is paused (and
     // save where the boat was) so the destination page can offer a banner
@@ -453,11 +780,16 @@ class Sea {
     seaBus.removeEventListener("sea:navigate", this.onNavigate)
     clearTimeout(this._biteMsgTimer)
     clearTimeout(this.toastTimer)
+    clearInterval(this.timeOfDayTimer)
     if (this.banner.parentNode) this.banner.remove()
     if (this.hint.parentNode) this.hint.remove()
     if (this.biteMsg.parentNode) this.biteMsg.remove()
     if (this.toast.parentNode) this.toast.remove()
     if (this.muteBtn.parentNode) this.muteBtn.remove()
+    if (this.bottleBanner.parentNode) this.bottleBanner.remove()
+    if (this.regattaHud.parentNode) this.regattaHud.remove()
+    if (this.customizeBtn.parentNode) this.customizeBtn.remove()
+    if (this.customizePanel.parentNode) this.customizePanel.remove()
   }
 }
 

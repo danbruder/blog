@@ -12,10 +12,21 @@ defmodule BlogWeb.SeaChannel do
   sailors can show an arrival/departure toast. `"emote"` is a single,
   content-free wave gesture fanned out the same way as `"pos"` — deliberately
   not a chat channel.
+
+  `"drop_bottle"` / `"bottle_dropped"` / `"bottle_expired"` relay
+  `Blog.SeaBottles`'s ephemeral messages-in-bottles: a sailor drops a short
+  note, everyone in Sea mode sees it float until it auto-expires. Also not
+  chat — one-way, capped length, no thread.
+
+  `"regatta_finish"` fans a finish time out to the rest of the channel
+  (same `broadcast_from!` shape as `"emote"`) when a sailor completes the
+  buoy-ring regatta -- the ring itself is deterministic client-side layout,
+  not server state.
   """
 
   use Phoenix.Channel
 
+  alias Blog.SeaBottles
   alias BlogWeb.Presence
   alias BlogWeb.PresenceTracker
 
@@ -23,6 +34,7 @@ defmodule BlogWeb.SeaChannel do
   def join("sea:ocean", %{"sailor_id" => sailor_id}, socket) do
     send(self(), :after_join)
     Phoenix.PubSub.subscribe(Blog.PubSub, PresenceTracker.topic())
+    Phoenix.PubSub.subscribe(Blog.PubSub, SeaBottles.topic())
     {:ok, assign(socket, :sailor_id, sailor_id)}
   end
 
@@ -30,6 +42,7 @@ defmodule BlogWeb.SeaChannel do
   def handle_info(:after_join, socket) do
     sailors = roster()
     push(socket, "roster", %{sailors: sailors})
+    push(socket, "bottles", %{bottles: SeaBottles.list()})
 
     flag =
       case Enum.find(sailors, &(&1.id == socket.assigns.sailor_id)) do
@@ -49,6 +62,19 @@ defmodule BlogWeb.SeaChannel do
     {:noreply, socket}
   end
 
+  # Relayed straight through from Blog.SeaBottles's PubSub broadcast to every
+  # member (including the dropper — simpler than special-casing "it's mine",
+  # and it's how the dropper sees their own bottle land too).
+  def handle_info({:bottle_dropped, bottle}, socket) do
+    push(socket, "bottle_dropped", bottle)
+    {:noreply, socket}
+  end
+
+  def handle_info({:bottle_expired, id}, socket) do
+    push(socket, "bottle_expired", %{id: id})
+    {:noreply, socket}
+  end
+
   @impl true
   def handle_in("pos", %{"x" => x, "z" => z, "h" => h}, socket) do
     broadcast_from!(socket, "pos", %{id: socket.assigns.sailor_id, x: x, z: z, h: h})
@@ -60,6 +86,24 @@ defmodule BlogWeb.SeaChannel do
   @impl true
   def handle_in("emote", _params, socket) do
     broadcast_from!(socket, "emote", %{id: socket.assigns.sailor_id})
+    {:noreply, socket}
+  end
+
+  # Text length/blankness is validated in Blog.SeaBottles; a bottle that
+  # comes out blank after trimming is silently dropped (no broadcast at
+  # all), same as pressing "cancel" on the client's prompt.
+  @impl true
+  def handle_in("drop_bottle", %{"x" => x, "z" => z, "text" => text}, socket) do
+    SeaBottles.drop(x, z, text, socket.assigns[:flag] || "🏳️")
+    {:noreply, socket}
+  end
+
+  # The regatta buoy ring is entirely client-side (deterministic from the
+  # harbor position, see world.js's regattaBuoys) -- this just fans out a
+  # finish-line brag to other sailors, the same shape as "emote".
+  @impl true
+  def handle_in("regatta_finish", %{"seconds" => seconds}, socket) do
+    broadcast_from!(socket, "regatta_finish", %{id: socket.assigns.sailor_id, seconds: seconds})
     {:noreply, socket}
   end
 

@@ -194,6 +194,28 @@ export class SeaAudio {
     })
   }
 
+  // A brighter four-note ascending run for finishing the regatta — bigger
+  // than the dock chime, since crossing the last buoy is a rarer, more
+  // deliberate accomplishment than every dock.
+  finishFanfare() {
+    this._oneShot((ctx, out) => {
+      ;[523.25, 659.25, 784, 1046.5].forEach((freq, i) => {
+        const osc = ctx.createOscillator()
+        osc.type = "triangle"
+        osc.frequency.value = freq
+        const gain = ctx.createGain()
+        const start = ctx.currentTime + i * 0.09
+        gain.gain.setValueAtTime(0, start)
+        gain.gain.linearRampToValueAtTime(0.4, start + 0.02)
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.55)
+        osc.connect(gain)
+        gain.connect(out)
+        osc.start(start)
+        osc.stop(start + 0.55)
+      })
+    })
+  }
+
   // Builds and discards its own nodes per call so overlapping triggers
   // (e.g. two crashes in a row) don't fight over shared state. No-ops
   // while muted so callers don't need to guard every call site.

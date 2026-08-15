@@ -19,13 +19,13 @@ chase cam, keyboard + touch controls, sidebar minimap.
 | 1 | Arrival/departure toast | Done |
 | 2 | Ambient + event sound (muted by default) | Done |
 | 3 | Wave/emote key | Done |
-| 4 | Message in a bottle | Not started |
-| 5 | Trending islands from analytics | Not started |
-| 6 | Regatta / buoy objective | Not started |
-| 7 | Day/night cycle (Eastern time) | Not started |
-| 8 | Wake trails | Not started |
-| 9 | More ambient creatures/hazards | Not started |
-| 10 | Boat customization | Not started |
+| 4 | Message in a bottle | Done |
+| 5 | Trending islands from analytics | Done |
+| 6 | Regatta / buoy objective | Done |
+| 7 | Day/night cycle (Eastern time) | Done |
+| 8 | Wake trails | Done |
+| 9 | More ambient creatures/hazards | Done |
+| 10 | Boat customization | Done |
 
 ---
 
@@ -85,7 +85,18 @@ sailing and you can see where people have been.
 Beyond sharks: flying fish, an occasional surfacing whale, floating
 driftwood — variety without added gameplay complexity.
 
+Shipped: flying fish (patrol + periodic leap, no interaction with the
+boat) and floating driftwood (static, gently bobbing). Skipped the whale
+to keep the scene from getting crowded — can revisit later.
+
 ## 10. Boat customization
 
 Let a visitor pick a hull color or flag emoji (localStorage-persisted)
 instead of always deriving hull color from a hash of the session id.
+
+Shipped as self-view-only: a 🎨 picker sets your hull color (from the same
+palette the hash-derived system draws from) and sail flag/emoji, persisted
+and applied immediately to your own boat. Other sailors still see your
+hash-derived color and GeoIP flag — syncing a custom look to other viewers
+would need extending the presence/channel roster; left as a future
+follow-up rather than done here.

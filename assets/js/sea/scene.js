@@ -14,11 +14,41 @@ const COL = {
   shark: 0x5b6470
 }
 
+// How much taller a trending island's silhouette stands versus its base
+// (non-trending) height — see SeaWorld/addIsland's `trending` flag.
+const TRENDING_HEIGHT_BOOST = 1.35
+
+// Day/night endpoints the scene lerps between — see applyTimeOfDay(). Kept
+// as plain hex numbers (not THREE.Color) since they're only ever fed
+// straight into `new THREE.Color(...)`.
+const NIGHT = {
+  sky: 0x161a33,
+  fogNear: 90,
+  fogFar: 240,
+  sunColor: 0x8fa0ff,
+  sunIntensity: 0.45,
+  hemiIntensity: 0.3,
+  sea: 0x1c2470
+}
+const DAY = {
+  sky: COL.paper,
+  fogNear: 120,
+  fogFar: 320,
+  sunColor: 0xffffff,
+  sunIntensity: 2.2,
+  hemiIntensity: 1.1,
+  sea: COL.sea
+}
+
 // A small family of fills at the same brightness/saturation as the brand's
 // lime and signal-blue accents, so colorful islands and boats still read as
 // "one system" — everything keeps the same thick ink outline regardless of
 // fill, which is what ties it together visually.
-const PALETTE = [
+// Exported so a sailor's boat-customization picker (see index.js) offers
+// exactly this palette — a custom hull color still "belongs" to the same
+// system as everyone else's hash-derived one, just chosen instead of
+// assigned.
+export const PALETTE = [
   0xc4e600, // lime (brand)
   0x4fd6c4, // teal
   0xff8a3d, // coral
@@ -81,16 +111,35 @@ export class SeaScene {
     )
     this.camera.position.set(0, 24, 34)
 
-    const sun = new THREE.DirectionalLight(0xffffff, 2.2)
-    sun.position.set(30, 60, 20)
-    this.scene.add(sun)
-    this.scene.add(new THREE.HemisphereLight(COL.paper, COL.seaDark, 1.1))
+    this.sun = new THREE.DirectionalLight(0xffffff, 2.2)
+    this.sun.position.set(30, 60, 20)
+    this.scene.add(this.sun)
+    this.hemi = new THREE.HemisphereLight(COL.paper, COL.seaDark, 1.1)
+    this.scene.add(this.hemi)
 
     this._water()
 
     this.boats = new Map() // id -> {group}
     this._onResize = () => this.resize()
     window.addEventListener("resize", this._onResize)
+  }
+
+  // Blends sky/fog/lighting/sea between NIGHT and DAY. `t` is 0 (deepest
+  // night) .. 1 (brightest day) — see world.js's dayFactor(), which derives
+  // it from the real time of day in US Eastern regardless of the visitor's
+  // own timezone, so everyone sailing together sees the same sky at once.
+  applyTimeOfDay(t) {
+    const sky = new THREE.Color(NIGHT.sky).lerp(new THREE.Color(DAY.sky), t)
+    this.scene.background = sky
+    this.scene.fog.color = sky
+    this.scene.fog.near = THREE.MathUtils.lerp(NIGHT.fogNear, DAY.fogNear, t)
+    this.scene.fog.far = THREE.MathUtils.lerp(NIGHT.fogFar, DAY.fogFar, t)
+
+    this.sun.color = new THREE.Color(NIGHT.sunColor).lerp(new THREE.Color(DAY.sunColor), t)
+    this.sun.intensity = THREE.MathUtils.lerp(NIGHT.sunIntensity, DAY.sunIntensity, t)
+    this.hemi.intensity = THREE.MathUtils.lerp(NIGHT.hemiIntensity, DAY.hemiIntensity, t)
+
+    this.water.material.color = new THREE.Color(NIGHT.sea).lerp(new THREE.Color(DAY.sea), t)
   }
 
   _water() {
@@ -116,13 +165,13 @@ export class SeaScene {
   // A cheap procedural palm: an ink trunk plus a squashed low-poly canopy.
   // Positions are derived from the island's hash so every sailor sees the
   // same trees in the same spots.
-  _palms(group, h, radius, baseY) {
+  _palms(group, h, radius, baseY, bonus = 0) {
     if (!this._palmTrunkGeo) {
       this._palmTrunkGeo = new THREE.CylinderGeometry(0.12, 0.18, 2.4)
       this._palmLeafGeo = new THREE.IcosahedronGeometry(0.9, 0)
     }
     const leafMat = new THREE.MeshToonMaterial({color: COL.palm, gradientMap: this.gradient})
-    const count = 2 + (h % 3) // 2..4
+    const count = 2 + (h % 3) + bonus // 2..4, more overgrown when trending
     for (let i = 0; i < count; i++) {
       const a = ((h >> (i * 5 + 1)) % 360) * (Math.PI / 180)
       const r = radius * (0.15 + ((h >> (i * 3 + 2)) % 40) / 100) // scattered near the shoreline
@@ -139,6 +188,23 @@ export class SeaScene {
     }
   }
 
+  // A soft lime glow standing above a trending island's peak — static
+  // (no per-frame animation needed) but unlit and translucent so it reads
+  // as a beacon rather than solid geometry, visible from well across the
+  // archipelago.
+  _beacon(group, peakY) {
+    const geo = new THREE.ConeGeometry(0.6, 6, 8)
+    const mat = new THREE.MeshBasicMaterial({
+      color: COL.lime,
+      transparent: true,
+      opacity: 0.55,
+      depthWrite: false
+    })
+    const beacon = new THREE.Mesh(geo, mat)
+    beacon.position.y = peakY + 3
+    group.add(beacon)
+  }
+
   // Islands are stacked hexagonal bands — a sand beach, a landmass slope,
   // and a peak (rocky if the island is tall) — plus a few palms, rather than
   // a single cone, so the silhouette reads as terrain rather than a triangle.
@@ -148,14 +214,19 @@ export class SeaScene {
     const group = new THREE.Group()
     const h = hashStr(island.path)
     const radius = 5 + ((h % 100) / 100) * 5 // 5..10
-    const height = 7 + (((h >> 8) % 100) / 100) * 9 // 7..16
+    const baseHeight = 7 + (((h >> 8) % 100) / 100) * 9 // 7..16
+    // Trending islands stand taller -- decide the peak's rock/vegetation
+    // fill from the *base* height first, so a trending boost never turns an
+    // otherwise-green peak to bare rock; it should read as overgrown, not
+    // just tall.
+    const fill = themedColor(island.color || island.section)
+    const peakFill = baseHeight > 12 ? COL.rock : fill
+    const height = island.trending ? baseHeight * TRENDING_HEIGHT_BOOST : baseHeight
     island.radius = radius
 
-    const fill = themedColor(island.color || island.section)
     const sandH = height * 0.16
     const slopeH = height * 0.5
     const peakH = height - sandH - slopeH
-    const peakFill = height > 12 ? COL.rock : fill
 
     let y = 0
     const beach = this._band(radius * 0.72, radius * 1.1, sandH, COL.sand)
@@ -175,7 +246,8 @@ export class SeaScene {
 
     island.height = y // actual peak height, used to float the label above it
 
-    this._palms(group, h, radius, sandH)
+    this._palms(group, h, radius, sandH, island.trending ? 2 : 0)
+    if (island.trending) this._beacon(group, y)
 
     group.position.set(island.x, 0, island.z)
     group.userData.island = island
@@ -242,6 +314,7 @@ export class SeaScene {
       new THREE.MeshToonMaterial({color: themedColor(sailorId), gradientMap: this.gradient})
     )
     hull.position.y = 1
+    hull.userData.isHull = true // lets setHullColor find it later without threading a reference through
     group.add(outline(hullGeo, 1.1).translateY(1))
     group.add(hull)
 
@@ -271,6 +344,7 @@ export class SeaScene {
     })
     const sail = new THREE.Mesh(sailGeo, sailMat)
     sail.position.set(0, 3.1, 0.2)
+    sail.userData.isSail = true // lets setSailTexture find it later
     group.add(sail)
 
     if (isSelf) {
@@ -287,8 +361,39 @@ export class SeaScene {
     return group
   }
 
+  // Re-tints an already-built boat's hull — used to apply a sailor's
+  // customized color over the hash-derived default (see index.js's
+  // boat-customization picker). No-op if `group` isn't a boat.
+  setHullColor(group, colorHex) {
+    const hull = group.children.find((c) => c.userData.isHull)
+    if (hull) hull.material.color.set(colorHex)
+  }
+
+  // Swaps an already-built boat's sail texture (e.g. a custom flag emoji
+  // instead of the hash/GeoIP default). Disposes the old texture -- unlike
+  // most meshes in this file, textures here are swapped at runtime rather
+  // than built once, so leaving the old one behind would actually leak.
+  setSailTexture(group, texture) {
+    const sail = group.children.find((c) => c.userData.isSail)
+    if (!sail) return
+    sail.material.map?.dispose()
+    sail.material.map = texture
+    sail.material.needsUpdate = true
+  }
+
   removeBoat(group) {
     this.scene.remove(group)
+  }
+
+  // Generic scene-graph attach/detach for standalone objects that aren't
+  // boats or islands (e.g. a bottle sprite) — keeps callers from reaching
+  // into the internal THREE.Scene directly.
+  add(object) {
+    this.scene.add(object)
+  }
+
+  remove(object) {
+    this.scene.remove(object)
   }
 
   // A single raked fin blade: a thin triangle (root-to-root along the base,
@@ -343,6 +448,55 @@ export class SeaScene {
     group.position.set(shark.x, breach * 3.2, shark.z)
     group.rotation.y = shark.h
     group.rotation.x = -breach * 0.4
+  }
+
+  // A flying fish: a small silvery body plus one tail fin, much smaller
+  // than a shark and with no dorsal fin (nothing to look menacing about) —
+  // ambient variety, see world.js's fish patrol/leap helpers this renders.
+  addFish() {
+    const group = new THREE.Group()
+    const fishColor = 0x9fd3ff
+
+    const bodyGeo = new THREE.IcosahedronGeometry(0.4, 0)
+    const body = new THREE.Mesh(
+      bodyGeo,
+      new THREE.MeshToonMaterial({color: fishColor, gradientMap: this.gradient})
+    )
+    body.scale.set(0.7, 0.5, 1.6)
+    body.add(outline(bodyGeo, 1.1))
+    group.add(body)
+
+    const tail = this._finBlade(0.5, 0.4, 0.06, fishColor)
+    tail.position.set(0, 0, -0.7)
+    group.add(tail)
+
+    this.scene.add(group)
+    return group
+  }
+
+  // Applies one frame of a fish's simulated state (see world.js) — same
+  // shape as updateShark, but fish leap much higher relative to their size
+  // and never lean into a "bite" pose.
+  updateFish(group, fish, leap) {
+    group.position.set(fish.x, 0.3 + leap * 2.4, fish.z)
+    group.rotation.y = fish.h
+    group.rotation.x = -leap * 0.5
+  }
+
+  // One static piece of driftwood: a lime-toned ink-outlined log lying on
+  // its side. Purely decorative set-dressing (see world.js's
+  // driftwoodPieces) — no collision, no per-frame simulation beyond the
+  // caller's gentle bob.
+  addDriftwood(piece) {
+    const geo = new THREE.CylinderGeometry(0.22, 0.28, 3.2, 6)
+    const mat = new THREE.MeshToonMaterial({color: 0x8a6a45, gradientMap: this.gradient})
+    const log = new THREE.Mesh(geo, mat)
+    log.add(outline(geo, 1.08))
+    log.rotation.z = Math.PI / 2 // lie on its side rather than stand upright
+    log.rotation.y = piece.rot
+    log.position.set(piece.x, 0.3, piece.z)
+    this.scene.add(log)
+    return log
   }
 
   // Cheap animated swell.
@@ -410,6 +564,31 @@ export function emoteSprite(emoji) {
   const sprite = new THREE.Sprite(mat)
   sprite.scale.set(3.2, 3.2, 1)
   return sprite
+}
+
+// A floating message-in-a-bottle marker: a smaller emoteSprite bobbing near
+// the waterline rather than above a boat's mast. Caller positions/animates
+// it (see Sea#updateBottles in index.js) and removes it on expiry.
+export function bottleSprite() {
+  const sprite = emoteSprite("🍾")
+  sprite.scale.set(2, 2, 1)
+  return sprite
+}
+
+// One puff of a boat's wake: a small flat, pale, translucent oblong laid on
+// the water surface. Caller positions/rotates it to trail behind a moving
+// boat and fades/grows it over time (see Sea#updateWakes in index.js) —
+// this just builds the mesh.
+export function wakeSegment() {
+  const geo = new THREE.PlaneGeometry(1.4, 2.4)
+  geo.rotateX(-Math.PI / 2)
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0xf2f4ef,
+    transparent: true,
+    opacity: 0.5,
+    depthWrite: false
+  })
+  return new THREE.Mesh(geo, mat)
 }
 
 // Builds a CanvasTexture showing an emoji flag on a lime sail.
