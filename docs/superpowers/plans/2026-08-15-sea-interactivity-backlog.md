@@ -23,7 +23,7 @@ chase cam, keyboard + touch controls, sidebar minimap.
 | 5 | Trending islands from analytics | Done |
 | 6 | Regatta / buoy objective | Done |
 | 7 | Day/night cycle (Eastern time) | Done |
-| 8 | Wake trails | Not started |
+| 8 | Wake trails | Done |
 | 9 | More ambient creatures/hazards | Not started |
 | 10 | Boat customization | Not started |
 

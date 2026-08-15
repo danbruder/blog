@@ -500,6 +500,22 @@ export function bottleSprite() {
   return sprite
 }
 
+// One puff of a boat's wake: a small flat, pale, translucent oblong laid on
+// the water surface. Caller positions/rotates it to trail behind a moving
+// boat and fades/grows it over time (see Sea#updateWakes in index.js) —
+// this just builds the mesh.
+export function wakeSegment() {
+  const geo = new THREE.PlaneGeometry(1.4, 2.4)
+  geo.rotateX(-Math.PI / 2)
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0xf2f4ef,
+    transparent: true,
+    opacity: 0.5,
+    depthWrite: false
+  })
+  return new THREE.Mesh(geo, mat)
+}
+
 // Builds a CanvasTexture showing an emoji flag on a lime sail.
 export function flagTexture(flag) {
   const c = document.createElement("canvas")

@@ -1,4 +1,4 @@
-import {SeaScene, flagTexture, emoteSprite, bottleSprite} from "./scene.js"
+import {SeaScene, flagTexture, emoteSprite, bottleSprite, wakeSegment} from "./scene.js"
 import {createControls} from "./controls.js"
 import {SeaNet} from "./net.js"
 import {SeaAudio} from "./audio.js"
@@ -38,6 +38,9 @@ const EMOTE_DURATION = 1.3 // seconds the wave sprite rises and fades over
 const BOTTLE_MAX_LENGTH = 80
 const REGATTA_BEST_KEY = "seaRegattaBest"
 const TIME_OF_DAY_REFRESH_MS = 60_000 // sky doesn't need per-frame updates -- just re-check each minute
+const WAKE_SPAWN_DISTANCE = 2.5 // a boat drops one wake puff per this many units traveled
+const WAKE_DURATION = 1.6 // seconds a puff takes to fully fade
+const MAX_WAKES = 120 // hard cap so a crowded sea can't run away with the segment count
 const BUOY_RESTING_SCALE = 3.2
 const BUOY_TARGET_SCALE = 4.6 // bigger than resting, marks the current target
 
@@ -84,6 +87,8 @@ class Sea {
     this.emoteCooldown = 0
     this.emotes = [] // active {sprite, boatGroup, t} wave sprites, see updateEmotes()
     this.bottleMeshes = new Map() // id -> {sprite, bottle}
+    this.wakes = [] // active {mesh, t} wake puffs, see updateWakes()
+    this.lastWakePos = new Map() // sailorId -> {x, z}, throttles wake spawning by distance traveled
     this.selfBoat = this.scene.makeBoat(flagTexture("🏴"), true, sailorId)
 
     // Regatta: a fixed ring of buoys around the harbor, sailed in order.
@@ -220,6 +225,7 @@ class Sea {
 
     this.selfBoat.position.set(this.pos.x, 0, this.pos.z)
     this.selfBoat.rotation.y = this.pos.h
+    this.maybeSpawnWake(this.sailorId, this.pos.x, this.pos.z, this.pos.h)
 
     this.stepSharks()
 
@@ -255,6 +261,7 @@ class Sea {
     this.updateBottleBanner()
 
     this.updateRegatta()
+    this.updateWakes()
 
     this.scene.animateWater(this.t)
     this.scene.chase(this.pos, this.pos.h)
@@ -312,11 +319,13 @@ class Sea {
       }
       b.position.set(p.x, 0, p.z)
       b.rotation.y = p.h
+      this.maybeSpawnWake(id, p.x, p.z, p.h)
     }
     for (const [id, b] of this.remoteBoats) {
       if (!liveIds.has(id)) {
         this.scene.removeBoat(b)
         this.remoteBoats.delete(id)
+        this.lastWakePos.delete(id) // stop tracking distance-traveled for a sailor who's gone
       }
     }
 
@@ -343,6 +352,46 @@ class Sea {
         this.scene.removeBoat(b)
         this.readerBoats.delete(id)
       }
+    }
+  }
+
+  // Drops one wake puff behind `id`'s boat once it's traveled
+  // WAKE_SPAWN_DISTANCE since its last one — called for the self boat and
+  // every live remote sailor (not anchored readers, which don't move), so
+  // distance-since-last-spawn is what throttles density, not a fixed timer;
+  // a stationary boat naturally stops generating wake.
+  maybeSpawnWake(id, x, z, h) {
+    const last = this.lastWakePos.get(id)
+    if (last && Math.hypot(x - last.x, z - last.z) < WAKE_SPAWN_DISTANCE) return
+    this.lastWakePos.set(id, {x, z})
+
+    if (this.wakes.length >= MAX_WAKES) {
+      const oldest = this.wakes.shift()
+      this.scene.remove(oldest.mesh)
+    }
+
+    const mesh = wakeSegment()
+    // Drop it a little behind the stern rather than right under the boat.
+    mesh.position.set(x - Math.sin(h) * 2, 0.12, z - Math.cos(h) * 2)
+    mesh.rotation.y = h
+    this.scene.add(mesh)
+    this.wakes.push({mesh, t: 0})
+  }
+
+  // Fades and slightly spreads each active wake puff, removing it once its
+  // duration is up.
+  updateWakes() {
+    for (let i = this.wakes.length - 1; i >= 0; i--) {
+      const w = this.wakes[i]
+      w.t += 0.016
+      if (w.t >= WAKE_DURATION) {
+        this.scene.remove(w.mesh)
+        this.wakes.splice(i, 1)
+        continue
+      }
+      const p = w.t / WAKE_DURATION
+      w.mesh.material.opacity = 0.5 * (1 - p)
+      w.mesh.scale.setScalar(1 + p * 0.6)
     }
   }
 
