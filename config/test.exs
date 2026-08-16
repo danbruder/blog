@@ -22,6 +22,12 @@ config :blog, :geoip_enabled, false
 
 config :blog, Blog.Analytics, path: :memory
 
+# Don't run Cron or process jobs in the background during tests -- tests
+# that care exercise Blog.Kudos.DailyDigestWorker.perform/1 directly.
+config :blog, Oban, testing: :manual
+
+config :blog, :site_url, "http://localhost:4002"
+
 config :logger, level: :warning
 
 config :phoenix, :plug_init_mode, :runtime

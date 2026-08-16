@@ -10,6 +10,34 @@ config :blog, Blog.Repo,
   journal_mode: :wal,
   busy_timeout: 5_000
 
+# One place `Blog.Kudos.today_range/1` and the Cron plugin below both read,
+# so the digest's "today" window and the schedule it runs on can never
+# drift apart. `Blog.Kudos` needs a real IANA database (not just
+# `Calendar.UTCOnlyTimeZoneDatabase`, Elixir's default) to convert between
+# this and UTC -- see the `:tz` dep and the `time_zone_database` config
+# below.
+kudos_digest_timezone = "America/New_York"
+
+config :elixir, :time_zone_database, Tz.TimeZoneDatabase
+
+config :blog, :kudos_digest_timezone, kudos_digest_timezone
+# Overridden per-environment (recipient in particular -- see runtime.exs
+# for prod); this default just keeps dev/test working out of the box.
+config :blog, :kudos_digest_to, "danbruder@hey.com"
+
+config :blog, Oban,
+  engine: Oban.Engines.Lite,
+  repo: Blog.Repo,
+  queues: [default: 5],
+  plugins: [
+    {Oban.Plugins.Cron,
+     timezone: kudos_digest_timezone,
+     crontab: [
+       # "End of day" for the kudos digest -- see Blog.Kudos.DailyDigestWorker.
+       {"0 21 * * *", Blog.Kudos.DailyDigestWorker}
+     ]}
+  ]
+
 config :blog, BlogWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
