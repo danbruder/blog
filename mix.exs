@@ -32,6 +32,8 @@ defmodule Blog.MixProject do
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.11"},
       {:ecto_sqlite3, "~> 0.17"},
+      {:oban, "~> 2.19"},
+      {:tz, "~> 0.28"},
       {:bandit, "~> 1.5"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},

@@ -33,6 +33,18 @@ if config_env() == :prod do
   host = System.get_env("PHX_HOST") || "localhost"
   port = String.to_integer(System.get_env("PORT") || "4000")
 
+  config :blog, :site_url, "https://#{host}"
+
+  # Both optional: without RESEND_API_KEY/RESEND_FROM_EMAIL configured,
+  # Blog.Resend.send_email/1 just returns {:error, :missing_api_key} (or
+  # :missing_from_address) instead of raising, so a blog without kudos
+  # email set up still boots -- see Blog.Kudos.deliver_digest/2.
+  config :blog, Blog.Resend,
+    api_key: System.get_env("RESEND_API_KEY"),
+    from: System.get_env("RESEND_FROM_EMAIL")
+
+  config :blog, :kudos_digest_to, System.get_env("KUDOS_DIGEST_TO_EMAIL") || "danbruder@hey.com"
+
   config :blog,
          :admin_password,
          System.get_env("ADMIN_PASSWORD") ||

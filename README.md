@@ -36,6 +36,13 @@ First-party analytics (page views and other visitor events, see
 `analytics.duckdb` next to the SQLite file on that same backed-up volume;
 override the location with `ANALYTICS_PATH` if needed.
 
+A daily digest email (see `Blog.Kudos`) goes out at 9pm America/New_York
+summarizing that day's kudos, skipped entirely on a day with none. Set
+`RESEND_API_KEY` and `RESEND_FROM_EMAIL` (a sender address on a domain
+verified with [Resend](https://resend.com)) to enable sending; without
+them the job just logs and no-ops. `KUDOS_DIGEST_TO_EMAIL` overrides the
+recipient (defaults to `danbruder@hey.com`).
+
 ## Ideas / not-yet-done
 
 - Split the old "blog" posts (mostly small learnings/notes) into a lighter,

@@ -379,6 +379,57 @@ defmodule Blog.AnalyticsTest do
     end
   end
 
+  describe "kudos_summary/2" do
+    test "totals and breaks down kudos given inside the window, by path" do
+      base = unique_base()
+
+      insert_kudos("/blog/popular", DateTime.add(base, 10, :second))
+      insert_kudos("/blog/popular", DateTime.add(base, 20, :second))
+      insert_kudos("/blog/less-popular", DateTime.add(base, 30, :second))
+      # Outside [base - 1min, base + 1min) -- shouldn't count.
+      insert_kudos("/blog/popular", DateTime.add(base, -1, :hour))
+
+      {:ok, summary} =
+        Analytics.kudos_summary(DateTime.add(base, -1, :minute), DateTime.add(base, 1, :minute))
+
+      assert summary == %{
+               total: 3,
+               by_path: [
+                 %{path: "/blog/popular", count: 2},
+                 %{path: "/blog/less-popular", count: 1}
+               ]
+             }
+    end
+
+    test "returns zero/empty for a window with no kudos" do
+      base = unique_base()
+
+      {:ok, summary} =
+        Analytics.kudos_summary(DateTime.add(base, -1, :minute), DateTime.add(base, 1, :minute))
+
+      assert summary == %{total: 0, by_path: []}
+    end
+
+    test "excludes page_view events" do
+      base = unique_base()
+
+      insert_page_view("sess-a", "/blog/not-a-kudo", "US", nil, base)
+
+      {:ok, summary} =
+        Analytics.kudos_summary(DateTime.add(base, -1, :minute), DateTime.add(base, 1, :minute))
+
+      assert summary == %{total: 0, by_path: []}
+    end
+  end
+
+  defp insert_kudos(path, %DateTime{} = occurred_at) do
+    {:ok, _columns, _rows} =
+      Analytics.query(
+        "INSERT INTO events (occurred_at_us, event_name, path) VALUES ($1, 'kudos', $2)",
+        [DateTime.to_unix(occurred_at, :microsecond), path]
+      )
+  end
+
   defp insert_page_view(session_id, path, country, referrer, %DateTime{} = occurred_at) do
     {:ok, _columns, _rows} =
       Analytics.query(

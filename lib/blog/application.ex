@@ -12,6 +12,7 @@ defmodule Blog.Application do
       BlogWeb.Presence,
       Blog.GeoIP,
       {Blog.Analytics, Application.fetch_env!(:blog, Blog.Analytics)},
+      {Oban, Application.fetch_env!(:blog, Oban)},
       Blog.SnakeGame,
       Blog.SandGame,
       Blog.SeaBottles,

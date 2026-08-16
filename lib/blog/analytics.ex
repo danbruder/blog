@@ -130,6 +130,19 @@ defmodule Blog.Analytics do
     GenServer.call(__MODULE__, {:post_stats, path})
   end
 
+  @doc """
+  Returns kudos given in `[from, to)` (both `DateTime`s), for the daily
+  digest email (see `Blog.Kudos`):
+
+      {:ok, %{total: 7, by_path: [%{path: "/blog/foo", count: 5}, ...]}}
+
+  `by_path` is ordered by count descending and omits paths with zero kudos
+  in the window; `total` is 0 and `by_path` is `[]` when none were given.
+  """
+  def kudos_summary(from, to) do
+    GenServer.call(__MODULE__, {:kudos_summary, from, to})
+  end
+
   @impl true
   def init(opts) do
     path = Keyword.fetch!(opts, :path)
@@ -271,6 +284,33 @@ defmodule Blog.Analytics do
       with {:ok, [views_all_time, views_last_week, kudos]} <-
              fetch_one(state.conn, sql, [@page_view_event, path, week_ago_us, @kudos_event]) do
         {:ok, %{views_all_time: views_all_time, views_last_week: views_last_week, kudos: kudos}}
+      end
+
+    {:reply, reply, state}
+  end
+
+  @impl true
+  def handle_call({:kudos_summary, from, to}, _from, state) do
+    state = flush_buffer(state)
+
+    sql = """
+    SELECT path, COUNT(*) AS count
+    FROM #{@table}
+    WHERE event_name = $1 AND occurred_at_us >= $2 AND occurred_at_us < $3
+    GROUP BY path
+    ORDER BY count DESC, path ASC
+    """
+
+    params = [
+      @kudos_event,
+      DateTime.to_unix(from, :microsecond),
+      DateTime.to_unix(to, :microsecond)
+    ]
+
+    reply =
+      with {:ok, rows} <- fetch_all(state.conn, sql, params) do
+        by_path = Enum.map(rows, fn [path, count] -> %{path: path, count: count} end)
+        {:ok, %{total: Enum.sum(Enum.map(by_path, & &1.count)), by_path: by_path}}
       end
 
     {:reply, reply, state}
