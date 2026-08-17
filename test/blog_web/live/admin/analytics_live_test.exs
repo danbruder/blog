@@ -132,4 +132,54 @@ defmodule BlogWeb.Admin.AnalyticsLiveTest do
       refute html =~ "/via-google"
     end
   end
+
+  describe "kudos by page" do
+    test "shows kudos per path for the selected range, respecting the time filter", %{
+      conn: conn
+    } do
+      old = DateTime.add(DateTime.utc_now(), -60, :day)
+
+      Analytics.track_kudos("/kudos-recent-post", "sess-a")
+      Analytics.track_kudos("/kudos-recent-post", "sess-b")
+      :ok = Analytics.flush()
+
+      {:ok, _cols, _rows} =
+        Analytics.query(
+          "INSERT INTO events (occurred_at_us, event_name, path) VALUES ($1, 'kudos', $2)",
+          [DateTime.to_unix(old, :microsecond), "/kudos-old-post"]
+        )
+
+      {:ok, _view, html} = live(admin_conn(conn), ~p"/admin/analytics?range=7d")
+
+      assert html =~ "/kudos-recent-post"
+      assert html =~ "2 kudos"
+      refute html =~ "/kudos-old-post"
+
+      {:ok, _view, html_all} = live(admin_conn(conn), ~p"/admin/analytics?range=all")
+
+      assert html_all =~ "/kudos-recent-post"
+      assert html_all =~ "/kudos-old-post"
+    end
+
+    test "clicking a kudos row filters the whole report to that path", %{conn: conn} do
+      Analytics.track_kudos("/kudos-only-post", "sess-a")
+      :ok = Analytics.flush()
+
+      {:ok, view, html} = live(admin_conn(conn), ~p"/admin/analytics?range=all")
+      assert html =~ "/kudos-only-post"
+
+      html =
+        view
+        |> element("button[phx-value-filter-value='/kudos-only-post']")
+        |> render_click()
+
+      assert_patch(
+        view,
+        ~p"/admin/analytics?#{%{range: "all", referrer: "", path: "/kudos-only-post", country: ""}}"
+      )
+
+      assert html =~ "/kudos-only-post"
+      assert html =~ "Filtered by"
+    end
+  end
 end

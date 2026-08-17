@@ -317,24 +317,30 @@ defmodule BlogWeb.Admin.AnalyticsLive do
         country: blank_to_nil(socket.assigns.country_filter)
       ] ++ referrer_opts(socket.assigns.referrer_filter)
 
-    case Analytics.stats(from, to, opts) do
-      {:ok, report} ->
-        assign(socket,
-          summary: report.summary,
-          trend: report.trend,
-          top_paths: report.top_paths,
-          top_countries: report.top_countries,
-          top_referrers: report.top_referrers
-        )
+    socket =
+      case Analytics.stats(from, to, opts) do
+        {:ok, report} ->
+          assign(socket,
+            summary: report.summary,
+            trend: report.trend,
+            top_paths: report.top_paths,
+            top_countries: report.top_countries,
+            top_referrers: report.top_referrers
+          )
 
-      {:error, _reason} ->
-        assign(socket,
-          summary: %{views: 0, sessions: 0, avg_duration_seconds: nil},
-          trend: [],
-          top_paths: [],
-          top_countries: [],
-          top_referrers: []
-        )
+        {:error, _reason} ->
+          assign(socket,
+            summary: %{views: 0, sessions: 0, avg_duration_seconds: nil},
+            trend: [],
+            top_paths: [],
+            top_countries: [],
+            top_referrers: []
+          )
+      end
+
+    case Analytics.kudos_summary(from, to) do
+      {:ok, kudos} -> assign(socket, kudos_total: kudos.total, kudos_by_path: kudos.by_path)
+      {:error, _reason} -> assign(socket, kudos_total: 0, kudos_by_path: [])
     end
   end
 
@@ -563,7 +569,7 @@ defmodule BlogWeb.Admin.AnalyticsLive do
           </button>
         </div>
 
-        <div class="mb-10 grid grid-cols-3 gap-4 border-y border-ink py-6 text-center">
+        <div class="mb-10 grid grid-cols-2 gap-4 border-y border-ink py-6 text-center sm:grid-cols-4">
           <div>
             <div class="mark font-display text-[28px] font-bold text-ink">{@summary.views}</div>
             <div class="label mt-1">Page views</div>
@@ -577,6 +583,10 @@ defmodule BlogWeb.Admin.AnalyticsLive do
               {format_duration(@summary.avg_duration_seconds)}
             </div>
             <div class="label mt-1">Avg time on page</div>
+          </div>
+          <div>
+            <div class="mark font-display text-[28px] font-bold text-ink">{@kudos_total}</div>
+            <div class="label mt-1">Kudos</div>
           </div>
         </div>
 
@@ -709,6 +719,33 @@ defmodule BlogWeb.Admin.AnalyticsLive do
             </div>
             <div :if={truncated?(@top_countries)} class="mt-2 text-[11.5px] text-ink-3">
               Showing the top {list_limit()}. Narrow the filters above to see more.
+            </div>
+          </section>
+
+          <section class="sm:col-span-2">
+            <h2 class="label mb-3">Kudos by page</h2>
+            <div :if={@kudos_by_path == []} class="text-[13px] text-ink-3">No kudos yet.</div>
+            <div class="max-h-[380px] divide-y divide-rule overflow-y-auto border-t border-ink">
+              <button
+                :for={row <- @kudos_by_path}
+                type="button"
+                phx-click="set_filter"
+                phx-value-field="path"
+                phx-value-filter-value={row.path}
+                class={[
+                  "relative flex w-full items-center justify-between gap-4 py-2.5 text-left hover:bg-paper-2",
+                  @path_filter == row.path && "bg-paper-2"
+                ]}
+              >
+                <span
+                  class="absolute inset-y-0 left-0 z-0 bar-fill"
+                  style={"width: #{bar_pct(row.count, max_of(@kudos_by_path, :count))}%"}
+                ></span>
+                <span class="relative z-10 truncate text-[13px] text-ink">{row.path}</span>
+                <span class="relative z-10 shrink-0 text-[13px] text-ink-2">
+                  {row.count} kudos
+                </span>
+              </button>
             </div>
           </section>
 
