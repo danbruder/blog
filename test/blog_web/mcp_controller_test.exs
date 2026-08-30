@@ -35,6 +35,22 @@ defmodule BlogWeb.MCPControllerTest do
     assert conn.status == 401
   end
 
+  test "rejects every request when MCP_API_TOKEN isn't configured (the app still boots)", %{
+    conn: conn
+  } do
+    original = Application.get_env(:blog, :mcp_api_token)
+    on_exit(fn -> Application.put_env(:blog, :mcp_api_token, original) end)
+    Application.put_env(:blog, :mcp_api_token, nil)
+
+    conn =
+      conn
+      |> put_req_header("authorization", "Bearer #{original}")
+      |> put_req_header("content-type", "application/json")
+      |> post(~p"/mcp", %{"jsonrpc" => "2.0", "id" => 1, "method" => "ping"})
+
+    assert conn.status == 401
+  end
+
   test "a notification (no id) gets a 202 with no body", %{conn: conn} do
     conn =
       conn
