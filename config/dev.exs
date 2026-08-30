@@ -34,6 +34,10 @@ config :blog, BlogWeb.Endpoint,
 # ADMIN_PASSWORD environment variable (see runtime.exs).
 config :blog, :admin_password, "admin"
 
+# Dev-only MCP bearer token for POST /mcp. In prod this comes from the
+# MCP_API_TOKEN environment variable (see runtime.exs).
+config :blog, :mcp_api_token, "dev-mcp-token"
+
 config :blog, dev_routes: true
 
 config :logger, :console, format: "[$level] $message\n"

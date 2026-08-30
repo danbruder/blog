@@ -17,6 +17,8 @@ config :blog, BlogWeb.Endpoint,
 
 config :blog, :admin_password, "test-admin-password"
 
+config :blog, :mcp_api_token, "test-mcp-token"
+
 # Avoid real network calls to the geo-IP lookup service during tests.
 config :blog, :geoip_enabled, false
 

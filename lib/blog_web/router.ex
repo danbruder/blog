@@ -19,6 +19,11 @@ defmodule BlogWeb.Router do
     plug(:accepts, ["xml"])
   end
 
+  pipeline :mcp do
+    plug(:accepts, ["json"])
+    plug(BlogWeb.Plugs.MCPAuth)
+  end
+
   scope "/", BlogWeb do
     get("/healthz", HealthController, :show)
   end
@@ -54,6 +59,12 @@ defmodule BlogWeb.Router do
     get("/admin/login", AdminSessionController, :new)
     post("/admin/login", AdminSessionController, :create)
     delete("/admin/logout", AdminSessionController, :delete)
+  end
+
+  scope "/mcp", BlogWeb do
+    pipe_through(:mcp)
+
+    post("/", MCPController, :handle)
   end
 
   scope "/", BlogWeb do

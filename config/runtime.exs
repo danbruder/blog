@@ -53,6 +53,18 @@ if config_env() == :prod do
            Set it to the password you'll use to log in to /admin.
            """)
 
+  # Bearer token for the POST /mcp API (see BlogWeb.Plugs.MCPAuth) that lets
+  # an MCP client create/edit/publish posts remotely. Generate one with
+  # `openssl rand -hex 32`.
+  config :blog,
+         :mcp_api_token,
+         System.get_env("MCP_API_TOKEN") ||
+           raise("""
+           environment variable MCP_API_TOKEN is missing.
+           Set it to a long random secret; MCP clients authenticate to /mcp
+           with `Authorization: Bearer <token>`.
+           """)
+
   config :blog, BlogWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
     # Allow LiveView sockets from every host this app is reachable at. Listing
