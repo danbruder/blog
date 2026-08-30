@@ -27,8 +27,13 @@ defmodule BlogWeb.Plugs.MCPAuth do
     end
   end
 
+  # No MCP_API_TOKEN configured means the feature is off -- reject every
+  # request rather than comparing against nil (or, worse, treating an unset
+  # token as "no auth required").
   defp valid_token?(token) do
-    configured = Application.fetch_env!(:blog, :mcp_api_token)
-    Plug.Crypto.secure_compare(token, configured)
+    case Application.get_env(:blog, :mcp_api_token) do
+      nil -> false
+      configured -> Plug.Crypto.secure_compare(token, configured)
+    end
   end
 end

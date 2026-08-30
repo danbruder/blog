@@ -31,10 +31,12 @@ the tool definitions (`list_posts`, `get_post`, `create_post`, `update_post`,
 `publish_post`, `unpublish_post`, `delete_post`, `preview_post`) and
 `BlogWeb.MCPController` for the JSON-RPC transport.
 
-It's guarded by a bearer token, independent of the `/admin` password -- set
-`MCP_API_TOKEN` (`config :blog, :mcp_api_token` in dev/test; generate a
-prod value with `openssl rand -hex 32`) and send it as
-`Authorization: Bearer <token>`. For example, with Claude Code:
+It's guarded by a bearer token, independent of the `/admin` password --
+optional, like `RESEND_API_KEY` below: set `MCP_API_TOKEN` (generate one
+with `openssl rand -hex 32`; dev/test use the `config :blog, :mcp_api_token`
+default instead) to turn it on, and send it as `Authorization: Bearer
+<token>`. Without it, `/mcp` just rejects every request -- the app boots
+fine either way. For example, with Claude Code:
 
 ```bash
 claude mcp add --transport http blog https://your-host/mcp \
@@ -44,9 +46,9 @@ claude mcp add --transport http blog https://your-host/mcp \
 ## Deploying
 
 This app is a plain Elixir release (see `Dockerfile`) that reads
-`DATABASE_PATH`, `SECRET_KEY_BASE`, `ADMIN_PASSWORD`, `MCP_API_TOKEN`, and
-`PHX_HOST` from the environment, and expects its SQLite file on a persistent
-volume at `/data/app.db` — this matches
+`DATABASE_PATH`, `SECRET_KEY_BASE`, `ADMIN_PASSWORD`, and `PHX_HOST` from the
+environment (`MCP_API_TOKEN` is optional -- see above), and expects its
+SQLite file on a persistent volume at `/data/app.db` — this matches
 [litehouse](https://github.com/danbruder/litehouse)'s app-volume convention,
 so `lh create blog --repo <owner>/blog` + `git push` is the intended way to
 ship it.
