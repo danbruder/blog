@@ -1,19 +1,26 @@
 // Steering input for the local boat. `state.throttle` is 0..1 forward,
 // `state.turn` is -1..1 (left/right), `state.dock`/`state.emote`/`state.drop`
-// latch true when their key/button is pressed. Works with keyboard
-// (arrows/WASD + space + E + B) and an on-screen touch joystick +
-// Dock/Wave/Bottle buttons injected into `overlay`.
+// latch true when their key/button is pressed. `state.ascend`/`state.descend`
+// are held states (true only while the key/button is down), used only by a
+// boat that can fly (see index.js's flight mechanic) -- harmless to read
+// otherwise. Works with keyboard (arrows/WASD + space + E + B + F + C) and
+// an on-screen touch joystick + Dock/Wave/Bottle/Ascend/Descend buttons
+// injected into `overlay`.
 
 export function createControls(overlay) {
-  const state = {throttle: 0, turn: 0, dock: false, emote: false, drop: false}
+  const state = {throttle: 0, turn: 0, dock: false, emote: false, drop: false, ascend: false, descend: false}
   const keys = new Set()
   let touchActive = false
   let touchTurn = 0
   let touchThrottle = 0
+  let touchAscend = false
+  let touchDescend = false
 
   const onKey = (down) => (e) => {
     const k = e.key.toLowerCase()
-    if (["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d", " ", "e", "b"].includes(k)) {
+    if (
+      ["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d", " ", "e", "b", "f", "c"].includes(k)
+    ) {
       e.preventDefault()
     }
     if (down) keys.add(k)
@@ -38,6 +45,10 @@ export function createControls(overlay) {
       <button class="sea-wave-btn" data-wave type="button">👋</button>
       <button class="sea-wave-btn" data-bottle type="button">🍾</button>
       <button class="sea-dock" data-dock type="button">Dock</button>
+    </div>
+    <div class="sea-buttons sea-flight-buttons">
+      <button class="sea-wave-btn" data-ascend type="button" aria-label="Ascend / take off">🛫</button>
+      <button class="sea-wave-btn" data-descend type="button" aria-label="Descend / land">🛬</button>
     </div>`
   overlay.appendChild(pad)
 
@@ -81,10 +92,28 @@ export function createControls(overlay) {
   pad.querySelector("[data-wave]").addEventListener("click", () => (state.emote = true))
   pad.querySelector("[data-bottle]").addEventListener("click", () => (state.drop = true))
 
+  // Ascend/descend are held states, not one-shot clicks -- pointerdown/up
+  // covers mouse and touch alike, unlike the stick's separate touch-only
+  // handling above. Harmless to hold on a boat that can't fly (index.js's
+  // flight logic no-ops); pointercancel/leave release it the same as up, so
+  // dragging off the button doesn't leave it stuck ascending.
+  const ascendBtn = pad.querySelector("[data-ascend]")
+  const descendBtn = pad.querySelector("[data-descend]")
+  ascendBtn.addEventListener("pointerdown", () => (touchAscend = true))
+  descendBtn.addEventListener("pointerdown", () => (touchDescend = true))
+  for (const ev of ["pointerup", "pointercancel", "pointerleave"]) {
+    ascendBtn.addEventListener(ev, () => (touchAscend = false))
+    descendBtn.addEventListener(ev, () => (touchDescend = false))
+  }
+
   // Recompute turn/throttle from whichever input source is active every call,
   // so releasing a key (or the touch stick) actually zeroes it out instead of
-  // sticking at its last value.
+  // sticking at its last value. Ascend/descend are independent of the stick's
+  // own touchActive state, since the flight buttons are separate elements.
   const read = () => {
+    state.ascend = touchAscend || keys.has("f")
+    state.descend = touchDescend || keys.has("c")
+
     if (touchActive) {
       state.turn = touchTurn
       state.throttle = touchThrottle
@@ -102,11 +131,20 @@ export function createControls(overlay) {
     return state
   }
 
+  const flightButtons = pad.querySelector(".sea-flight-buttons")
+  // Hidden by default (most boats can't fly) -- index.js shows these only
+  // while a flight-capable boat (the seaplane) is selected.
+  flightButtons.hidden = true
+  const setFlightControlsVisible = (visible) => {
+    flightButtons.hidden = !visible
+    if (!visible) touchAscend = touchDescend = false // don't leave a held button latched on a boat that can't use it
+  }
+
   const destroy = () => {
     window.removeEventListener("keydown", kd)
     window.removeEventListener("keyup", ku)
     if (pad.parentNode) pad.parentNode.removeChild(pad)
   }
 
-  return {read, state, destroy}
+  return {read, state, destroy, setFlightControlsVisible}
 }

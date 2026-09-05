@@ -194,6 +194,26 @@ export class SeaAudio {
     })
   }
 
+  // A rising sawtooth sweep for the seaplane lifting off the water --
+  // mirrors biteAlarm's falling growl, just inverted and a touch brighter.
+  // Landing reuses splash() (already a water-impact sound, fitting for a
+  // seaplane's splashdown too) rather than needing its own cue.
+  liftoff() {
+    this._oneShot((ctx, out) => {
+      const osc = ctx.createOscillator()
+      osc.type = "sawtooth"
+      osc.frequency.setValueAtTime(180, ctx.currentTime)
+      osc.frequency.exponentialRampToValueAtTime(640, ctx.currentTime + 0.5)
+      const gain = ctx.createGain()
+      gain.gain.setValueAtTime(0.35, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5)
+      osc.connect(gain)
+      gain.connect(out)
+      osc.start()
+      osc.stop(ctx.currentTime + 0.5)
+    })
+  }
+
   // Builds and discards its own nodes per call so overlapping triggers
   // (e.g. two crashes in a row) don't fight over shared state. No-ops
   // while muted so callers don't need to guard every call site.

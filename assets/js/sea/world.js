@@ -5,7 +5,10 @@
 // this for any island a caller hasn't rendered yet.
 const DEFAULT_RADIUS = 8
 const DOCK_MARGIN = 3 // how far beyond an island's edge you can still dock
-const COLLISION_MARGIN = 1.5 // boat half-length buffer beyond an island's edge
+// Exported so index.js can scale it by a boat type's own sizeFactor (a
+// container ship needs more clearance than a speedboat) rather than every
+// boat sharing one fixed buffer.
+export const COLLISION_MARGIN = 1.5 // boat half-length buffer beyond an island's edge
 
 export function islandRadius(island) {
   return island.radius ?? DEFAULT_RADIUS

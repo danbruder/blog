@@ -369,6 +369,11 @@ pre code.hljs {
   letter-spacing: .08em; padding: 12px 18px; font-size: 13px; }
 .sea-wave-btn { width: 44px; height: 44px; border: 2px solid var(--color-ink);
   background: var(--color-paper); font-size: 18px; }
+/* .sea-flight-buttons also carries .sea-buttons (display:flex); this
+   attribute selector out-specifies that plain class so [hidden] (toggled by
+   controls.js's setFlightControlsVisible, only true for the seaplane) still
+   actually hides it instead of the class rule winning the tie. */
+.sea-flight-buttons[hidden] { display: none; }
 @media (hover: hover) and (pointer: fine) { .sea-touch { display: none; } }
 
 .sea-banner { position: absolute; top: 0; left: 0; transform: translate(-50%, -100%);
@@ -388,7 +393,11 @@ pre code.hljs {
   pointer-events: none; opacity: 0; transition: opacity 150ms ease; }
 .sea-toast { position: absolute; top: 48px; left: 50%; transform: translateX(-50%);
   font-family: "Space Grotesk", system-ui, sans-serif; font-weight: 700;
-  font-size: clamp(12px, 1.6vw, 15px); letter-spacing: 0.02em; white-space: nowrap;
+  font-size: clamp(12px, 1.6vw, 15px); letter-spacing: 0.02em;
+  /* max-width + wrapping (rather than nowrap) so a longer message -- e.g.
+     the seaplane's flight tutorial -- wraps on a narrow phone screen
+     instead of running off both edges. */
+  max-width: min(90vw, 420px); text-align: center;
   color: var(--color-ink); background: var(--color-paper); border: 2px solid var(--color-ink);
   padding: 6px 14px; pointer-events: none; opacity: 0; transition: opacity 300ms ease; }
 .sea-mute { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px;
@@ -411,6 +420,15 @@ pre code.hljs {
 .sea-flag-swatch { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
   font-size: 14px; line-height: 1; border: 2px solid var(--color-ink); background: var(--color-paper);
   cursor: pointer; padding: 0; }
+/* Boat-type picker: unlike the color/flag swatches (whose own fill/glyph
+   already shows the choice), a row of otherwise-identical hulls needs a
+   label to read at all, so these are text pills rather than icon swatches --
+   .is-selected marks the current pick the same way a swatch's own look does. */
+.sea-boat-swatches { display: flex; flex-wrap: wrap; gap: 6px; max-width: 220px; }
+.sea-boat-swatch { border: 2px solid var(--color-ink); background: var(--color-paper);
+  color: var(--color-ink); font-size: 11px; font-weight: 700; letter-spacing: .02em;
+  padding: 5px 8px; cursor: pointer; }
+.sea-boat-swatch.is-selected { background: var(--color-lime); color: var(--on-lime); }
 
 /* Post footer kudos button (see the `Kudos` hook in app.js). [data-kudos-fill]
    (--color-lime) rises bottom-to-top over the 3s hold while the button
