@@ -17,7 +17,10 @@ import {
   makeGulls,
   stepGull,
   gullBob,
-  gullBank
+  gullBank,
+  boatRiseOffset,
+  boatSinkOffset,
+  BOAT_RISE_DURATION
 } from "./world.js"
 import {seaBus} from "./bus.js"
 
@@ -106,6 +109,13 @@ class Sea {
     this.customFlag = localStorage.getItem(CUSTOM_FLAG_KEY)
     this.selfBoat = this.scene.makeBoat(flagTexture(this.customFlag || "🏴"), true, sailorId)
     if (this.customColor) this.scene.setHullColor(this.selfBoat, this.customColor)
+    // Every boat (self, live sailors, anchored readers) rises from below the
+    // water when it first appears rather than popping in -- see
+    // spawnRise/applyRise. A departing sailor's boat sinks instead of
+    // vanishing -- see sinkBoat/updateSinkingBoats.
+    this.spawnRise = new Map() // id -> elapsed seconds since appearing, while still rising
+    this.sinkingBoats = [] // [{group, t}] boats currently playing their exit animation
+    this.spawnRise.set(sailorId, 0)
 
     this.customizeBtn = document.createElement("button")
     this.customizeBtn.className = "sea-customize-btn"
@@ -237,6 +247,7 @@ class Sea {
 
     this.selfBoat.position.set(this.pos.x, 0, this.pos.z)
     this.selfBoat.rotation.y = this.pos.h
+    this.applyRise(this.sailorId, this.selfBoat)
     this.maybeSpawnWake(this.sailorId, this.pos.x, this.pos.z, this.pos.h)
 
     this.stepSharks()
@@ -274,6 +285,7 @@ class Sea {
     this.updateBottleBanner()
 
     this.updateWakes()
+    this.updateSinkingBoats()
 
     this.scene.animateWater(this.t)
     this.scene.chase(this.pos, this.pos.h)
@@ -338,14 +350,16 @@ class Sea {
       if (!b) {
         b = this.scene.makeBoat(flagTexture(this.flagFor(id)), false, id)
         this.remoteBoats.set(id, b)
+        this.spawnRise.set(id, 0)
       }
       b.position.set(p.x, 0, p.z)
       b.rotation.y = p.h
+      this.applyRise(id, b)
       this.maybeSpawnWake(id, p.x, p.z, p.h)
     }
     for (const [id, b] of this.remoteBoats) {
       if (!liveIds.has(id)) {
-        this.scene.removeBoat(b)
+        this.sinkBoat(id, b)
         this.remoteBoats.delete(id)
         this.lastWakePos.delete(id) // stop tracking distance-traveled for a sailor who's gone
       }
@@ -364,15 +378,57 @@ class Sea {
       if (!b) {
         b = this.scene.makeBoat(flagTexture(s.flag), false, s.id)
         this.readerBoats.set(s.id, b)
+        this.spawnRise.set(s.id, 0)
       }
       const bob = Math.sin(this.t * 1.5 + hash(s.id)) * 0.4
       b.position.set(isl.x + 10, bob, isl.z + 10)
       b.rotation.y = hash(s.id)
+      this.applyRise(s.id, b)
     }
     for (const [id, b] of this.readerBoats) {
       if (!anchored.has(id)) {
-        this.scene.removeBoat(b)
+        this.sinkBoat(id, b)
         this.readerBoats.delete(id)
+      }
+    }
+  }
+
+  // Adds this frame's rise offset (see world.js's boatRiseOffset) on top of
+  // `group`'s just-set normal position, for however many boats (self, live
+  // sailors, anchored readers) are still mid-entrance. No-op once a boat
+  // isn't tracked in spawnRise (the common case: already fully surfaced).
+  applyRise(id, group) {
+    const t = this.spawnRise.get(id)
+    if (t === undefined) return
+    const next = t + 0.016
+    if (next >= BOAT_RISE_DURATION) {
+      this.spawnRise.delete(id)
+      return
+    }
+    this.spawnRise.set(id, next)
+    group.position.y += boatRiseOffset(next)
+  }
+
+  // Starts a departing boat's sink-and-remove animation (see world.js's
+  // boatSinkOffset) rather than deleting it from the scene outright. Cancels
+  // any in-flight rise so a boat that leaves mid-entrance doesn't fight itself.
+  sinkBoat(id, group) {
+    this.spawnRise.delete(id)
+    this.sinkingBoats.push({group, t: 0})
+  }
+
+  // Advances every sinking boat's descent/list, removing it for good once
+  // its animation completes.
+  updateSinkingBoats() {
+    for (let i = this.sinkingBoats.length - 1; i >= 0; i--) {
+      const s = this.sinkingBoats[i]
+      s.t += 0.016
+      const {y, tilt, done} = boatSinkOffset(s.t)
+      s.group.position.y = y
+      s.group.rotation.z = tilt
+      if (done) {
+        this.scene.removeBoat(s.group)
+        this.sinkingBoats.splice(i, 1)
       }
     }
   }
