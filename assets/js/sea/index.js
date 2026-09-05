@@ -1,4 +1,4 @@
-import {SeaScene, flagTexture, emoteSprite, bottleSprite, wakeSegment, PALETTE} from "./scene.js"
+import {SeaScene, flagTexture, emoteSprite, bottleSprite, wakeSegment, PALETTE, BOAT_TYPES} from "./scene.js"
 import {createControls} from "./controls.js"
 import {SeaNet} from "./net.js"
 import {SeaAudio} from "./audio.js"
@@ -8,6 +8,7 @@ import {
   nearestBottle,
   isCloseEnoughToDock,
   resolveCollision,
+  COLLISION_MARGIN,
   makeSharks,
   stepShark,
   sharkBreach,
@@ -49,10 +50,21 @@ const GULL_COUNT = 6
 const GULL_BOUNDS = 130 // seagulls patrol within this radius of the harbor
 const CUSTOM_COLOR_KEY = "seaCustomColor"
 const CUSTOM_FLAG_KEY = "seaCustomFlag"
+const CUSTOM_BOAT_KEY = "seaCustomBoat"
 // Curated rather than free text, same reasoning as the hull PALETTE: a
 // fixed set keeps every sailor's picker rendering something every browser
 // actually has a glyph for.
 const FLAG_EMOJI = ["🏴", "🏳️", "🏁", "🚩", "⚓", "⛵", "🦈", "🐙", "🐬", "🌊", "⭐", "💀", "🔥", "🍀", "🌈", "⚡"]
+
+// The seaplane's flight mechanic (see updateFlight()): needs a runway-speed
+// minimum before it can lift off, then altitude is held directly by
+// holding the ascend/descend keys/buttons -- no separate "toggle flight"
+// control, so up/down (climb/descend) IS takeoff/landing.
+const TAKEOFF_SPEED_FRACTION = 0.55 // fraction of the seaplane's own max speed needed to leave the water
+const CRUISE_ALTITUDE = 16 // a bit under GULL_ALTITUDE, so a flying boat reads as lower than the gulls
+const CLIMB_RATE = 9 // units/sec while holding ascend
+const DESCEND_RATE = 11 // units/sec while holding descend -- a touch faster, like coming in to land
+const TAKEOFF_HINT_COOLDOWN = 3 // seconds between "get up to speed" toasts, so holding the key doesn't spam
 
 let active = null
 
@@ -99,15 +111,20 @@ class Sea {
     this.bottleMeshes = new Map() // id -> {sprite, bottle}
     this.wakes = [] // active {mesh, t} wake puffs, see updateWakes()
     this.lastWakePos = new Map() // sailorId -> {x, z}, throttles wake spawning by distance traveled
-    // A customized hull color/flag (see the 🎨 picker below) is applied
+    // A customized hull color/flag/boat (see the 🎨 picker below) is applied
     // right after creation, overriding the hash-derived hull color and the
     // placeholder "🏴" flag for *this sailor's own view only* — other
-    // sailors still see this boat's hash-derived color and GeoIP flag, the
-    // same as before. Syncing a custom look to other viewers would need
-    // extending the presence/channel roster; left for later.
+    // sailors still see this boat's hash-derived color, GeoIP flag, and the
+    // default pirate ship, the same as before. Syncing a custom look to
+    // other viewers would need extending the presence/channel roster; left
+    // for later.
     this.customColor = localStorage.getItem(CUSTOM_COLOR_KEY)
     this.customFlag = localStorage.getItem(CUSTOM_FLAG_KEY)
-    this.selfBoat = this.scene.makeBoat(flagTexture(this.customFlag || "🏴"), true, sailorId)
+    this.boatType = BOAT_TYPES.find((b) => b.id === localStorage.getItem(CUSTOM_BOAT_KEY)) || BOAT_TYPES[0]
+    // Altitude above the water -- only a canFly boat (the seaplane) ever
+    // moves this off 0; see updateFlight().
+    this.altitude = 0
+    this.selfBoat = this.scene.makeBoat(flagTexture(this.customFlag || "🏴"), true, sailorId, this.boatType)
     if (this.customColor) this.scene.setHullColor(this.selfBoat, this.customColor)
     // Every boat (self, live sailors, anchored readers) rises from below the
     // water when it first appears rather than popping in -- see
@@ -130,6 +147,7 @@ class Sea {
     el.appendChild(this.customizePanel)
 
     this.controls = createControls(el)
+    this.controls.setFlightControlsVisible(this.boatType.canFly)
     this.net = new SeaNet(sailorId)
     this.readerBoats = new Map() // id -> {group}
     this.remoteBoats = new Map() // id -> {group}
@@ -150,8 +168,8 @@ class Sea {
 
     this.hint = document.createElement("div")
     this.hint.className = "sea-hint"
-    this.hint.textContent = "Arrows / WASD to sail · Space to dock · E to wave · B for a bottle"
     el.appendChild(this.hint)
+    this.updateHint()
 
     this.bottleBanner = document.createElement("div")
     this.bottleBanner.className = "sea-bottle-banner"
@@ -216,12 +234,18 @@ class Sea {
 
     const input = this.controls.read()
 
+    // Airborne (only possible for a canFly boat -- see updateFlight): sails
+    // clean over islands and other boats, and cruises at its own flying
+    // speed rather than its on-water one.
+    const flying = this.boatType.canFly && this.altitude > 0.5
+    const speedFactor = flying && this.boatType.flySpeedFactor ? this.boatType.flySpeedFactor : this.boatType.speedFactor
+
     // Ease speed toward the throttle target, decaying with friction when the
     // throttle is released — so letting go coasts to a stop instead of
     // snapping, and tapping briefly doesn't leave the boat drifting forever.
-    const target = input.throttle * MAX_SPEED
+    const target = input.throttle * MAX_SPEED * speedFactor
     if (target !== 0) {
-      this.speed += (target - this.speed) * ACCEL
+      this.speed += (target - this.speed) * ACCEL * speedFactor
     } else {
       this.speed *= DECAY
       if (Math.abs(this.speed) < 0.002) this.speed = 0
@@ -234,23 +258,40 @@ class Sea {
 
     const nextX = this.pos.x + Math.sin(this.pos.h) * this.speed
     const nextZ = this.pos.z + Math.cos(this.pos.h) * this.speed
-    const land = resolveCollision(nextX, nextZ, this.islands)
-    const boats = resolveCollision(land.x, land.z, this.boatObstacles(), BOAT_COLLISION_MARGIN)
-    const colliding = land.hit || boats.hit
-    if (colliding) this.speed *= CRASH_BOUNCE
-    // Edge-triggered so holding the throttle into an island plays one splash
-    // on impact, not one every frame for as long as contact continues.
-    if (colliding && !this.wasColliding) this.audio.splash()
-    this.wasColliding = colliding
-    this.pos.x = boats.x
-    this.pos.z = boats.z
+    if (flying) {
+      this.pos.x = nextX
+      this.pos.z = nextZ
+      this.wasColliding = false
+    } else {
+      // Collision clearance scales with the boat's own footprint (see
+      // BOAT_TYPES' sizeFactor) -- a container ship needs more room than a
+      // speedboat to keep its bow from visually poking through land.
+      const land = resolveCollision(nextX, nextZ, this.islands, COLLISION_MARGIN * this.boatType.sizeFactor)
+      const boats = resolveCollision(
+        land.x,
+        land.z,
+        this.boatObstacles(),
+        BOAT_COLLISION_MARGIN * this.boatType.sizeFactor
+      )
+      const colliding = land.hit || boats.hit
+      if (colliding) this.speed *= CRASH_BOUNCE
+      // Edge-triggered so holding the throttle into an island plays one splash
+      // on impact, not one every frame for as long as contact continues.
+      if (colliding && !this.wasColliding) this.audio.splash()
+      this.wasColliding = colliding
+      this.pos.x = boats.x
+      this.pos.z = boats.z
+    }
 
-    this.selfBoat.position.set(this.pos.x, 0, this.pos.z)
+    this.updateFlight(input)
+
+    this.selfBoat.position.set(this.pos.x, this.altitude, this.pos.z)
     this.selfBoat.rotation.y = this.pos.h
     this.applyRise(this.sailorId, this.selfBoat)
-    this.maybeSpawnWake(this.sailorId, this.pos.x, this.pos.z, this.pos.h)
+    // A boat wake is a water-surface effect -- skip it while airborne.
+    if (!flying) this.maybeSpawnWake(this.sailorId, this.pos.x, this.pos.z, this.pos.h)
 
-    this.stepSharks()
+    this.stepSharks(flying)
     this.stepGulls()
 
     this.net.sendPos(
@@ -295,13 +336,15 @@ class Sea {
 
   // Advances every shark's patrol/breach state and its rendered mesh, then
   // — once any post-bite invulnerability has worn off — knocks the boat back
-  // and flashes a warning if it strayed within range of one.
-  stepSharks() {
+  // and flashes a warning if it strayed within range of one. `flying` skips
+  // just the bite check: a seaplane in the air is out of reach.
+  stepSharks(flying) {
     for (let i = 0; i < this.sharks.length; i++) {
       const shark = this.sharks[i]
       stepShark(shark, 0.016, SHARK_BOUNDS)
       this.scene.updateShark(this.sharkMeshes[i], shark, sharkBreach(shark))
     }
+    if (flying) return
 
     if (this.biteCooldown > 0) {
       this.biteCooldown -= 0.016
@@ -334,6 +377,48 @@ class Sea {
       stepGull(g, 0.016, GULL_BOUNDS)
       this.scene.updateGull(this.gullMeshes[i], g, gullBob(g), gullBank(g))
     }
+  }
+
+  // The seaplane's altitude, held directly by holding ascend/descend --
+  // there's no separate "toggle flight" control, so climbing off the water
+  // (once past TAKEOFF_SPEED_FRACTION) IS taking off, and descending back
+  // to 0 IS landing. No-ops (beyond a safety-net landing) for every other
+  // boat, so this is always safe to call regardless of selection.
+  updateFlight(input) {
+    if (!this.boatType.canFly) {
+      if (this.altitude > 0) this.altitude = 0 // switched away from the seaplane mid-flight
+      this.selfBoat.rotation.x = 0
+      return
+    }
+
+    const wasAirborne = this.altitude > 0
+    const effectiveMax = MAX_SPEED * this.boatType.speedFactor
+
+    if (input.ascend) {
+      const canLift = wasAirborne || Math.abs(this.speed) >= effectiveMax * TAKEOFF_SPEED_FRACTION
+      if (canLift) this.altitude = Math.min(CRUISE_ALTITUDE, this.altitude + CLIMB_RATE * 0.016)
+      else this.showTakeoffHint()
+    } else if (input.descend && this.altitude > 0) {
+      this.altitude = Math.max(0, this.altitude - DESCEND_RATE * 0.016)
+    }
+
+    const nowAirborne = this.altitude > 0
+    if (!wasAirborne && nowAirborne) this.audio.liftoff()
+    if (wasAirborne && !nowAirborne) this.audio.splash() // splashdown
+
+    // Nose pitches with climb/descent for visual feedback, easing back
+    // level (0) once neither key is held or altitude is pinned at an end.
+    if (input.ascend && nowAirborne) this.selfBoat.rotation.x = -0.25
+    else if (input.descend && wasAirborne) this.selfBoat.rotation.x = 0.2
+    else this.selfBoat.rotation.x *= 0.8
+  }
+
+  // Throttled so holding ascend without enough speed doesn't spam the toast
+  // queue every single frame.
+  showTakeoffHint() {
+    if (this._lastTakeoffHint !== undefined && this.t - this._lastTakeoffHint < TAKEOFF_HINT_COOLDOWN) return
+    this._lastTakeoffHint = this.t
+    this.queueToast("🛫 Get up to speed first, then keep holding to take off")
   }
 
   // Live sailors (from net.remote). A sailor id that is also in the roster is
@@ -671,10 +756,42 @@ class Sea {
     this.muteBtn.setAttribute("aria-label", this.audio.muted ? "Unmute sea sounds" : "Mute sea sounds")
   }
 
-  // Small hidden-by-default popover: a swatch per PALETTE color, then a
-  // swatch per FLAG_EMOJI option, both applied immediately and persisted to
-  // localStorage. See the customColor/customFlag comment above for why
-  // this only affects this sailor's own view.
+  // Applies a new boat choice: persists it, swaps the rigged hull (see
+  // scene.js's setBoatType, which keeps the current hull color/flag), shows
+  // or hides the ascend/descend touch buttons, and refreshes the hint text
+  // and the switcher's own selection highlight. Selecting the seaplane also
+  // teaches its takeoff/landing controls; switching *away* from it while
+  // airborne lands it immediately (updateFlight's own safety net would
+  // catch this too, but doing it here avoids one frame of a non-seaplane
+  // hull hanging in mid-air).
+  selectBoatType(type) {
+    this.boatType = type
+    localStorage.setItem(CUSTOM_BOAT_KEY, type.id)
+    this.scene.setBoatType(this.selfBoat, type)
+    this.controls.setFlightControlsVisible(type.canFly)
+    this.updateHint()
+    if (type.canFly) {
+      this.queueToast("✈️ Get up to speed, then hold 🛫 to take off — 🛬 to land")
+    } else if (this.altitude > 0) {
+      this.altitude = 0
+    }
+    for (const [id, btn] of this.boatSwatchButtons) {
+      btn.classList.toggle("is-selected", id === type.id)
+    }
+  }
+
+  // Base steering hint, plus the flight controls only while a canFly boat
+  // (the seaplane) is selected.
+  updateHint() {
+    const base = "Arrows / WASD to sail · Space to dock · E to wave · B for a bottle"
+    this.hint.textContent = this.boatType.canFly ? `${base} · F/C to fly` : base
+  }
+
+  // Small hidden-by-default popover: a swatch per PALETTE color, a swatch
+  // per FLAG_EMOJI option, and a text pill per BOAT_TYPES entry, all applied
+  // immediately and persisted to localStorage. See the
+  // customColor/customFlag/boatType comment above for why this only affects
+  // this sailor's own view.
   buildCustomizePanel() {
     const panel = document.createElement("div")
     panel.className = "sea-customize-panel"
@@ -714,6 +831,22 @@ class Sea {
       flags.appendChild(btn)
     }
     panel.appendChild(flags)
+
+    const boats = document.createElement("div")
+    boats.className = "sea-boat-swatches"
+    this.boatSwatchButtons = new Map() // type.id -> button, so selectBoatType can update the highlight
+    for (const type of BOAT_TYPES) {
+      const btn = document.createElement("button")
+      btn.type = "button"
+      btn.className = "sea-boat-swatch"
+      if (type.id === this.boatType.id) btn.classList.add("is-selected")
+      btn.textContent = type.label
+      btn.setAttribute("aria-label", `Switch to the ${type.label}`)
+      btn.addEventListener("click", () => this.selectBoatType(type))
+      this.boatSwatchButtons.set(type.id, btn)
+      boats.appendChild(btn)
+    }
+    panel.appendChild(boats)
 
     return panel
   }

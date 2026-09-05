@@ -7,11 +7,89 @@ import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js"
 // assumes (see chase()'s `dir`).
 const FORWARD_YAW = -Math.PI / 2
 
-const SHIP_URL = "/models/pirateship.glb"
 const SHARK_URL = "/models/shark.glb"
 const CHEST_URL = "/models/treasurechest.glb"
 const LIGHTHOUSE_URL = "/models/lighthouse.glb"
 const GULL_URL = "/models/seagull.glb"
+
+// Selectable boats (see index.js's 🎨 panel / BOAT_TYPES export below) --
+// the original pirate ship plus six more hulls from a CC0 asset kit.
+// `scale` is tuned by eye (like SHIP_SCALE used to be) so every hull reads
+// at a sensible size next to the others and the islands, regardless of each
+// model's own raw footprint. `speedFactor` scales MAX_SPEED/ACCEL in
+// index.js so the boats actually handle differently, not just look
+// different; `sizeFactor` scales how much collision clearance a boat needs
+// (a container ship shouldn't graze islands as close as a speedboat can).
+// `flagPos` places the masthead pennant somewhere that clears each model's
+// own superstructure. Only `canFly` (the seaplane) gets a `flySpeedFactor`,
+// its cruise speed once airborne -- see index.js's flight mechanic.
+export const BOAT_TYPES = [
+  {
+    id: "pirateship",
+    label: "Pirate Ship",
+    url: "/models/pirateship.glb",
+    scale: 0.9,
+    flagPos: {x: 0.8, y: 7.6},
+    speedFactor: 1,
+    sizeFactor: 1
+  },
+  {
+    id: "speedboat",
+    label: "Speedboat",
+    url: "/models/boat-speedboat.glb",
+    scale: 0.85,
+    flagPos: {x: -1.6, y: 2.3},
+    speedFactor: 1.5,
+    sizeFactor: 0.85
+  },
+  {
+    id: "tugboat",
+    label: "Tugboat",
+    url: "/models/boat-tugboat.glb",
+    scale: 1,
+    flagPos: {x: 0.3, y: 3.6},
+    speedFactor: 0.75,
+    sizeFactor: 1.1
+  },
+  {
+    id: "submarine",
+    label: "Submarine",
+    url: "/models/boat-submarine.glb",
+    scale: 0.95,
+    flagPos: {x: 0.4, y: 2.8},
+    speedFactor: 0.85,
+    sizeFactor: 1
+  },
+  {
+    id: "battleship",
+    label: "Battleship",
+    url: "/models/boat-battleship.glb",
+    scale: 0.85,
+    flagPos: {x: -0.6, y: 4.2},
+    speedFactor: 0.7,
+    sizeFactor: 1.5
+  },
+  {
+    id: "containership",
+    label: "Container Ship",
+    url: "/models/boat-containership.glb",
+    scale: 0.78,
+    flagPos: {x: -1.2, y: 4.6},
+    speedFactor: 0.55,
+    sizeFactor: 2
+  },
+  {
+    id: "seaplane",
+    label: "Seaplane",
+    url: "/models/boat-seaplane.glb",
+    scale: 0.95,
+    flagPos: {x: -1.8, y: 2.5},
+    speedFactor: 1.1,
+    sizeFactor: 1,
+    canFly: true,
+    flySpeedFactor: 1.7
+  }
+]
 
 // Five hand-built island types (a CC0 asset kit), swapped in for the old
 // procedural hex-band islands. `radius`/`height` are each model's own
@@ -32,9 +110,6 @@ const ISLAND_TYPES = [
 // growing taller.
 const TRENDING_SCALE_BOOST = 1.3
 
-// SHIP_SCALE brings the pirate ship down to roughly the old procedural
-// hull's footprint, just a bit grander.
-const SHIP_SCALE = 0.9
 // SHARK_SCALE keeps the shark close to its authored size (already
 // shark-sized relative to a boat); SHARK_SUBMERGE sinks it so only the
 // dorsal fin breaks the surface at rest, same intent as the old procedural
@@ -227,8 +302,8 @@ export class SeaScene {
 
   // A treasure chest hidden on roughly a quarter of islands, toward the
   // outer beach — a reward for exploring, not a fixture of every island.
-  // Position/presence are both derived from the island's hash, same
-  // reasoning as _palms.
+  // Position/presence are both derived from the island's hash, so every
+  // sailor sees the same islands hiding one.
   _treasureChest(group, h, radius, baseY) {
     if ((h >> 20) % 4 !== 0) return
     const a = ((h >> 22) % 360) * (Math.PI / 180)
@@ -351,15 +426,21 @@ export class SeaScene {
     }
   }
 
-  // Clones the shared ship template into `group`, toon-shading it and
+  // Clones `boatType`'s hull template into `group`, toon-shading it and
   // rigging a small masthead pennant that carries the flag texture. Runs
-  // once the GLTF has loaded (see makeBoat) — by then `group` may already
-  // carry a customized hull color / flag texture in its userData, so those
-  // win over the model's own defaults.
-  _riggedShip(group, template) {
+  // once the GLTF has loaded (see makeBoat/setBoatType) — by then `group`
+  // may already carry a customized hull color / flag texture in its
+  // userData, so those win over the model's own defaults. Guarded by
+  // `epoch` against a switch-boat-type race: if setBoatType moved this
+  // group on to a *different* type before this particular load resolved,
+  // this stale rig is dropped instead of landing on top of the new one.
+  _riggedShip(group, template, boatType, epoch) {
+    if (group.userData.boatEpoch !== epoch) return
+
     const ship = template.clone(true)
-    ship.scale.setScalar(SHIP_SCALE)
+    ship.scale.setScalar(boatType.scale)
     ship.rotation.y = FORWARD_YAW
+    ship.userData.isShipRoot = true // lets setBoatType find + remove this whole rig later
 
     // GLTFLoader sanitizes mesh names (spaces -> underscores) but leaves
     // material names as authored, so key the hull off the material, not
@@ -370,7 +451,9 @@ export class SeaScene {
 
     // Masthead pennant: a small flat flag near the top of the mast, rather
     // than texturing the model's own sails, so the emoji-flag customization
-    // (see setSailTexture) keeps working against a plain rectangle.
+    // (see setSailTexture) keeps working against a plain rectangle. Position
+    // is per boat type (see BOAT_TYPES) so it clears each hull's own
+    // superstructure instead of poking through the deck or floating in air.
     const flagGeo = new THREE.PlaneGeometry(1.4, 0.9)
     const flagMat = new THREE.MeshBasicMaterial({
       map: group.userData.sailTexture,
@@ -379,25 +462,29 @@ export class SeaScene {
     })
     const flag = new THREE.Mesh(flagGeo, flagMat)
     flag.userData.isSail = true // lets setSailTexture find it later
-    flag.position.set(0.8, 7.6, 0)
+    flag.position.set(boatType.flagPos.x, boatType.flagPos.y, 0)
     ship.add(flag)
 
     group.add(ship)
     this.setHullColor(group, group.userData.hullColor)
   }
 
-  // Boat: the shared pirate-ship model (loaded async and rigged in once
+  // Boat: one of BOAT_TYPES's hull models (loaded async and rigged in once
   // ready — see _riggedShip) plus a masthead flag. The hull color is keyed
   // by sailor id, not by whether it's "you" — so a given sailor's boat looks
   // the same to every viewer, on every screen. `isSelf` only adds the ring
-  // accent beneath your own boat.
-  makeBoat(flagTexture, isSelf, sailorId) {
+  // accent beneath your own boat. `boatType` defaults to BOAT_TYPES[0] (the
+  // pirate ship) — only the sailor's own boat (see index.js's switcher)
+  // ever picks something else.
+  makeBoat(flagTexture, isSelf, sailorId, boatType = BOAT_TYPES[0]) {
     const group = new THREE.Group()
     group.userData.sailorId = sailorId
     group.userData.hullColor = null // sailor's default until setHullColor overrides it
     group.userData.sailTexture = flagTexture
+    group.userData.boatType = boatType
+    group.userData.boatEpoch = 0
 
-    loadModel(SHIP_URL).then((template) => this._riggedShip(group, template))
+    loadModel(boatType.url).then((template) => this._riggedShip(group, template, boatType, 0))
 
     if (isSelf) {
       const ring = new THREE.Mesh(
@@ -411,6 +498,25 @@ export class SeaScene {
 
     this.scene.add(group)
     return group
+  }
+
+  // Swaps an already-built boat's hull for a different BOAT_TYPES entry
+  // (see index.js's boat switcher) -- removes the old rigged hull (tagged
+  // isShipRoot) and rigs the new one in, in place, keeping the boat's hull
+  // color/flag/self-ring untouched. `boatEpoch` invalidates any still-
+  // in-flight load from a previous call so a rapid double-switch can't have
+  // the earlier one land after the later one.
+  setBoatType(group, boatType) {
+    group.userData.boatType = boatType
+    const epoch = ++group.userData.boatEpoch
+
+    let old = null
+    group.traverse((o) => {
+      if (o.userData.isShipRoot) old = o
+    })
+    if (old) group.remove(old)
+
+    loadModel(boatType.url).then((template) => this._riggedShip(group, template, boatType, epoch))
   }
 
   // Re-tints an already-built boat's hull — used to apply a sailor's
