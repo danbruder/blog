@@ -161,30 +161,6 @@ export function nearestBitingShark(x, z, sharks, radius = SHARK_BITE_RADIUS) {
   return null
 }
 
-// Regatta: a fixed ring of buoys around the harbor, sailed in order (buoy 0
-// starts the clock, the last one stops it). Purely a client-side layout —
-// same for every sailor since it's derived from the harbor position alone,
-// no server round-trip needed.
-const REGATTA_BUOY_COUNT = 5
-const REGATTA_RADIUS = 70
-const REGATTA_HIT_RADIUS = 7
-
-export function regattaBuoys(harbor) {
-  const buoys = []
-  for (let i = 0; i < REGATTA_BUOY_COUNT; i++) {
-    const angle = (i / REGATTA_BUOY_COUNT) * Math.PI * 2
-    buoys.push({
-      x: harbor.x + Math.cos(angle) * REGATTA_RADIUS,
-      z: harbor.z + Math.sin(angle) * REGATTA_RADIUS
-    })
-  }
-  return buoys
-}
-
-export function isAtBuoy(x, z, buoy, radius = REGATTA_HIT_RADIUS) {
-  return Math.hypot(buoy.x - x, buoy.z - z) <= radius
-}
-
 // Real-world day/night cycle, always following US Eastern time regardless
 // of the visitor's own timezone -- so everyone sailing together sees the
 // same sky at once. Intl.DateTimeFormat resolves America/New_York via the
@@ -209,56 +185,8 @@ export function dayFactor(hour) {
   return (Math.cos(((hour - 13) / 24) * Math.PI * 2) + 1) / 2
 }
 
-// Flying fish: ambient and purely local, same reasoning as sharks (see
-// above) -- every visitor simulates their own, unsynced. Unlike sharks,
-// they never interact with the boat at all; leaping is just atmosphere.
-const FISH_SPEED = 0.22
-const FISH_JUMP_MIN = 2
-const FISH_JUMP_MAX = 6
-const FISH_JUMP_DURATION = 0.6
-
-export function makeFlyingFish(count, bounds, rand = Math.random) {
-  const fish = []
-  for (let i = 0; i < count; i++) {
-    fish.push({
-      x: (rand() - 0.5) * bounds * 2,
-      z: (rand() - 0.5) * bounds * 2,
-      h: rand() * Math.PI * 2,
-      turnBias: (rand() - 0.5) * 0.02,
-      jumpIn: FISH_JUMP_MIN + rand() * (FISH_JUMP_MAX - FISH_JUMP_MIN),
-      jumpT: 0
-    })
-  }
-  return fish
-}
-
-export function stepFish(fish, dt, bounds, rand = Math.random) {
-  fish.h += fish.turnBias + (rand() - 0.5) * 0.02
-  fish.x += Math.sin(fish.h) * FISH_SPEED
-  fish.z += Math.cos(fish.h) * FISH_SPEED
-  if (Math.hypot(fish.x, fish.z) > bounds) fish.h += Math.PI
-
-  if (fish.jumpT > 0) {
-    fish.jumpT -= dt
-    if (fish.jumpT <= 0) {
-      fish.jumpT = 0
-      fish.jumpIn = FISH_JUMP_MIN + rand() * (FISH_JUMP_MAX - FISH_JUMP_MIN)
-    }
-  } else {
-    fish.jumpIn -= dt
-    if (fish.jumpIn <= 0) fish.jumpT = FISH_JUMP_DURATION
-  }
-}
-
-// 0 (in the water) .. 1 (peak of the leap).
-export function fishLeap(fish) {
-  if (fish.jumpT <= 0) return 0
-  const p = 1 - fish.jumpT / FISH_JUMP_DURATION
-  return Math.sin(p * Math.PI)
-}
-
 // Seagulls: pure ambient atmosphere circling above the harbor -- same
-// wandering-patrol shape as sharks/fish (see above), but cruising at a
+// wandering-patrol shape as sharks (see above), but cruising at a
 // fixed altitude (scene.js's updateGull) with no leap/breach, just a
 // steady drifting glide.
 const GULL_SPEED = 0.35
@@ -294,33 +222,4 @@ export function gullBob(gull) {
 
 export function gullBank(gull) {
   return Math.sin(gull.bobPhase * 0.5)
-}
-
-// Floating driftwood: purely decorative set-dressing, no collision. Layout
-// is deterministic from each piece's index alone (a cheap integer hash, not
-// Math.random), so it's stable across reloads and identical for every
-// sailor without a server round-trip — the same reasoning as an island's
-// palm placement in scene.js.
-const DRIFTWOOD_COUNT = 14
-const DRIFTWOOD_BOUNDS = 130
-
-export function driftwoodPieces(count = DRIFTWOOD_COUNT, bounds = DRIFTWOOD_BOUNDS) {
-  const pieces = []
-  for (let i = 0; i < count; i++) {
-    const h = hashInt(i)
-    const angle = (h % 360) * (Math.PI / 180)
-    const radius = 20 + (((h >> 8) % 100) / 100) * bounds
-    pieces.push({
-      x: Math.cos(angle) * radius,
-      z: Math.sin(angle) * radius,
-      rot: ((h >> 16) % 360) * (Math.PI / 180)
-    })
-  }
-  return pieces
-}
-
-function hashInt(n) {
-  let h = Math.imul(n + 1, 2654435761) >>> 0
-  h ^= h >>> 15
-  return h
 }

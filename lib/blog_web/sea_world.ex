@@ -126,11 +126,19 @@ defmodule BlogWeb.SeaWorld do
 
   defp position(section, path) do
     sector = section_angle(section)
-    # Deterministic spread within the sector.
+    sector_width = 2 * :math.pi() / length(@sections)
     h = :erlang.phash2(path)
-    jitter = rem(h, 40) / 40 * 0.7 - 0.35
+    # Deterministic spread within the sector -- 1000 steps (rather than the
+    # old 40) so islands land continuously across the sector instead of
+    # quantizing onto a handful of angles that different paths keep landing
+    # on top of.
+    jitter = (rem(h, 1000) / 1000 - 0.5) * sector_width * 0.8
     angle = sector + jitter
-    radius = 45 + rem(div(h, 40), 8) * 26 + rem(div(h, 320), 5) * 6
+    # Same idea for radius, pulled from an independent slice of the hash: a
+    # wide, finely-stepped spread instead of only 40 coarse radius bands
+    # (8 x 5), which was clumping islands on top of each other since many
+    # paths land in the same handful of bands.
+    radius = 55 + rem(div(h, 1000), 1000) / 1000 * 250
     {Float.round(radius * :math.cos(angle), 2), Float.round(radius * :math.sin(angle), 2)}
   end
 
