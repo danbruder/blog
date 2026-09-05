@@ -223,3 +223,32 @@ export function gullBob(gull) {
 export function gullBank(gull) {
   return Math.sin(gull.bobPhase * 0.5)
 }
+
+// A boat's entrance/exit, when a sailor joins or leaves Sea mode: it rises
+// up from below the water rather than popping in, and sinks back down
+// rather than vanishing. Purely cosmetic -- index.js tracks elapsed seconds
+// per boat and feeds it back in here each frame; it removes the boat once
+// boatSinkOffset reports `done`.
+export const BOAT_RISE_DURATION = 0.9 // seconds to fully surface
+export const BOAT_SINK_DURATION = 1.1 // seconds to fully submerge
+const BOAT_RISE_DEPTH = 10 // units below the waterline a boat starts at
+const BOAT_SINK_DEPTH = 10
+const BOAT_SINK_TILT = 0.4 // radians of list at the deepest point -- reads as sinking, not an elevator
+
+// Y offset to add on top of a rising boat's normal position, `t` seconds
+// since it appeared: -BOAT_RISE_DEPTH at t=0, easing to 0 once fully surfaced.
+export function boatRiseOffset(t) {
+  if (t >= BOAT_RISE_DURATION) return 0
+  const remaining = 1 - t / BOAT_RISE_DURATION
+  return -(remaining * remaining * remaining) * BOAT_RISE_DEPTH
+}
+
+// Y offset and list (roll) angle for a boat `t` seconds into leaving --
+// starts near the surface and accelerates downward, like actually taking on
+// water rather than descending at a constant rate. `done` is true once the
+// caller should remove the boat for good.
+export function boatSinkOffset(t) {
+  const p = Math.min(1, t / BOAT_SINK_DURATION)
+  const eased = p * p * p
+  return {y: -eased * BOAT_SINK_DEPTH, tilt: eased * BOAT_SINK_TILT, done: p >= 1}
+}

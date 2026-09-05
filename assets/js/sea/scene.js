@@ -9,10 +9,28 @@ const FORWARD_YAW = -Math.PI / 2
 
 const SHIP_URL = "/models/pirateship.glb"
 const SHARK_URL = "/models/shark.glb"
-const PALM_URL = "/models/palmtree.glb"
 const CHEST_URL = "/models/treasurechest.glb"
 const LIGHTHOUSE_URL = "/models/lighthouse.glb"
 const GULL_URL = "/models/seagull.glb"
+
+// Five hand-built island types (a CC0 asset kit), swapped in for the old
+// procedural hex-band islands. `radius`/`height` are each model's own
+// native half-footprint (half its longer X/Z extent) and vertical extent at
+// scale 1 -- used for collision/docking (world.js's islandRadius) and for
+// floating an island's label above its actual peak. Every model already sits
+// with its waterline at local y=0 and comes with its own palms/rocks baked
+// in, so islands no longer need procedural tree scattering.
+const ISLAND_TYPES = [
+  {url: "/models/island-palm-cay.glb", radius: 3.53, height: 3.52},
+  {url: "/models/island-crescent-lagoon.glb", radius: 5.51, height: 4.13},
+  {url: "/models/island-twin-peaks.glb", radius: 8.0, height: 6.45},
+  {url: "/models/island-rock-arch.glb", radius: 7.75, height: 6.43},
+  {url: "/models/island-volcano.glb", radius: 11.69, height: 7.5}
+]
+// Trending islands scale up bodily (footprint and height together, since
+// each is one rigid model rather than stacked bands) instead of only
+// growing taller.
+const TRENDING_SCALE_BOOST = 1.3
 
 // SHIP_SCALE brings the pirate ship down to roughly the old procedural
 // hull's footprint, just a bit grander.
@@ -23,10 +41,6 @@ const SHIP_SCALE = 0.9
 // body's -0.55 sink offset.
 const SHARK_SCALE = 1.1
 const SHARK_SUBMERGE = -1.6
-// Authored root-to-frond height already matches the old procedural palm's
-// footprint almost exactly, so PALM_SCALE stays near 1 — see _palms, which
-// varies it slightly per tree for a less uniform treeline.
-const PALM_SCALE = 1
 const CHEST_SCALE = 1
 // LIGHTHOUSE_SCALE makes it a proper landmark towering over a trending
 // island's peak, without dwarfing the island itself.
@@ -61,14 +75,8 @@ const COL = {
   lime: 0xc4e600,
   limeDark: 0xa9c700,
   sea: 0x3d4fd4,
-  seaDark: 0x2f3ba8,
-  sand: 0xe8d9a0,
-  rock: 0x7d8088
+  seaDark: 0x2f3ba8
 }
-
-// How much taller a trending island's silhouette stands versus its base
-// (non-trending) height — see SeaWorld/addIsland's `trending` flag.
-const TRENDING_HEIGHT_BOOST = 1.35
 
 // Day/night endpoints the scene lerps between — see applyTimeOfDay(). Kept
 // as plain hex numbers (not THREE.Color) since they're only ever fed
@@ -92,10 +100,10 @@ const DAY = {
   sea: COL.sea
 }
 
-// A small family of fills at the same brightness/saturation as the brand's
-// lime and signal-blue accents, so colorful islands and boats still read as
-// "one system" — everything keeps the same thick ink outline regardless of
-// fill, which is what ties it together visually.
+// A small family of hull fills at the same brightness/saturation as the
+// brand's lime and signal-blue accents, so every boat still reads as "one
+// system" whichever fill it gets — the shared thick ink outline is what
+// ties it together visually.
 // Exported so a sailor's boat-customization picker (see index.js) offers
 // exactly this palette — a custom hull color still "belongs" to the same
 // system as everyone else's hash-derived one, just chosen instead of
@@ -111,10 +119,9 @@ export const PALETTE = [
   0x4fd67a // mint
 ]
 
-// Deterministically maps any key (category/tag/section, or a sailor id) to
-// one of the palette colors, so the same thing always looks the same color to
-// everyone — e.g. a given sailor's boat is the same hull color on every
-// screen, not just tinted for "you" vs "everyone else".
+// Deterministically maps a sailor id to one of the palette colors, so the
+// same sailor's boat is always the same hull color on every screen, not
+// just tinted for "you" vs "everyone else".
 function themedColor(key) {
   return PALETTE[hashStr(key || "") % PALETTE.length]
 }
@@ -133,21 +140,14 @@ function hashStr(s) {
   return h
 }
 
-// Ink outline: a slightly larger back-side copy of a geometry.
-function outline(geometry, scale = 1.06) {
-  const mat = new THREE.MeshBasicMaterial({color: COL.ink, side: THREE.BackSide})
-  const mesh = new THREE.Mesh(geometry, mat)
-  mesh.scale.multiplyScalar(scale)
-  return mesh
-}
-
 // Ink outline via vertex-normal extrusion, for meshes that aren't centered
 // on their own local origin — every part of an imported GLTF model (ship,
-// shark) is authored in one shared whole-model coordinate frame, so
-// `outline()`'s trick of scaling the mesh up about its local origin would
-// puff each part away from the model's center rather than away from its
-// own surface. Clones the geometry (never mutates the shared template) and
-// pushes every vertex out along its normal by a small constant distance.
+// shark, island) is authored in one shared whole-model coordinate frame, so
+// scaling a copy up about its local origin (as a centered primitive's
+// outline could) would puff each part away from the model's center rather
+// than away from its own surface. Clones the geometry (never mutates the
+// shared template) and pushes every vertex out along its normal by a small
+// constant distance.
 function normalOutline(geometry, dist = 0.045) {
   const geo = geometry.clone()
   const pos = geo.attributes.position
@@ -225,39 +225,6 @@ export class SeaScene {
     this.scene.add(this.water)
   }
 
-  // One tapered hexagonal band (beach/slope/peak) with a matching ink
-  // outline nested as a child, so the outline inherits the band's transform.
-  _band(topR, botR, h, color) {
-    const geo = new THREE.CylinderGeometry(topR, botR, h, 6)
-    const mat = new THREE.MeshToonMaterial({color, gradientMap: this.gradient})
-    const mesh = new THREE.Mesh(geo, mat)
-    mesh.add(outline(geo, 1.05))
-    return mesh
-  }
-
-  // Scatters the shared palm-tree model near an island's shoreline.
-  // Positions (and each tree's own scale/facing, for a less uniform
-  // treeline) are derived from the island's hash so every sailor sees the
-  // same trees in the same spots.
-  _palms(group, h, radius, baseY, bonus = 0) {
-    const count = 2 + (h % 3) + bonus // 2..4, more overgrown when trending
-    for (let i = 0; i < count; i++) {
-      const a = ((h >> (i * 5 + 1)) % 360) * (Math.PI / 180)
-      const r = radius * (0.15 + ((h >> (i * 3 + 2)) % 40) / 100) // scattered near the shoreline
-      const scale = PALM_SCALE * (0.85 + ((h >> (i * 7 + 3)) % 30) / 100) // 0.85..1.15
-      const yaw = ((h >> (i * 11 + 4)) % 360) * (Math.PI / 180)
-
-      loadModel(PALM_URL).then((template) => {
-        const tree = template.clone(true)
-        tree.scale.setScalar(scale)
-        tree.rotation.y = yaw
-        tree.position.set(Math.cos(a) * r, baseY, Math.sin(a) * r)
-        this._toonify(tree)
-        group.add(tree)
-      })
-    }
-  }
-
   // A treasure chest hidden on roughly a quarter of islands, toward the
   // outer beach — a reward for exploring, not a fixture of every island.
   // Position/presence are both derived from the island's hash, same
@@ -291,50 +258,46 @@ export class SeaScene {
     })
   }
 
-  // Islands are stacked hexagonal bands — a sand beach, a landmass slope,
-  // and a peak (rocky if the island is tall) — plus a few palms, rather than
-  // a single cone, so the silhouette reads as terrain rather than a triangle.
-  // Radius/height/tree placement are all deterministic from the island's
-  // path, so every sailor sees the same shape.
+  // One of the five whimsical island models (see ISLAND_TYPES), chosen and
+  // sized/rotated deterministically from the island's path so every sailor
+  // sees the same island in the same spot. `island.radius`/`island.height`
+  // are set synchronously (world.js/index.js need them for collision and
+  // label placement right away) even though the model itself loads async.
+  // Collision stays a single circle of that radius, same simplification as
+  // the old procedural islands -- for the crescent lagoon and rock arch this
+  // means their lagoon/passage read as open water but still block like solid
+  // land; giving them a true opening would need compound/mesh collision,
+  // which world.js's collision helpers don't support.
   addIsland(island) {
     const group = new THREE.Group()
     const h = hashStr(island.path)
-    const radius = 5 + ((h % 100) / 100) * 5 // 5..10
-    const baseHeight = 7 + (((h >> 8) % 100) / 100) * 9 // 7..16
-    // Trending islands stand taller -- decide the peak's rock/vegetation
-    // fill from the *base* height first, so a trending boost never turns an
-    // otherwise-green peak to bare rock; it should read as overgrown, not
-    // just tall.
-    const fill = themedColor(island.color || island.section)
-    const peakFill = baseHeight > 12 ? COL.rock : fill
-    const height = island.trending ? baseHeight * TRENDING_HEIGHT_BOOST : baseHeight
-    island.radius = radius
+    const type = ISLAND_TYPES[h % ISLAND_TYPES.length]
+    // 0.9..1.19, further boosted for a trending island -- see
+    // TRENDING_SCALE_BOOST.
+    const scale = (0.9 + ((h >> 8) % 30) / 100) * (island.trending ? TRENDING_SCALE_BOOST : 1)
+    const yaw = ((h >> 16) % 360) * (Math.PI / 180)
 
-    const sandH = height * 0.16
-    const slopeH = height * 0.5
-    const peakH = height - sandH - slopeH
+    island.radius = type.radius * scale
+    island.height = type.height * scale
 
-    let y = 0
-    const beach = this._band(radius * 0.72, radius * 1.1, sandH, COL.sand)
-    beach.position.y = y + sandH / 2
-    group.add(beach)
-    y += sandH
+    loadModel(type.url).then((template) => {
+      const model = template.clone(true)
+      model.scale.setScalar(scale)
+      model.rotation.y = yaw
+      this._toonify(model, (child, srcMat) => {
+        // The volcano's lava reads as an unlit glow rather than lit terrain
+        // -- same treatment _toonify gives a lighthouse lamp/chest's
+        // "..._glow" materials, just keyed off this kit's own material name.
+        if (srcMat.name === "lava") {
+          child.material = new THREE.MeshBasicMaterial({color: srcMat.color})
+          return false
+        }
+      })
+      group.add(model)
+    })
 
-    const slope = this._band(radius * 0.3, radius * 0.72, slopeH, fill)
-    slope.position.y = y + slopeH / 2
-    group.add(slope)
-    y += slopeH
-
-    const peak = this._band(radius * 0.12, radius * 0.3, peakH, peakFill)
-    peak.position.y = y + peakH / 2
-    group.add(peak)
-    y += peakH
-
-    island.height = y // actual peak height, used to float the label above it
-
-    this._palms(group, h, radius, sandH, island.trending ? 2 : 0)
-    this._treasureChest(group, h, radius, sandH)
-    if (island.trending) this._lighthouse(group, y)
+    this._treasureChest(group, h, island.radius, 0.15)
+    if (island.trending) this._lighthouse(group, island.height)
 
     group.position.set(island.x, 0, island.z)
     group.userData.island = island
@@ -354,16 +317,16 @@ export class SeaScene {
   }
 
   // Re-materializes every mesh of a cloned imported model (ship/shark/
-  // palm tree/treasure chest/lighthouse/seagull) as toon-shaded with a
-  // matching ink outline, so it reads in the same low-poly cel-shaded style
-  // as everything hand-built in this file. A mesh whose material is named
+  // island/treasure chest/lighthouse/seagull) as toon-shaded with a matching
+  // ink outline, so it reads in the same low-poly cel-shaded style as
+  // everything hand-built in this file. A mesh whose material is named
   // "..._glow" (a lighthouse's lamp, a chest's treasure) is treated as a
   // light source instead: an unlit, outline-free MeshBasicMaterial, so it
   // reads as glowing rather than lit by the scene regardless of time of day.
   // `onMesh(child, originalMaterial)`, if given, runs per mesh before either
   // swap and can return `false` to skip re-materializing that mesh entirely
-  // (the caller already handled it) — used to tag the ship's hull mesh by
-  // its original material name before that name's material is replaced.
+  // (the caller already handled it) — used to tag the ship's hull mesh, and
+  // to give a volcano island's lava the same glow treatment (see addIsland).
   _toonify(root, onMesh) {
     // Collect meshes before touching any of them: traverse() walks the live
     // children array, so adding an outline mesh mid-traversal would have it
