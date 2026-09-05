@@ -1,4 +1,44 @@
 import * as THREE from "three"
+import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js"
+
+// The ship/shark/fish models were all authored nose/bow-forward along +X,
+// beam along Z. FORWARD_YAW rotates a clone so that instead faces local
+// +Z, to match the local-+Z-is-forward convention every heading in this
+// file assumes (see chase()'s `dir`).
+const FORWARD_YAW = -Math.PI / 2
+
+const SHIP_URL = "/models/pirateship.glb"
+const SHARK_URL = "/models/shark.glb"
+const FISH_URL = "/models/fish.glb"
+
+// SHIP_SCALE brings the pirate ship down to roughly the old procedural
+// hull's footprint, just a bit grander.
+const SHIP_SCALE = 0.9
+// SHARK_SCALE keeps the shark close to its authored size (already
+// shark-sized relative to a boat); SHARK_SUBMERGE sinks it so only the
+// dorsal fin breaks the surface at rest, same intent as the old procedural
+// body's -0.55 sink offset.
+const SHARK_SCALE = 1.1
+const SHARK_SUBMERGE = -1.6
+// Flying fish are pure background atmosphere — much smaller than the
+// shark, and left to float at updateFish's existing +0.3 baseline.
+const FISH_SCALE = 0.65
+
+// Loaded once per page per model and cloned per instance (see
+// makeBoat/addShark/addFish) so every sailor's ship/every shark/every fish
+// shares one GPU-side geometry/texture upload of its kind.
+const modelCache = new Map()
+function loadModel(url) {
+  if (!modelCache.has(url)) {
+    modelCache.set(
+      url,
+      new Promise((resolve, reject) => {
+        new GLTFLoader().load(url, (gltf) => resolve(gltf.scene), undefined, reject)
+      })
+    )
+  }
+  return modelCache.get(url)
+}
 
 // system-v2 palette, approximated in sRGB hex (the CSS uses oklch).
 const COL = {
@@ -10,8 +50,7 @@ const COL = {
   seaDark: 0x2f3ba8,
   sand: 0xe8d9a0,
   rock: 0x7d8088,
-  palm: 0x2f8f4f,
-  shark: 0x5b6470
+  palm: 0x2f8f4f
 }
 
 // How much taller a trending island's silhouette stands versus its base
@@ -87,6 +126,27 @@ function outline(geometry, scale = 1.06) {
   const mesh = new THREE.Mesh(geometry, mat)
   mesh.scale.multiplyScalar(scale)
   return mesh
+}
+
+// Ink outline via vertex-normal extrusion, for meshes that aren't centered
+// on their own local origin — every part of an imported GLTF model (ship,
+// shark, fish) is authored in one shared whole-model coordinate frame, so
+// `outline()`'s trick of scaling the mesh up about its local origin would
+// puff each part away from the model's center rather than away from its
+// own surface. Clones the geometry (never mutates the shared template) and
+// pushes every vertex out along its normal by a small constant distance.
+function normalOutline(geometry, dist = 0.045) {
+  const geo = geometry.clone()
+  const pos = geo.attributes.position
+  const norm = geo.attributes.normal
+  for (let i = 0; i < pos.count; i++) {
+    pos.setX(i, pos.getX(i) + norm.getX(i) * dist)
+    pos.setY(i, pos.getY(i) + norm.getY(i) * dist)
+    pos.setZ(i, pos.getZ(i) + norm.getZ(i) * dist)
+  }
+  pos.needsUpdate = true
+  const mat = new THREE.MeshBasicMaterial({color: COL.ink, side: THREE.BackSide})
+  return new THREE.Mesh(geo, mat)
 }
 
 export class SeaScene {
@@ -266,86 +326,79 @@ export class SeaScene {
     }
   }
 
-  // A pointed-bow hull cut from a canoe-shaped outline and tapered inward
-  // toward the deck, instead of a box — the local +Z axis is the bow, to
-  // match how callers set `group.rotation.y` as heading. Built once and
-  // shared (read-only) across every boat instance.
-  _hullGeometry() {
-    if (this._hullGeo) return this._hullGeo
-    const w = 2.4
-    const l = 4.2
-    const hgt = 1.3
-
-    const shape = new THREE.Shape()
-    shape.moveTo(0, -l / 2 - 0.3) // bow tip, raked out ahead of the hull body
-    shape.lineTo(w / 2, -0.5) // starboard shoulder
-    shape.lineTo(w / 2 - 0.3, l / 2) // starboard stern corner
-    shape.lineTo(-(w / 2 - 0.3), l / 2) // port stern corner
-    shape.lineTo(-w / 2, -0.5) // port shoulder
-    shape.closePath()
-
-    const geo = new THREE.ExtrudeGeometry(shape, {depth: hgt, bevelEnabled: false})
-    geo.rotateX(-Math.PI / 2) // shape was drawn top-down; stand the extrusion up
-    geo.translate(0, -hgt / 2, 0) // center vertically, like a BoxGeometry
-
-    // Taper the sides inward toward the deck for a hull-like cross section.
-    const pos = geo.attributes.position
-    for (let i = 0; i < pos.count; i++) {
-      const t = (pos.getY(i) + hgt / 2) / hgt // 0 at keel, 1 at deck
-      pos.setX(i, pos.getX(i) * (1 - 0.35 * t))
+  // Re-materializes every mesh of a cloned imported model (ship/shark/fish)
+  // as toon-shaded with a matching ink outline, so it reads in the same
+  // low-poly cel-shaded style as everything hand-built in this file.
+  // `onMesh(child, originalMaterial)`, if given, runs per mesh before the
+  // material swap — e.g. to tag the ship's hull mesh by its original
+  // material name before that name's material is replaced.
+  _toonify(root, onMesh) {
+    // Collect meshes before touching any of them: traverse() walks the live
+    // children array, so adding an outline mesh mid-traversal would have it
+    // visit (and try to outline) that new child too, recursing forever.
+    const meshes = []
+    root.traverse((child) => {
+      if (child.isMesh) meshes.push(child)
+    })
+    for (const child of meshes) {
+      const srcMat = child.material
+      onMesh?.(child, srcMat)
+      child.material = new THREE.MeshToonMaterial({
+        color: srcMat.color,
+        gradientMap: this.gradient,
+        side: srcMat.side
+      })
+      child.add(normalOutline(child.geometry))
     }
-    pos.needsUpdate = true
-    geo.computeVertexNormals()
-
-    this._hullGeo = geo
-    return geo
   }
 
-  // Boat: ink-outlined pointed hull + a curved sail carrying a flag canvas
-  // texture. The hull color is keyed by sailor id, not by whether it's
-  // "you" — so a given sailor's boat looks the same to every viewer, on
-  // every screen. `isSelf` only adds the ring accent beneath your own boat.
+  // Clones the shared ship template into `group`, toon-shading it and
+  // rigging a small masthead pennant that carries the flag texture. Runs
+  // once the GLTF has loaded (see makeBoat) — by then `group` may already
+  // carry a customized hull color / flag texture in its userData, so those
+  // win over the model's own defaults.
+  _riggedShip(group, template) {
+    const ship = template.clone(true)
+    ship.scale.setScalar(SHIP_SCALE)
+    ship.rotation.y = FORWARD_YAW
+
+    // GLTFLoader sanitizes mesh names (spaces -> underscores) but leaves
+    // material names as authored, so key the hull off the material, not
+    // the mesh, and tag it before _toonify replaces that material.
+    this._toonify(ship, (child, srcMat) => {
+      if (srcMat.name === "hull") child.userData.isHull = true // lets setHullColor find it later
+    })
+
+    // Masthead pennant: a small flat flag near the top of the mast, rather
+    // than texturing the model's own sails, so the emoji-flag customization
+    // (see setSailTexture) keeps working against a plain rectangle.
+    const flagGeo = new THREE.PlaneGeometry(1.4, 0.9)
+    const flagMat = new THREE.MeshBasicMaterial({
+      map: group.userData.sailTexture,
+      side: THREE.DoubleSide,
+      transparent: true
+    })
+    const flag = new THREE.Mesh(flagGeo, flagMat)
+    flag.userData.isSail = true // lets setSailTexture find it later
+    flag.position.set(0.8, 7.6, 0)
+    ship.add(flag)
+
+    group.add(ship)
+    this.setHullColor(group, group.userData.hullColor)
+  }
+
+  // Boat: the shared pirate-ship model (loaded async and rigged in once
+  // ready — see _riggedShip) plus a masthead flag. The hull color is keyed
+  // by sailor id, not by whether it's "you" — so a given sailor's boat looks
+  // the same to every viewer, on every screen. `isSelf` only adds the ring
+  // accent beneath your own boat.
   makeBoat(flagTexture, isSelf, sailorId) {
     const group = new THREE.Group()
+    group.userData.sailorId = sailorId
+    group.userData.hullColor = null // sailor's default until setHullColor overrides it
+    group.userData.sailTexture = flagTexture
 
-    const hullGeo = this._hullGeometry()
-    const hull = new THREE.Mesh(
-      hullGeo,
-      new THREE.MeshToonMaterial({color: themedColor(sailorId), gradientMap: this.gradient})
-    )
-    hull.position.y = 1
-    hull.userData.isHull = true // lets setHullColor find it later without threading a reference through
-    group.add(outline(hullGeo, 1.1).translateY(1))
-    group.add(hull)
-
-    const keelGeo = new THREE.BoxGeometry(0.15, 0.8, 1.8)
-    const keel = new THREE.Mesh(keelGeo, new THREE.MeshBasicMaterial({color: COL.ink}))
-    keel.position.set(0, 0.2, -0.3)
-    group.add(keel)
-
-    const mastGeo = new THREE.CylinderGeometry(0.12, 0.12, 4)
-    const mast = new THREE.Mesh(mastGeo, new THREE.MeshBasicMaterial({color: COL.ink}))
-    mast.position.set(0, 3.2, 0.2)
-    group.add(mast)
-
-    // A few extra width segments so the sail can belly out, as if filled
-    // with wind, instead of sitting perfectly flat.
-    const sailGeo = new THREE.PlaneGeometry(2.6, 2.6, 6, 1)
-    const sailPos = sailGeo.attributes.position
-    for (let i = 0; i < sailPos.count; i++) {
-      const t = sailPos.getX(i) / 1.3 // -1..1 across the sail's width
-      sailPos.setZ(i, (1 - t * t) * 0.35)
-    }
-    sailPos.needsUpdate = true
-    sailGeo.computeVertexNormals()
-    const sailMat = new THREE.MeshBasicMaterial({
-      map: flagTexture,
-      side: THREE.DoubleSide
-    })
-    const sail = new THREE.Mesh(sailGeo, sailMat)
-    sail.position.set(0, 3.1, 0.2)
-    sail.userData.isSail = true // lets setSailTexture find it later
-    group.add(sail)
+    loadModel(SHIP_URL).then((template) => this._riggedShip(group, template))
 
     if (isSelf) {
       const ring = new THREE.Mesh(
@@ -363,18 +416,30 @@ export class SeaScene {
 
   // Re-tints an already-built boat's hull — used to apply a sailor's
   // customized color over the hash-derived default (see index.js's
-  // boat-customization picker). No-op if `group` isn't a boat.
+  // boat-customization picker), or falls back to the hash-derived default
+  // when `colorHex` is nullish. No-op (beyond recording the pending value)
+  // if the ship model hasn't finished loading into `group` yet.
   setHullColor(group, colorHex) {
-    const hull = group.children.find((c) => c.userData.isHull)
-    if (hull) hull.material.color.set(colorHex)
+    group.userData.hullColor = colorHex
+    let hull = null
+    group.traverse((o) => {
+      if (o.userData.isHull) hull = o
+    })
+    if (hull) hull.material.color.set(colorHex ?? themedColor(group.userData.sailorId))
   }
 
   // Swaps an already-built boat's sail texture (e.g. a custom flag emoji
   // instead of the hash/GeoIP default). Disposes the old texture -- unlike
   // most meshes in this file, textures here are swapped at runtime rather
   // than built once, so leaving the old one behind would actually leak.
+  // No-op (beyond recording the pending value) if the ship model hasn't
+  // finished loading into `group` yet.
   setSailTexture(group, texture) {
-    const sail = group.children.find((c) => c.userData.isSail)
+    group.userData.sailTexture = texture
+    let sail = null
+    group.traverse((o) => {
+      if (o.userData.isSail) sail = o
+    })
     if (!sail) return
     sail.material.map?.dispose()
     sail.material.map = texture
@@ -396,47 +461,20 @@ export class SeaScene {
     this.scene.remove(object)
   }
 
-  // A single raked fin blade: a thin triangle (root-to-root along the base,
-  // swept tip above) extruded for thickness. Local origin is the *front*
-  // root, extending backward (-z) and up (+y) from there, so callers place
-  // it by setting `position` to where the front of the fin meets the body.
-  _finBlade(len, height, thickness, color = COL.ink) {
-    const shape = new THREE.Shape()
-    shape.moveTo(0, 0)
-    shape.lineTo(len, 0)
-    shape.lineTo(len * 0.45, height)
-    shape.closePath()
-
-    const geo = new THREE.ExtrudeGeometry(shape, {depth: thickness, bevelEnabled: false})
-    geo.rotateY(Math.PI / 2) // shape drawn as a side profile; swing it to face forward
-    geo.translate(-thickness / 2, 0, 0) // center the blade's thickness
-    return new THREE.Mesh(geo, new THREE.MeshBasicMaterial({color}))
-  }
-
-  // Shark: a stretched low-poly body (mostly submerged) plus a dorsal and
-  // tail fin. Ambient and purely local — see world.js's shark helpers for
-  // the patrol/breach simulation this just renders each frame.
+  // Shark: the shared shark model (loaded async and toon-shaded in once
+  // ready, sunk so only the dorsal fin breaks the surface at rest). Ambient
+  // and purely local — see world.js's shark helpers for the patrol/breach
+  // simulation this just renders each frame.
   addShark() {
     const group = new THREE.Group()
-
-    const bodyGeo = new THREE.IcosahedronGeometry(1, 1)
-    const body = new THREE.Mesh(
-      bodyGeo,
-      new THREE.MeshToonMaterial({color: COL.shark, gradientMap: this.gradient})
-    )
-    body.scale.set(0.85, 0.6, 2.4)
-    body.position.y = -0.55 // mostly underwater; only the topmost sliver breaks the surface
-    body.add(outline(bodyGeo, 1.08))
-    group.add(body)
-
-    const dorsal = this._finBlade(1.3, 1.3, 0.14)
-    dorsal.position.set(0, 0, 0.4)
-    group.add(dorsal)
-
-    const tail = this._finBlade(0.8, 1.0, 0.12)
-    tail.position.set(0, 0, -2.1)
-    group.add(tail)
-
+    loadModel(SHARK_URL).then((template) => {
+      const model = template.clone(true)
+      model.scale.setScalar(SHARK_SCALE)
+      model.rotation.y = FORWARD_YAW
+      model.position.y = SHARK_SUBMERGE
+      this._toonify(model)
+      group.add(model)
+    })
     this.scene.add(group)
     return group
   }
@@ -450,26 +488,18 @@ export class SeaScene {
     group.rotation.x = -breach * 0.4
   }
 
-  // A flying fish: a small silvery body plus one tail fin, much smaller
-  // than a shark and with no dorsal fin (nothing to look menacing about) —
-  // ambient variety, see world.js's fish patrol/leap helpers this renders.
+  // A flying fish: the shared fish model, much smaller than a shark and
+  // floating higher out of the water — ambient variety, see world.js's fish
+  // patrol/leap helpers this renders.
   addFish() {
     const group = new THREE.Group()
-    const fishColor = 0x9fd3ff
-
-    const bodyGeo = new THREE.IcosahedronGeometry(0.4, 0)
-    const body = new THREE.Mesh(
-      bodyGeo,
-      new THREE.MeshToonMaterial({color: fishColor, gradientMap: this.gradient})
-    )
-    body.scale.set(0.7, 0.5, 1.6)
-    body.add(outline(bodyGeo, 1.1))
-    group.add(body)
-
-    const tail = this._finBlade(0.5, 0.4, 0.06, fishColor)
-    tail.position.set(0, 0, -0.7)
-    group.add(tail)
-
+    loadModel(FISH_URL).then((template) => {
+      const model = template.clone(true)
+      model.scale.setScalar(FISH_SCALE)
+      model.rotation.y = FORWARD_YAW
+      this._toonify(model)
+      group.add(model)
+    })
     this.scene.add(group)
     return group
   }
