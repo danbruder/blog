@@ -59,11 +59,15 @@ const FLAG_EMOJI = ["🏴", "🏳️", "🏁", "🚩", "⚓", "⛵", "🦈", "�
 // The seaplane's flight mechanic (see updateFlight()): needs a runway-speed
 // minimum before it can lift off, then altitude is held directly by
 // holding the ascend/descend keys/buttons -- no separate "toggle flight"
-// control, so up/down (climb/descend) IS takeoff/landing.
+// control, so up/down (climb/descend) IS takeoff/landing. It also has no
+// reverse thrust (see the throttle clamp in loop()) and stalls -- falls out
+// of the sky -- the moment it isn't being pushed forward, same as it can't
+// leave the water without enough forward speed.
 const TAKEOFF_SPEED_FRACTION = 0.55 // fraction of the seaplane's own max speed needed to leave the water
 const CRUISE_ALTITUDE = 16 // a bit under GULL_ALTITUDE, so a flying boat reads as lower than the gulls
 const CLIMB_RATE = 9 // units/sec while holding ascend
 const DESCEND_RATE = 11 // units/sec while holding descend -- a touch faster, like coming in to land
+const FALL_RATE = 13 // units/sec while stalling -- steeper than a controlled descend, it's a stall
 const TAKEOFF_HINT_COOLDOWN = 3 // seconds between "get up to speed" toasts, so holding the key doesn't spam
 
 let active = null
@@ -233,6 +237,10 @@ class Sea {
     this.t += 0.016
 
     const input = this.controls.read()
+    // The seaplane has no reverse thrust -- real aircraft don't back up
+    // under their own power -- so clamp out negative throttle before it
+    // feeds the speed target below, whether taxiing or airborne.
+    if (this.boatType.canFly && input.throttle < 0) input.throttle = 0
 
     // Airborne (only possible for a canFly boat -- see updateFlight): sails
     // clean over islands and other boats, and cruises at its own flying
@@ -393,8 +401,13 @@ class Sea {
 
     const wasAirborne = this.altitude > 0
     const effectiveMax = MAX_SPEED * this.boatType.speedFactor
+    // No forward throttle means no airflow over the wings -- once airborne,
+    // that's a stall, and it falls whether or not ascend is still held.
+    const stalling = wasAirborne && input.throttle <= 0
 
-    if (input.ascend) {
+    if (stalling) {
+      this.altitude = Math.max(0, this.altitude - FALL_RATE * 0.016)
+    } else if (input.ascend) {
       const canLift = wasAirborne || Math.abs(this.speed) >= effectiveMax * TAKEOFF_SPEED_FRACTION
       if (canLift) this.altitude = Math.min(CRUISE_ALTITUDE, this.altitude + CLIMB_RATE * 0.016)
       else this.showTakeoffHint()
@@ -406,10 +419,10 @@ class Sea {
     if (!wasAirborne && nowAirborne) this.audio.liftoff()
     if (wasAirborne && !nowAirborne) this.audio.splash() // splashdown
 
-    // Nose pitches with climb/descent for visual feedback, easing back
+    // Nose pitches with climb/descent/stall for visual feedback, easing back
     // level (0) once neither key is held or altitude is pinned at an end.
-    if (input.ascend && nowAirborne) this.selfBoat.rotation.x = -0.25
-    else if (input.descend && wasAirborne) this.selfBoat.rotation.x = 0.2
+    if (input.ascend && !stalling && nowAirborne) this.selfBoat.rotation.x = -0.25
+    else if ((input.descend || stalling) && wasAirborne) this.selfBoat.rotation.x = 0.2
     else this.selfBoat.rotation.x *= 0.8
   }
 
