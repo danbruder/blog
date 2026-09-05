@@ -363,6 +363,12 @@ pre code.hljs {
   background: rgba(238,240,236,.5); position: relative; touch-action: none; }
 .sea-nub { width: 40px; height: 40px; background: var(--color-lime);
   border: 2px solid var(--color-ink); position: absolute; left: 26px; top: 26px; }
+/* Buttons stack in a right-aligned column (flight row above the main row)
+   instead of spreading across the same row as the stick -- with the stick,
+   3 wide button rows would fight for one line's width and overflow on
+   narrow phones. Stacking keeps each row's width independent of the
+   others', so it fits even when the flight buttons are shown. */
+.sea-buttons-col { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
 .sea-buttons { display: flex; gap: 10px; align-items: flex-end; }
 .sea-dock { border: 2px solid var(--color-ink); background: var(--color-lime);
   color: var(--on-lime); font-weight: 700; text-transform: uppercase;

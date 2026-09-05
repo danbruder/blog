@@ -41,14 +41,16 @@ export function createControls(overlay) {
     <div class="sea-stick" data-stick>
       <div class="sea-nub" data-nub></div>
     </div>
-    <div class="sea-buttons">
-      <button class="sea-wave-btn" data-wave type="button">👋</button>
-      <button class="sea-wave-btn" data-bottle type="button">🍾</button>
-      <button class="sea-dock" data-dock type="button">Dock</button>
-    </div>
-    <div class="sea-buttons sea-flight-buttons">
-      <button class="sea-wave-btn" data-ascend type="button" aria-label="Ascend / take off">🛫</button>
-      <button class="sea-wave-btn" data-descend type="button" aria-label="Descend / land">🛬</button>
+    <div class="sea-buttons-col">
+      <div class="sea-buttons sea-flight-buttons">
+        <button class="sea-wave-btn" data-ascend type="button" aria-label="Ascend / take off">🛫</button>
+        <button class="sea-wave-btn" data-descend type="button" aria-label="Descend / land">🛬</button>
+      </div>
+      <div class="sea-buttons">
+        <button class="sea-wave-btn" data-wave type="button">👋</button>
+        <button class="sea-wave-btn" data-bottle type="button">🍾</button>
+        <button class="sea-dock" data-dock type="button">Dock</button>
+      </div>
     </div>`
   overlay.appendChild(pad)
 
