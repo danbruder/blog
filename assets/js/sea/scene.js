@@ -10,6 +10,10 @@ const FORWARD_YAW = -Math.PI / 2
 const SHIP_URL = "/models/pirateship.glb"
 const SHARK_URL = "/models/shark.glb"
 const FISH_URL = "/models/fish.glb"
+const PALM_URL = "/models/palmtree.glb"
+const CHEST_URL = "/models/treasurechest.glb"
+const LIGHTHOUSE_URL = "/models/lighthouse.glb"
+const GULL_URL = "/models/seagull.glb"
 
 // SHIP_SCALE brings the pirate ship down to roughly the old procedural
 // hull's footprint, just a bit grander.
@@ -23,6 +27,20 @@ const SHARK_SUBMERGE = -1.6
 // Flying fish are pure background atmosphere — much smaller than the
 // shark, and left to float at updateFish's existing +0.3 baseline.
 const FISH_SCALE = 0.65
+// Authored root-to-frond height already matches the old procedural palm's
+// footprint almost exactly, so PALM_SCALE stays near 1 — see _palms, which
+// varies it slightly per tree for a less uniform treeline.
+const PALM_SCALE = 1
+const CHEST_SCALE = 1
+// LIGHTHOUSE_SCALE makes it a proper landmark towering over a trending
+// island's peak, without dwarfing the island itself.
+const LIGHTHOUSE_SCALE = 2
+// GULL_SCALE is big enough to read as a bird gliding at GULL_ALTITUDE (see
+// updateGull) rather than a speck.
+const GULL_SCALE = 3
+const GULL_ALTITUDE = 18 // cruise height above the water
+const GULL_BOB_HEIGHT = 1.5
+const GULL_BANK_ANGLE = 0.3
 
 // Loaded once per page per model and cloned per instance (see
 // makeBoat/addShark/addFish) so every sailor's ship/every shark/every fish
@@ -49,8 +67,7 @@ const COL = {
   sea: 0x3d4fd4,
   seaDark: 0x2f3ba8,
   sand: 0xe8d9a0,
-  rock: 0x7d8088,
-  palm: 0x2f8f4f
+  rock: 0x7d8088
 }
 
 // How much taller a trending island's silhouette stands versus its base
@@ -222,47 +239,60 @@ export class SeaScene {
     return mesh
   }
 
-  // A cheap procedural palm: an ink trunk plus a squashed low-poly canopy.
-  // Positions are derived from the island's hash so every sailor sees the
+  // Scatters the shared palm-tree model near an island's shoreline.
+  // Positions (and each tree's own scale/facing, for a less uniform
+  // treeline) are derived from the island's hash so every sailor sees the
   // same trees in the same spots.
   _palms(group, h, radius, baseY, bonus = 0) {
-    if (!this._palmTrunkGeo) {
-      this._palmTrunkGeo = new THREE.CylinderGeometry(0.12, 0.18, 2.4)
-      this._palmLeafGeo = new THREE.IcosahedronGeometry(0.9, 0)
-    }
-    const leafMat = new THREE.MeshToonMaterial({color: COL.palm, gradientMap: this.gradient})
     const count = 2 + (h % 3) + bonus // 2..4, more overgrown when trending
     for (let i = 0; i < count; i++) {
       const a = ((h >> (i * 5 + 1)) % 360) * (Math.PI / 180)
       const r = radius * (0.15 + ((h >> (i * 3 + 2)) % 40) / 100) // scattered near the shoreline
+      const scale = PALM_SCALE * (0.85 + ((h >> (i * 7 + 3)) % 30) / 100) // 0.85..1.15
+      const yaw = ((h >> (i * 11 + 4)) % 360) * (Math.PI / 180)
 
-      const trunk = new THREE.Mesh(this._palmTrunkGeo, new THREE.MeshBasicMaterial({color: COL.ink}))
-      trunk.position.set(Math.cos(a) * r, baseY + 1.2, Math.sin(a) * r)
-      trunk.rotation.z = Math.sin(a + i) * 0.2
-      group.add(trunk)
-
-      const leaf = new THREE.Mesh(this._palmLeafGeo, leafMat)
-      leaf.scale.set(1, 0.55, 1)
-      leaf.position.set(Math.cos(a) * r, baseY + 2.5, Math.sin(a) * r)
-      group.add(leaf)
+      loadModel(PALM_URL).then((template) => {
+        const tree = template.clone(true)
+        tree.scale.setScalar(scale)
+        tree.rotation.y = yaw
+        tree.position.set(Math.cos(a) * r, baseY, Math.sin(a) * r)
+        this._toonify(tree)
+        group.add(tree)
+      })
     }
   }
 
-  // A soft lime glow standing above a trending island's peak — static
-  // (no per-frame animation needed) but unlit and translucent so it reads
-  // as a beacon rather than solid geometry, visible from well across the
-  // archipelago.
-  _beacon(group, peakY) {
-    const geo = new THREE.ConeGeometry(0.6, 6, 8)
-    const mat = new THREE.MeshBasicMaterial({
-      color: COL.lime,
-      transparent: true,
-      opacity: 0.55,
-      depthWrite: false
+  // A treasure chest hidden on roughly a quarter of islands, toward the
+  // outer beach — a reward for exploring, not a fixture of every island.
+  // Position/presence are both derived from the island's hash, same
+  // reasoning as _palms.
+  _treasureChest(group, h, radius, baseY) {
+    if ((h >> 20) % 4 !== 0) return
+    const a = ((h >> 22) % 360) * (Math.PI / 180)
+    const r = radius * (0.55 + ((h >> 27) % 30) / 100)
+    const yaw = ((h >> 17) % 360) * (Math.PI / 180)
+
+    loadModel(CHEST_URL).then((template) => {
+      const chest = template.clone(true)
+      chest.scale.setScalar(CHEST_SCALE)
+      chest.rotation.y = yaw
+      chest.position.set(Math.cos(a) * r, baseY, Math.sin(a) * r)
+      this._toonify(chest)
+      group.add(chest)
     })
-    const beacon = new THREE.Mesh(geo, mat)
-    beacon.position.y = peakY + 3
-    group.add(beacon)
+  }
+
+  // A lighthouse standing on a trending island's peak, replacing the old
+  // glowing beacon cone with an actual landmark — its lamp still reads as
+  // lit at any time of day (see _toonify's "..._glow" handling).
+  _lighthouse(group, peakY) {
+    loadModel(LIGHTHOUSE_URL).then((template) => {
+      const lighthouse = template.clone(true)
+      lighthouse.scale.setScalar(LIGHTHOUSE_SCALE)
+      lighthouse.position.y = peakY
+      this._toonify(lighthouse)
+      group.add(lighthouse)
+    })
   }
 
   // Islands are stacked hexagonal bands — a sand beach, a landmass slope,
@@ -307,7 +337,8 @@ export class SeaScene {
     island.height = y // actual peak height, used to float the label above it
 
     this._palms(group, h, radius, sandH, island.trending ? 2 : 0)
-    if (island.trending) this._beacon(group, y)
+    this._treasureChest(group, h, radius, sandH)
+    if (island.trending) this._lighthouse(group, y)
 
     group.position.set(island.x, 0, island.z)
     group.userData.island = island
@@ -326,12 +357,17 @@ export class SeaScene {
     }
   }
 
-  // Re-materializes every mesh of a cloned imported model (ship/shark/fish)
-  // as toon-shaded with a matching ink outline, so it reads in the same
-  // low-poly cel-shaded style as everything hand-built in this file.
-  // `onMesh(child, originalMaterial)`, if given, runs per mesh before the
-  // material swap — e.g. to tag the ship's hull mesh by its original
-  // material name before that name's material is replaced.
+  // Re-materializes every mesh of a cloned imported model (ship/shark/fish/
+  // palm tree/treasure chest/lighthouse/seagull) as toon-shaded with a
+  // matching ink outline, so it reads in the same low-poly cel-shaded style
+  // as everything hand-built in this file. A mesh whose material is named
+  // "..._glow" (a lighthouse's lamp, a chest's treasure) is treated as a
+  // light source instead: an unlit, outline-free MeshBasicMaterial, so it
+  // reads as glowing rather than lit by the scene regardless of time of day.
+  // `onMesh(child, originalMaterial)`, if given, runs per mesh before either
+  // swap and can return `false` to skip re-materializing that mesh entirely
+  // (the caller already handled it) — used to tag the ship's hull mesh by
+  // its original material name before that name's material is replaced.
   _toonify(root, onMesh) {
     // Collect meshes before touching any of them: traverse() walks the live
     // children array, so adding an outline mesh mid-traversal would have it
@@ -342,7 +378,11 @@ export class SeaScene {
     })
     for (const child of meshes) {
       const srcMat = child.material
-      onMesh?.(child, srcMat)
+      if (onMesh?.(child, srcMat) === false) continue
+      if (srcMat.name.endsWith("_glow")) {
+        child.material = new THREE.MeshBasicMaterial({color: srcMat.color})
+        continue
+      }
       child.material = new THREE.MeshToonMaterial({
         color: srcMat.color,
         gradientMap: this.gradient,
@@ -511,6 +551,32 @@ export class SeaScene {
     group.position.set(fish.x, 0.3 + leap * 2.4, fish.z)
     group.rotation.y = fish.h
     group.rotation.x = -leap * 0.5
+  }
+
+  // A seagull cruising well above the water — pure atmosphere, no
+  // interaction with the boat at all. See world.js's gull patrol helpers
+  // this renders.
+  addGull() {
+    const group = new THREE.Group()
+    loadModel(GULL_URL).then((template) => {
+      const model = template.clone(true)
+      model.scale.setScalar(GULL_SCALE)
+      model.rotation.y = FORWARD_YAW
+      this._toonify(model)
+      group.add(model)
+    })
+    this.scene.add(group)
+    return group
+  }
+
+  // Applies one frame of a gull's simulated state (see world.js): patrol
+  // position/heading at a fixed cruise altitude, plus a gentle rise-and-fall
+  // bob and a matching wing-tip bank so the glide doesn't read as perfectly
+  // level. `bob`/`bank` are both -1..1.
+  updateGull(group, gull, bob, bank) {
+    group.position.set(gull.x, GULL_ALTITUDE + bob * GULL_BOB_HEIGHT, gull.z)
+    group.rotation.y = gull.h
+    group.rotation.z = bank * GULL_BANK_ANGLE
   }
 
   // One static piece of driftwood: a lime-toned ink-outlined log lying on

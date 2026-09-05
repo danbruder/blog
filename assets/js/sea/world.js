@@ -257,6 +257,45 @@ export function fishLeap(fish) {
   return Math.sin(p * Math.PI)
 }
 
+// Seagulls: pure ambient atmosphere circling above the harbor -- same
+// wandering-patrol shape as sharks/fish (see above), but cruising at a
+// fixed altitude (scene.js's updateGull) with no leap/breach, just a
+// steady drifting glide.
+const GULL_SPEED = 0.35
+
+export function makeGulls(count, bounds, rand = Math.random) {
+  const gulls = []
+  for (let i = 0; i < count; i++) {
+    gulls.push({
+      x: (rand() - 0.5) * bounds * 2,
+      z: (rand() - 0.5) * bounds * 2,
+      h: rand() * Math.PI * 2,
+      turnBias: (rand() - 0.5) * 0.01,
+      bobPhase: rand() * Math.PI * 2
+    })
+  }
+  return gulls
+}
+
+export function stepGull(gull, dt, bounds, rand = Math.random) {
+  gull.h += gull.turnBias + (rand() - 0.5) * 0.01
+  gull.x += Math.sin(gull.h) * GULL_SPEED
+  gull.z += Math.cos(gull.h) * GULL_SPEED
+  if (Math.hypot(gull.x, gull.z) > bounds) gull.h += Math.PI
+  gull.bobPhase += dt * 0.9
+}
+
+// -1..1: a gentle rise and fall, and a slower/smaller companion wave for
+// wing-tip bank -- scene.js's updateGull turns these into an altitude
+// offset and a roll angle.
+export function gullBob(gull) {
+  return Math.sin(gull.bobPhase)
+}
+
+export function gullBank(gull) {
+  return Math.sin(gull.bobPhase * 0.5)
+}
+
 // Floating driftwood: purely decorative set-dressing, no collision. Layout
 // is deterministic from each piece's index alone (a cheap integer hash, not
 // Math.random), so it's stable across reloads and identical for every
