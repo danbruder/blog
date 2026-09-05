@@ -1,15 +1,14 @@
 import * as THREE from "three"
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js"
 
-// The ship/shark/fish models were all authored nose/bow-forward along +X,
-// beam along Z. FORWARD_YAW rotates a clone so that instead faces local
-// +Z, to match the local-+Z-is-forward convention every heading in this
-// file assumes (see chase()'s `dir`).
+// The ship/shark models were all authored nose/bow-forward along +X, beam
+// along Z. FORWARD_YAW rotates a clone so that instead faces local +Z, to
+// match the local-+Z-is-forward convention every heading in this file
+// assumes (see chase()'s `dir`).
 const FORWARD_YAW = -Math.PI / 2
 
 const SHIP_URL = "/models/pirateship.glb"
 const SHARK_URL = "/models/shark.glb"
-const FISH_URL = "/models/fish.glb"
 const PALM_URL = "/models/palmtree.glb"
 const CHEST_URL = "/models/treasurechest.glb"
 const LIGHTHOUSE_URL = "/models/lighthouse.glb"
@@ -24,9 +23,6 @@ const SHIP_SCALE = 0.9
 // body's -0.55 sink offset.
 const SHARK_SCALE = 1.1
 const SHARK_SUBMERGE = -1.6
-// Flying fish are pure background atmosphere — much smaller than the
-// shark, and left to float at updateFish's existing +0.3 baseline.
-const FISH_SCALE = 0.65
 // Authored root-to-frond height already matches the old procedural palm's
 // footprint almost exactly, so PALM_SCALE stays near 1 — see _palms, which
 // varies it slightly per tree for a less uniform treeline.
@@ -43,8 +39,8 @@ const GULL_BOB_HEIGHT = 1.5
 const GULL_BANK_ANGLE = 0.3
 
 // Loaded once per page per model and cloned per instance (see
-// makeBoat/addShark/addFish) so every sailor's ship/every shark/every fish
-// shares one GPU-side geometry/texture upload of its kind.
+// makeBoat/addShark) so every sailor's ship/every shark shares one
+// GPU-side geometry/texture upload of its kind.
 const modelCache = new Map()
 function loadModel(url) {
   if (!modelCache.has(url)) {
@@ -147,7 +143,7 @@ function outline(geometry, scale = 1.06) {
 
 // Ink outline via vertex-normal extrusion, for meshes that aren't centered
 // on their own local origin — every part of an imported GLTF model (ship,
-// shark, fish) is authored in one shared whole-model coordinate frame, so
+// shark) is authored in one shared whole-model coordinate frame, so
 // `outline()`'s trick of scaling the mesh up about its local origin would
 // puff each part away from the model's center rather than away from its
 // own surface. Clones the geometry (never mutates the shared template) and
@@ -357,7 +353,7 @@ export class SeaScene {
     }
   }
 
-  // Re-materializes every mesh of a cloned imported model (ship/shark/fish/
+  // Re-materializes every mesh of a cloned imported model (ship/shark/
   // palm tree/treasure chest/lighthouse/seagull) as toon-shaded with a
   // matching ink outline, so it reads in the same low-poly cel-shaded style
   // as everything hand-built in this file. A mesh whose material is named
@@ -528,31 +524,6 @@ export class SeaScene {
     group.rotation.x = -breach * 0.4
   }
 
-  // A flying fish: the shared fish model, much smaller than a shark and
-  // floating higher out of the water — ambient variety, see world.js's fish
-  // patrol/leap helpers this renders.
-  addFish() {
-    const group = new THREE.Group()
-    loadModel(FISH_URL).then((template) => {
-      const model = template.clone(true)
-      model.scale.setScalar(FISH_SCALE)
-      model.rotation.y = FORWARD_YAW
-      this._toonify(model)
-      group.add(model)
-    })
-    this.scene.add(group)
-    return group
-  }
-
-  // Applies one frame of a fish's simulated state (see world.js) — same
-  // shape as updateShark, but fish leap much higher relative to their size
-  // and never lean into a "bite" pose.
-  updateFish(group, fish, leap) {
-    group.position.set(fish.x, 0.3 + leap * 2.4, fish.z)
-    group.rotation.y = fish.h
-    group.rotation.x = -leap * 0.5
-  }
-
   // A seagull cruising well above the water — pure atmosphere, no
   // interaction with the boat at all. See world.js's gull patrol helpers
   // this renders.
@@ -577,22 +548,6 @@ export class SeaScene {
     group.position.set(gull.x, GULL_ALTITUDE + bob * GULL_BOB_HEIGHT, gull.z)
     group.rotation.y = gull.h
     group.rotation.z = bank * GULL_BANK_ANGLE
-  }
-
-  // One static piece of driftwood: a lime-toned ink-outlined log lying on
-  // its side. Purely decorative set-dressing (see world.js's
-  // driftwoodPieces) — no collision, no per-frame simulation beyond the
-  // caller's gentle bob.
-  addDriftwood(piece) {
-    const geo = new THREE.CylinderGeometry(0.22, 0.28, 3.2, 6)
-    const mat = new THREE.MeshToonMaterial({color: 0x8a6a45, gradientMap: this.gradient})
-    const log = new THREE.Mesh(geo, mat)
-    log.add(outline(geo, 1.08))
-    log.rotation.z = Math.PI / 2 // lie on its side rather than stand upright
-    log.rotation.y = piece.rot
-    log.position.set(piece.x, 0.3, piece.z)
-    this.scene.add(log)
-    return log
   }
 
   // Cheap animated swell.
