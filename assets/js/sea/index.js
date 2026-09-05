@@ -19,6 +19,10 @@ import {
   makeFlyingFish,
   stepFish,
   fishLeap,
+  makeGulls,
+  stepGull,
+  gullBob,
+  gullBank,
   driftwoodPieces
 } from "./world.js"
 import {seaBus} from "./bus.js"
@@ -47,6 +51,8 @@ const WAKE_DURATION = 1.6 // seconds a puff takes to fully fade
 const MAX_WAKES = 120 // hard cap so a crowded sea can't run away with the segment count
 const FISH_COUNT = 8
 const FISH_BOUNDS = 120 // flying fish patrol within this radius of the harbor
+const GULL_COUNT = 6
+const GULL_BOUNDS = 130 // seagulls patrol within this radius of the harbor
 const CUSTOM_COLOR_KEY = "seaCustomColor"
 const CUSTOM_FLAG_KEY = "seaCustomFlag"
 // Curated rather than free text, same reasoning as the hull PALETTE: a
@@ -156,6 +162,10 @@ class Sea {
     // Flying fish are the same story, minus the biting — pure atmosphere.
     this.fish = makeFlyingFish(FISH_COUNT, FISH_BOUNDS)
     this.fishMeshes = this.fish.map(() => this.scene.addFish())
+
+    // Seagulls circle overhead — same ambient, unsynced, purely local story.
+    this.gulls = makeGulls(GULL_COUNT, GULL_BOUNDS)
+    this.gullMeshes = this.gulls.map(() => this.scene.addGull())
 
     // Driftwood is fully static set-dressing: built once, bobbed gently,
     // never re-simulated.
@@ -273,6 +283,7 @@ class Sea {
 
     this.stepSharks()
     this.stepAllFish()
+    this.stepGulls()
     this.bobDriftwood()
 
     this.net.sendPos(
@@ -355,6 +366,16 @@ class Sea {
       const f = this.fish[i]
       stepFish(f, 0.016, FISH_BOUNDS)
       this.scene.updateFish(this.fishMeshes[i], f, fishLeap(f))
+    }
+  }
+
+  // Advances every seagull's patrol/bob state — pure atmosphere, cruising
+  // well above anything else in the scene.
+  stepGulls() {
+    for (let i = 0; i < this.gulls.length; i++) {
+      const g = this.gulls[i]
+      stepGull(g, 0.016, GULL_BOUNDS)
+      this.scene.updateGull(this.gullMeshes[i], g, gullBob(g), gullBank(g))
     }
   }
 
